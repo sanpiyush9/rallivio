@@ -129,7 +129,16 @@ export async function runYouTubeAcquisition() {
     });
 
     const signals = await computePhase0Signals();
-    const result = { ok: true, searched: search.items.length, videos: videos.length, channels: channels.length, ...signals };
+    const result = {
+      ok: true,
+      searched: search.items.length,
+      videos: videos.length,
+      channels: channels.length,
+      scoredChannels: signals.channels,
+      signals: signals.signals,
+      rankings: signals.rankings,
+      week: signals.week,
+    };
     await supabaseService("system_health", {
       method: "POST",
       headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
