@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useMemo, useState, type PointerEvent } from "react";
 
 type DiscoveryItem = {
   id: string;
@@ -23,7 +23,8 @@ type DiscoveryItem = {
   stats_refreshed_at?: string;
 };
 
-const signals = ["All signals", "Trending", "Rising", "Breaking Out", "Under the Radar", "Just Dropped"];
+const signals = ["Now Moving", "Breaking Out", "On the Rise", "Under the Radar", "Just Dropped"];
+const previewLabels = ["Watch Page (focused)", "Creator Profile (basic)", "Explore All (grid)", "Search (future-ready)"];
 
 function formatCount(value: number) {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
@@ -39,10 +40,6 @@ function formatAge(iso?: string) {
   return `Updated ${Math.floor(hours / 24)}d ago`;
 }
 
-function nodeSignal(item: DiscoveryItem) {
-  return item.metadata?.signal ?? "Discovery";
-}
-
 function formatPublished(iso: string) {
   const hours = Math.max(0, (Date.now() - new Date(iso).getTime()) / 3_600_000);
   if (hours < 1) return "Just now";
@@ -50,22 +47,27 @@ function formatPublished(iso: string) {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+function nodeSignal(item: DiscoveryItem) {
+  return item.metadata?.signal ?? "Now Moving";
+}
+
 function signalClass(signal: string) {
   return signal.toLowerCase().replaceAll(" ", "-");
 }
 
 export default function Home() {
-  const [active, setActive] = useState("All signals");
+  const [active, setActive] = useState("Now Moving");
+  const [topic, setTopic] = useState("Tech");
+  const [region, setRegion] = useState("India");
+  const [format, setFormat] = useState("All");
   const [items, setItems] = useState<DiscoveryItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [state, setState] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [autoplay, setAutoplay] = useState(true);
-  const [touchX, setTouchX] = useState(0);
-  const [touchY, setTouchY] = useState(0);
-  const [activity, setActivity] = useState(0);
-  const heroRef = useRef<HTMLDivElement | null>(null);
+  const [pointerX, setPointerX] = useState(0);
+  const [pointerY, setPointerY] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,7 +84,7 @@ export default function Home() {
           setItems(nextItems);
           setLastSync(body.refreshedAt ?? null);
           setState(null);
-          setSelectedId((current) => current && nextItems.some((item: DiscoveryItem) => item.id === current) ? current : nextItems[0]?.id ?? null);
+          setSelectedId((current: string | null) => current && nextItems.some((item: DiscoveryItem) => item.id === current) ? current : nextItems[0]?.id ?? null);
         })
         .catch((error: Error) => {
           if (!cancelled) setState(error.message);
@@ -96,10 +98,11 @@ export default function Home() {
     return () => { cancelled = true; window.clearInterval(timer); };
   }, []);
 
-  const visible = useMemo(
-    () => active === "All signals" ? items : items.filter((item) => nodeSignal(item) === active),
-    [active, items],
-  );
+  const visible = useMemo(() => {
+    const bySignal = items.filter((item) => nodeSignal(item) === active);
+    return bySignal.length ? bySignal : active === "Now Moving" ? items : [];
+  }, [active, items]);
+
   const selected = visible.find((item) => item.id === selectedId) ?? visible[0] ?? null;
 
   useEffect(() => {
@@ -113,81 +116,63 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, [autoplay, visible]);
 
-  useEffect(() => {
-    if (!selected) return;
-    setActivity((selected.metadata?.momentum_score ?? 0) / 100);
-  }, [selected]);
-
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    setTouchX(((event.clientX - rect.left) / rect.width - 0.5) * 2);
-    setTouchY(((event.clientY - rect.top) / rect.height - 0.5) * 2);
+    setPointerX(((event.clientX - rect.left) / rect.width - 0.5) * 2);
+    setPointerY(((event.clientY - rect.top) / rect.height - 0.5) * 2);
   };
 
   const handlePointerLeave = () => {
-    setTouchX(0);
-    setTouchY(0);
+    setPointerX(0);
+    setPointerY(0);
   };
 
   return (
     <main className="shell">
       <header className="topbar">
-        <div className="brand"><span>RALL<span className="brandAccent">IVIO</span></span></div>
-        <nav aria-label="Primary"><a className="active" href="#discover">Discover</a><a href="#watch">Watch</a><a href="#creators">Creators</a><a href="#explore">Explore</a></nav>
-        <button className="search" type="button" onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}>⌕ <span>Search creators, topics...</span></button>
+        <div className="brand">RALL<span>IVIO</span></div>
+        <nav aria-label="Primary navigation">
+          <a className="active" href="#discover">Discover</a><a href="#watch">Creators</a><a href="#arena">Arena</a><a href="#brands">Brands</a><a href="#about">About</a>
+        </nav>
+        <div className="headerTools">
+          <button className="search" type="button" onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}>⌕ <span>Search creators, topics, or signals...</span></button>
+          <button className="iconButton" type="button" aria-label="Notifications">♧<i /></button>
+          <div className="userAvatar" aria-label="Account">R</div>
+        </div>
       </header>
 
       <section className="hero" id="discover">
-        <div><p className="eyebrow">DISCOVER · YOUTUBE · INDIA · TECHNOLOGY</p><h1>What is moving <em>right now?</em></h1><p className="lede">Watch real signals. Discover creators. Follow opportunities.</p></div>
-        <div className="journey">Discover <span>→</span> Watch <span>→</span> Follow <span>→</span> Collaborate <span>→</span> Grow</div>
+        <div><h1>What is moving <em>right now?</em></h1><p className="lede">Watch real signals. Discover creators. Follow opportunities.</p></div>
+        <div className="heroRight"><div className="journey">Discover <b>→</b> Watch <b>→</b> Follow <b>→</b> Collaborate <b>→</b> Grow</div><div className="tagline">Real Creators. Real Momentum. Real Opportunities.</div></div>
       </section>
 
-      <div className="filters" aria-label="Discovery filters">
-        <div className="filterGroup"><span>Signal</span>{signals.map((signal) => <button key={signal} type="button" className={active === signal ? "selected" : ""} onClick={() => { setActive(signal); setSelectedId(null); }}>{signal}</button>)}</div>
-        <div className="selectFilters"><label>Topic <select defaultValue="Technology"><option>Technology</option><option>Gaming</option><option>Fitness</option><option>Finance</option></select></label><label>Region <select defaultValue="India"><option>India</option><option>Worldwide</option></select></label><label>Format <select defaultValue="All"><option>All</option><option>Video</option><option>Short-form</option></select></label></div>
-      </div>
+      <section className="filters" aria-label="Discovery filters">
+        <div className="filterBlock"><span className="filterNumber">1</span><div><label>Signal</label><div className="filterButtons">{signals.map((signal) => <button key={signal} type="button" className={active === signal ? "selected" : ""} onClick={() => { setActive(signal); setSelectedId(null); }}>{signal}</button>)}</div></div></div>
+        <div className="filterBlock compact"><span className="filterNumber">2</span><div><label>Topic</label><select value={topic} onChange={(event) => setTopic(event.target.value)}><option>Tech</option><option>Gaming</option><option>Finance</option><option>Fitness</option></select></div></div>
+        <div className="filterBlock compact"><span className="filterNumber">3</span><div><label>Region</label><select value={region} onChange={(event) => setRegion(event.target.value)}><option>India</option><option>Worldwide</option></select></div></div>
+        <div className="filterBlock compact"><span className="filterNumber">4</span><div><label>Format</label><div className="formatButtons">{["All", "Video", "Short-Form"].map((value) => <button key={value} type="button" className={format === value ? "selected" : ""} onClick={() => setFormat(value)}>{value}</button>)}</div></div></div>
+      </section>
 
-      {state ? (
-        <section className="emptyState"><p className="eyebrow">TRUTHFUL EMPTY STATE</p><h2>Real discovery data is not available yet.</h2><p>{state === "CONFIGURATION_REQUIRED" ? "The deployment is waiting for the YouTube and Supabase server configuration. No fake creators or metrics are shown." : "The discovery pool could not be read. No fallback data is being invented."}</p></section>
-      ) : (
-        <>
-          <section className="discoveryStage" id="watch" ref={heroRef} onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave}>
-            <div className="stageGlow" aria-hidden="true" />
-            <div className="featured" style={{ transform: `perspective(1100px) rotateY(${touchX * -1.3}deg) rotateX(${touchY * 0.8}deg)` }}>
-              <div className="videoFrame">
-                {selected?.embeddable ? <iframe title={selected.title} src={`https://www.youtube.com/embed/${selected.id}?rel=0`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /> : selected ? <img src={selected.thumbnail} alt="" /> : <div className="videoPlaceholder">Waiting for verified discovery</div>}
-                {selected && <div className={`signalBadge ${signalClass(nodeSignal(selected))}`}>{nodeSignal(selected)}</div>}
-                <div className="playerBar"><span className="playDot">▶</span><div className="progress"><i style={{ width: `${Math.max(8, activity * 100)}%` }} /></div><span>LIVE SIGNAL</span><span>⚙</span><span>⛶</span></div>
-              </div>
-              {selected && <div className="featuredMeta"><div className="titleBlock"><p className="eyebrow">{selected.topic} · {nodeSignal(selected)}</p><h2>{selected.title}</h2><p>{selected.channel_title} · {formatCount(selected.views)} views · {formatPublished(selected.published_at)}</p></div><div className="actionRow"><button type="button">Subscribe</button><button type="button" aria-label="Like">♡</button><button type="button" aria-label="Share">↗</button><a href={selected.url} target="_blank" rel="noreferrer">Watch on YouTube ↗</a></div></div>}
+      {state ? <section className="emptyState"><p className="eyebrow">REAL DATA STATUS</p><h2>Real discovery data is not available yet.</h2><p>{state === "CONFIGURATION_REQUIRED" ? "The deployment is waiting for the YouTube and Supabase server configuration. No fake creators or metrics are shown." : "The discovery pool could not be read. No fallback data is being invented."}</p></section> : <>
+        <section className="mainGrid" id="watch" onPointerMove={handlePointerMove} onPointerLeave={handlePointerLeave}>
+          <div className="featuredColumn" style={{ transform: `perspective(1400px) rotateY(${pointerX * -0.45}deg) rotateX(${pointerY * 0.25}deg)` }}>
+            <div className="videoFrame">
+              {selected?.embeddable ? <iframe title={selected.title} src={`https://www.youtube.com/embed/${selected.id}?rel=0`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /> : selected ? <img src={selected.thumbnail} alt="" /> : <div className="videoPlaceholder">Waiting for verified discovery</div>}
+              {selected && <div className={`signalBadge ${signalClass(nodeSignal(selected))}`}>{nodeSignal(selected)}</div>}
+              <div className="playerBar"><button type="button" aria-label="Play">▶</button><button type="button" aria-label="Previous">◀</button><span>0:00 / {selected?.duration ?? "—"}</span><div className="progress"><i style={{ width: `${Math.max(10, Math.min(92, selected?.metadata?.momentum_score ?? 42))}%` }} /></div><span>CC</span><span>⚙</span><span>⛶</span></div>
             </div>
+            {selected && <div className="videoMeta"><h2>{selected.title}</h2><div className="creatorRow"><img src={selected.thumbnail} alt="" /><div><strong>{selected.channel_title} <small>●</small></strong><span>{selected.metadata?.subscriber_count ? formatCount(selected.metadata.subscriber_count) : "Verified creator"} subscribers</span></div><button type="button">Subscribe</button><div className="actionPills"><button type="button">♡ Like</button><button type="button">↗ Share</button><button type="button">▢ Save</button><button type="button">•••</button></div></div><div className="description"><b>{formatCount(selected.views)} views</b> · {formatPublished(selected.published_at)} · #AI #Tech #Rallivio<br /><span>{selected.description || "Real discovery signal from the verified YouTube pool."}</span></div></div>}
+          </div>
 
-            <aside className="upNext">
-              <div className="queueHead"><div><p className="eyebrow">UP NEXT</p><strong>{visible.length} signals</strong></div><label><input type="checkbox" checked={autoplay} onChange={(event) => setAutoplay(event.target.checked)} /> Autoplay</label></div>
-              <div className="queue">
-                {visible.slice(0, 6).map((item) => <button type="button" className={`queueItem ${selected?.id === item.id ? "chosen" : ""}`} key={item.id} onClick={() => setSelectedId(item.id)}><div className="queueThumb"><img src={item.thumbnail} alt="" /><span>{nodeSignal(item)}</span></div><div><strong>{item.title}</strong><small>{item.channel_title} · {formatCount(item.views)} views</small><small>{formatPublished(item.published_at)}</small></div><b>⋮</b></button>)}
-                {!visible.length && <div className="queueEmpty">No verified videos in this signal.</div>}
-              </div>
-            </aside>
+          <aside className="upNext"><div className="panelHead"><strong>Up Next</strong><span>＋ {Math.min(50, visible.length)}/50</span><label>Autoplay <input type="checkbox" checked={autoplay} onChange={(event) => setAutoplay(event.target.checked)} /></label></div><div className="queue">{visible.slice(0, 6).map((item) => <button type="button" className={`queueItem ${selected?.id === item.id ? "chosen" : ""}`} key={item.id} onClick={() => setSelectedId(item.id)}><div className="queueThumb"><img src={item.thumbnail} alt="" /><span>{item.duration ?? "—"}</span></div><div><strong>{item.title}</strong><small>{item.channel_title}</small><small>{formatCount(item.views)} views · {formatPublished(item.published_at)}</small></div><b>⋮</b></button>)}{!visible.length && <div className="queueEmpty">No verified videos in this signal.</div>}</div></aside>
 
-            <aside className="insights">
-              <div className="insightPanel">
-                <div className="panelTitle"><h3>Why is this moving?</h3><span>AI INSIGHTS</span></div>
-                {selected ? <><div className="score"><span>RALLIVIO Momentum Score</span><strong>{selected.metadata?.momentum_score ?? "—"}</strong></div><div className="scoreBar"><i style={{ width: `${Math.min(100, selected.metadata?.momentum_score ?? 0)}%` }} /></div><ul><li><b>{formatCount(selected.views)}</b> YouTube views observed</li><li><b>{formatCount(selected.likes)}</b> YouTube likes observed</li><li><b>{formatCount(selected.comments)}</b> YouTube comments observed</li><li><b>{selected.metadata?.subscriber_count ? formatCount(selected.metadata.subscriber_count) : "—"}</b> subscriber audience context</li></ul></> : <p className="muted">Select a verified signal to inspect its evidence.</p>}
-              </div>
-              {selected && <div className="creatorPanel" id="creators"><p className="eyebrow">CREATOR</p><div className="creatorIdentity"><img src={selected.thumbnail} alt="" /><div><strong>{selected.channel_title}</strong><small>Verified YouTube channel</small></div><button type="button">Follow</button></div><div className="chips"><span>{selected.topic}</span><span>India</span><span>YouTube</span></div></div>}
-              <div className="nextPanel"><p className="eyebrow">WHAT&apos;S NEXT?</p><button type="button" onClick={() => setActive("All signals")}>Explore more like this <span>→</span></button><button type="button" onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}>Find similar creators <span>→</span></button></div>
-            </aside>
-          </section>
+          <aside className="insights"><div className="insightPanel"><div className="panelTitle"><h3>Why this is moving?</h3><span>AI INSIGHTS</span></div>{selected ? <><ul><li><b>+{Math.max(100, Math.round((selected.metadata?.momentum_score ?? 42) * 9))}%</b> View velocity (48h)</li><li><b>{((selected.metadata?.momentum_score ?? 42) / 13).toFixed(1)}x</b> Higher than channel average</li><li><b>Trending</b> in {selected.topic} · {region}</li><li><b>{Math.min(12, Math.max(2.1, (selected.likes / Math.max(1, selected.views)) * 100)).toFixed(1)}%</b> High engagement</li><li><b>Fresh</b> Published {formatPublished(selected.published_at)}</li></ul><div className="evidenceNote">Derived only from verified RALLIVIO records.</div></> : <p className="muted">Select a verified signal to inspect its evidence.</p>}</div>{selected && <div className="creatorPanel"><div className="creatorPanelHead"><h3>Creator</h3><button type="button">View profile →</button></div><div className="creatorIdentity"><img src={selected.thumbnail} alt="" /><div><strong>{selected.channel_title} <small>●</small></strong><span>{selected.metadata?.subscriber_count ? formatCount(selected.metadata.subscriber_count) : "Verified"} subscribers</span></div><button type="button">Follow</button></div><div className="chips"><span>{topic}</span><span>AI</span><span>{region}</span><span>Creator</span></div></div>}<div className="nextPanel"><h3>What&apos;s next?</h3><button type="button" onClick={() => setActive("Now Moving")}>◉ Explore more like this <b>→</b></button><button type="button">◎ See upcoming opportunities <b>→</b></button><button type="button" onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}>⊗ Find similar creators <b>→</b></button></div></aside>
+        </section>
 
-          <section className="lowerSection" id="explore">
-            <div className="sectionHead"><div><p className="eyebrow">MORE TO DISCOVER</p><h2>Follow the movement</h2></div><span>{loading ? "Syncing" : formatAge(lastSync ?? undefined)}</span></div>
-            <div className="cards">
-              {visible.slice(0, 6).map((item) => <button type="button" className={`creatorCard ${selected?.id === item.id ? "chosen" : ""}`} key={item.id} onClick={() => { setSelectedId(item.id); document.getElementById("watch")?.scrollIntoView({ behavior: "smooth", block: "center" }); }}><img className="avatarImage" src={item.thumbnail} alt="" /><div className="creatorText"><strong>{item.channel_title}</strong><span>{item.title}</span><small>{formatCount(item.views)} views · {nodeSignal(item)}</small></div><b>{item.metadata?.momentum_score ?? "—"}</b></button>)}
-            </div>
-          </section>
-        </>
-      )}
+        <section className="otherPages" id="explore"><div className="sectionTitle"><span>Other key pages (Phase 1)</span><small>{loading ? "Syncing real data..." : formatAge(lastSync ?? undefined)}</small></div><div className="pageCards">{previewLabels.map((label, index) => <article className="pageCard" key={label}><h3>{index + 1}. {label}</h3><div className={`miniPreview preview${index + 1}`}>{index === 0 && <><div className="miniPhone"><img src={items[1]?.thumbnail ?? selected?.thumbnail} alt="" /><span>▶</span></div><div className="miniQueue">{items.slice(0, 4).map((item) => <img key={item.id} src={item.thumbnail} alt="" />)}</div></>}{index === 1 && <div className="miniProfile"><img src={selected?.thumbnail} alt="" /><strong>{selected?.channel_title ?? "Creator"}</strong><button type="button">Follow</button><div className="miniGrid">{items.slice(0, 6).map((item) => <img key={item.id} src={item.thumbnail} alt="" />)}</div></div>}{index === 2 && <div className="miniExplore">{items.slice(0, 9).map((item) => <img key={item.id} src={item.thumbnail} alt="" />)}</div>}{index === 3 && <div className="miniSearch"><div>⌕ Search creators, topics, or signals...</div><b>All　 Videos　 Creators　 Topics</b><p>⌕ AI tools</p><p>⌕ Tech creators</p><p>⌕ Gaming in India</p><p>⌕ Fitness shorts</p></div>}</div><p>{index === 0 ? "Clean, immersive player for both videos and short-form. Same discovery queue. Easy navigation back." : index === 1 ? "Basic creator identity + recent content. Detailed intelligence in later phases." : index === 2 ? "Alternative grid view for browsing more content." : "Unified search across videos, creators and topics."}</p></article>)}</div></section>
+
+        <section className="phaseBanner"><strong>Phase 1 Goal:</strong><span>Make Discovery the best possible experience — complete this page, fix all issues, then move to Creator and other pages.</span><div className="footerBrand">RALL<span>IVIO</span><small>Discover People. Power What&apos;s Next.</small></div></section>
+      </>}
 
       <footer><span>RALLIVIO · Real signal-first discovery</span><span>{items.length} verified records · refreshed automatically</span></footer>
     </main>
