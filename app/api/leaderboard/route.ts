@@ -46,10 +46,9 @@ export async function GET() {
       return NextResponse.json({ ready: false, week, collectedVideos: pool.length, items: [], latest: pool });
     }
 
-    const videoIds = rankings.map((row) => row.notable_video_id).filter(Boolean) as string[];
-    const ids = videoIds.map(encodeURIComponent).join(",");
+    const channelIds = rankings.map((row) => encodeURIComponent(row.channel_id)).join(",");
     const videos = await supabasePublic<Video[]>(
-      `youtube_discovery_pool?select=id,channel_id,channel_title,title,url,thumbnail,published_at,views&or=(id.in.(${ids}),channel_id.in.(${rankings.map((row) => encodeURIComponent(row.channel_id)).join(",")}))&order=published_at.desc&limit=100`,
+      `youtube_discovery_pool?select=id,channel_id,channel_title,title,url,thumbnail,published_at,views&channel_id=in.(${channelIds})&order=published_at.desc&limit=100`,
     );
     const byVideo = new Map(videos.map((video) => [video.id, video]));
 
