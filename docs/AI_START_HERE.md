@@ -36,6 +36,25 @@ If a task does not serve Phase 0, it is out of scope. Say so rather than buildin
 
 Then state what you understand the current state to be, which documents you are treating as authoritative and their versions, and what you expect to modify — **before** writing code.
 
+## Required context report
+
+Before writing any code, output this report. If you cannot fill in a row, you have not read that document — read it before continuing.
+
+| Document | Version | Key thing I took from it |
+|---|---|---|
+| CANONICAL.md | | |
+| [spec for this area] | | |
+| SESSION_LOG.md (last 3) | | |
+| KNOWN_ISSUES.md | | Any entries touching this area? |
+
+Then state:
+- What I understand the current state to be
+- What I think this task requires
+- Which files I expect to modify
+- Anything in the spec that seems ambiguous or wrong
+
+Wait for confirmation before writing code.
+
 ---
 
 ## Rules
