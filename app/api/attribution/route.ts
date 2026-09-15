@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseService } from "@/lib/supabase/rest";
 
 function safeYouTubeId(value: string | null) {
-  return value && /^[A-Za-z0-9_-]{6,20}$/.test(value) ? value : null;
+  return value && /^[A-Za-z0-9_-]{6,64}$/.test(value) ? value : null;
 }
 
 export async function GET(request: NextRequest) {
