@@ -10,7 +10,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "canonical-check": "node scripts/check-canonical.js",
-    "verify": "npm run typecheck && npm run lint && npm run test && npm run build && npm run canonical-check"
+    "check:docs": "node scripts/check-docs.js",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run build && npm run canonical-check && npm run check:docs"
   },
   "dependencies": {
     "next": "15.5.24",
