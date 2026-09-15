@@ -1,7 +1,11 @@
 import { supabaseService } from "@/lib/supabase/rest";
 
-const DAILY_UNIT_LIMIT = 10_000;
-const DAILY_SEARCH_LIMIT = 60;
+export const DAILY_UNIT_LIMIT = 10_000;
+export const DAILY_SEARCH_LIMIT = 60;
+
+export function canReserve(currentUnits: number, currentSearchCalls: number, units: number, searchCalls = 0) {
+  return currentUnits + units <= DAILY_UNIT_LIMIT && currentSearchCalls + searchCalls <= DAILY_SEARCH_LIMIT;
+}
 
 export async function reserveYouTubeQuota(units: number, searchCalls = 0) {
   if (units < 0 || searchCalls < 0) throw new Error("Quota reservation cannot be negative");
