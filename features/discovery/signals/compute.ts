@@ -1,4 +1,5 @@
 import { supabaseService } from "@/lib/supabase/rest";
+import { median, shrunkResidual, subscriberBucket } from "@/features/discovery/signals/math";
 
 type PoolVideo = {
   id: string;
@@ -23,18 +24,6 @@ type SignalRow = {
   observed_at: string;
   expires_at: string;
 };
-
-function median(values: number[]) {
-  const sorted = [...values].sort((a, b) => a - b);
-  if (!sorted.length) return 0;
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
-}
-
-function subscriberBucket(subscribers: number) {
-  if (subscribers <= 0) return 0;
-  return Math.floor(Math.log10(Math.max(1, subscribers)));
-}
 
 function weekStartIndia(now = new Date()) {
   const india = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
@@ -83,12 +72,9 @@ export async function computePhase0Signals() {
 
   const snapshots = await fetchSnapshots(pool.map((v) => v.id));
   const channelStats = await fetchChannelStats([...new Set(pool.map((v) => v.channel_id))]);
-  const byVideo = new Map<string, Snapshot[]>();
-  for (const snapshot of snapshots) {
-    const list = byVideo.get(snapshot.video_id) ?? [];
-    list.push(snapshot);
-    byVideo.set(snapshot.video_id, list);
-  }
+  const snapshotCounts = new Map<string, number>();
+  for (const snapshot of snapshots) snapshotCounts.set(snapshot.video_id, (snapshotCounts.get(snapshot.video_id) ?? 0) + 1);
+
   const byChannel = new Map<string, PoolVideo[]>();
   for (const video of pool) {
     const list = byChannel.get(video.channel_id) ?? [];
@@ -104,14 +90,13 @@ export async function computePhase0Signals() {
   const channelMedians = new Map<string, number>();
 
   for (const [channelId, videos] of byChannel) {
-    const recent = videos.filter((video) => inDays(video.published_at, 30)).slice(0, 10);
+    const recent = videos.filter((video) => inDays(video.published_at, 30) && (snapshotCounts.get(video.id) ?? 0) >= 3).slice(0, 10);
     if (recent.length < 3) continue;
     const medianViews = median(recent.map((video) => Number(video.views) || 0));
     const stat = latestChannel.get(channelId);
     if (!stat || stat.subscriber_count <= 0 || medianViews < 100) continue;
     channelMedians.set(channelId, medianViews);
-    const bucket = subscriberBucket(stat.subscriber_count);
-    const key = `Technology:${bucket}`;
+    const key = `Technology:${subscriberBucket(stat.subscriber_count)}`;
     const baseline = allChannelBaselines.get(key) ?? [];
     baseline.push(medianViews);
     allChannelBaselines.set(key, baseline);
@@ -121,22 +106,21 @@ export async function computePhase0Signals() {
     const stat = latestChannel.get(channelId)!;
     const bucket = subscriberBucket(stat.subscriber_count);
     const expected = median(allChannelBaselines.get(`Technology:${bucket}`) ?? []);
-    if (!expected) continue;
-    const residual = Math.log(Math.max(1, medianViews) / expected);
-    const n = Math.min(10, byChannel.get(channelId)?.filter((v) => inDays(v.published_at, 30)).length ?? 0);
-    const shrunk = residual * (n / (n + 5));
+    const recentCount = byChannel.get(channelId)?.filter((v) => inDays(v.published_at, 30) && (snapshotCounts.get(v.id) ?? 0) >= 3).length ?? 0;
+    const result = shrunkResidual(medianViews, expected, recentCount, 5);
+    if (!result) continue;
     const notable = byChannel.get(channelId)![0];
     channelScores.push({
       channelId,
-      score: shrunk,
+      score: result.shrunk,
       videoId: notable.id,
       evidence: {
         median_views: medianViews,
         peer_expected_views: expected,
         subscriber_count: stat.subscriber_count,
         subscriber_bucket: bucket,
-        recent_video_count: n,
-        residual,
+        recent_video_count: recentCount,
+        residual: result.residual,
         shrinkage_k: 5,
       },
     });
@@ -160,7 +144,7 @@ export async function computePhase0Signals() {
   if (signalRows.length) {
     await supabaseService("discovery_signals", {
       method: "POST",
-      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      headers: { Prefer: "return=minimal" },
       body: JSON.stringify(signalRows),
     });
   }
