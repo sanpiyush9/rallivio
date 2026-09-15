@@ -3,35 +3,52 @@
 > Newest entries at the top.
 > Read the most recent 3 before starting work.
 
-## Template — copy this for every new entry
-
-```markdown
-## YYYY-MM-DD — Short title
-Branch: feature/xxx
-Status: Complete | In progress | Blocked
+## 2026-09-16 — Living Discovery Environment V1 implemented
+Branch: feature/youtube-real-discovery
+Status: In progress
 
 ### Done
-- What was actually finished and merged
+- Owner explicitly approved the transition from a conventional discovery feed toward a living simulated discovery ecosystem.
+- Created `docs/specs/living-discovery-environment-v1.md` defining the experience, truth boundary, interaction rules, platform-environment direction and V1 acceptance criteria.
+- Implemented the first Living Discovery Environment in `app/page.tsx` using the existing verified discovery pool as the only content source.
+- Added a visual signal field containing real discovery thumbnails as selectable nodes around the current discovery focus.
+- Added signal-driven filtering, selected-node focus, responsive touch/click selection and a bounded periodic refresh of the persisted discovery read path.
+- Added explicit UI language distinguishing verified data from presentation motion: `Motion is presentation only...`.
+- Added reduced-motion behavior and responsive styling in `app/globals.css`.
+- Kept the existing real YouTube player and source link as the factual playback layer beneath the living environment.
+- Updated `docs/RALLIVIO_STATE.md` so the ecosystem direction is now recorded as **IMPLEMENTING**, not merely proposed.
 
 ### Not done
-- What was started but left incomplete
-- What was deliberately deferred and why
+- `docs/CANONICAL.md` registration of the new spec is pending because the repository write check rejected the attempted canonical-index update; this must be completed before the spec is considered fully canonical.
+- `npm run verify` has not yet been run after the V1 code change.
+- Vercel Preview deployment and user field test of the new living field are pending.
+- The existing **Breaking Out vs Just Dropped** signal-consistency issue remains open and must be fixed after V1 deployment validation.
+- The full production discovery graph, historical intelligence, continuous acquisition and platform-specific environments are not implemented yet.
+- The temporary `/api/qa/bootstrap` must be removed or replaced before production.
 
 ### Next session should
-[MANDATORY — name a specific file and line, or a specific first action.
-"Continue the feature" is not acceptable. This is the single highest-value
-line in the entire documentation system.]
+Run `npm run verify` on the current branch, confirm the latest Vercel Preview deployment contains the living field, then user-test signal switching and node selection. After that, inspect `app/api/discovery/route.ts` and `app/page.tsx` together to resolve the signal consistency issue before expanding the ecosystem.
 
 ### Gotchas discovered
-- Anything surprising that a future session would waste time rediscovering
+- The living environment must never become a decorative fake-data layer. Nodes, titles, creators and metrics must originate from verified discovery records.
+- Client-side refresh is intentionally reading the persisted RALLIVIO discovery pool; it does not call the expensive YouTube search API from the visitor request path.
+- The first V1 visual field is bounded to nine verified nodes to keep interaction and rendering predictable.
+- Motion communicates state; it does not claim that the source platform changed every frame.
+- The selected item is constrained to the currently visible signal set so a signal filter cannot leave stale content selected from another signal.
 
 ### Documents touched
-- Which specs or design assets changed, and whether CANONICAL.md was updated
-```
+- Added `docs/specs/living-discovery-environment-v1.md`.
+- Updated `app/page.tsx`.
+- Updated `app/globals.css`.
+- Updated `docs/RALLIVIO_STATE.md`.
+- Updated this session log.
+- `docs/CANONICAL.md` still needs the living-environment spec registered.
+
+---
 
 ## 2026-09-16 — Proposed living simulated discovery ecosystem
 Branch: feature/youtube-real-discovery
-Status: In progress
+Status: Superseded by approved implementation transition
 
 ### Done
 - Reviewed the user's desired evolution of RALLIVIO from a conventional discovery feed into a visually living discovery environment.
@@ -57,7 +74,7 @@ If the owner approves the living-ecosystem direction, create the design/interact
 ### Documents touched
 - Updated `docs/RALLIVIO_STATE.md` with a full requirement-transition record for the proposed ecosystem direction.
 - Updated this session log.
-- `docs/CANONICAL.md` was intentionally not changed because the proposal is not yet approved/current.
+- `docs/CANONICAL.md` was intentionally not changed because the proposal was not yet approved at that time.
 
 ---
 
