@@ -14,6 +14,8 @@ RALLIVIO is a creator-discovery intelligence platform. YouTube remains the sourc
 
 RALLIVIO must not host or fabricate video content. YouTube videos should be playable through YouTube embeds or linked back to YouTube. RALLIVIO stores metadata and historical statistics needed for its own derived signals.
 
+RALLIVIO is now also implementing a **Living Discovery Environment**: the real verified discovery state drives a dynamic visual environment. Motion and simulation are presentation mechanisms only and must never fabricate factual platform activity.
+
 ## 2. Non-negotiable requirements
 
 1. **Truth first:** Never fabricate creators, videos, metrics, freshness, rankings, or engagement.
@@ -26,6 +28,8 @@ RALLIVIO must not host or fabricate video content. YouTube videos should be play
 8. **Exact intent:** Never fill a requested topic/format/region with unrelated content. If constraints must relax, record and label the relaxation.
 9. **Source timestamps:** Distinguish YouTube publication time from RALLIVIO acquisition/observation time.
 10. **Embeds are not stored video:** We store IDs/metadata, not the video files themselves.
+11. **Living environment truth boundary:** Real data determines factual state. Motion, spatial layout, transitions and visual simulation may communicate that state but must never be presented as real metrics or fabricated activity.
+12. **Responsive interaction:** Pointer, touch, click, keyboard focus and navigation may change presentation and discovery focus, but must not break scrolling, accessibility, or factual ranking.
 
 ## 3. Phase transition record
 
@@ -50,6 +54,24 @@ The broader product vision now explicitly includes Trending content, Rising/Brea
 **Reason:** The user explicitly rejected continuing to polish a static prototype and wants the real data and ranking mechanism to become the product's working foundation.
 
 **Implementation boundary for this step:** YouTube only; start narrow; no scraping; no fabricated fallback data; no full marketplace/auth/subscription system yet.
+
+### 2026-09-16 — Approved transition: Living Discovery Environment
+
+**Old requirement:** RALLIVIO Discover presents real source-backed content through a mostly conventional feed/card interface.
+
+**New requirement:** RALLIVIO Discover/Home becomes a **living simulated discovery ecosystem**. Verified platform data controls the factual state, while dynamic visual presentation communicates movement through spatial nodes, transitions, video/images, responsive interactions and platform-specific environments.
+
+**Why it changed:** The user wants visitors to immediately understand that RALLIVIO represents what is moving across the creator internet, not another static analytics dashboard or video directory. The interface itself should change as verified trends change and should respond to user touch/pointer interaction.
+
+**Impact:** The UI now has a Living Discovery Environment layer. The existing signal/feed/player remains the information and truth layer beneath it. Future platform pages will share normalized intelligence but can use platform-specific visual grammars.
+
+**Truth rule:** “Live” refers to refreshed verified state plus responsive presentation. It does not authorize fake second-by-second metrics, fabricated activity, or simulated engagement claims.
+
+**Implementation status:** **IMPLEMENTING.** V1 is now being built on `feature/youtube-real-discovery`.
+
+**Validation:** First V1 implementation added a signal-driven visual node field around the real selected YouTube content, periodic persisted-pool refresh, pointer/touch-compatible selection, responsive layout, and reduced-motion handling. Automated verification and user field QA are still pending for this V1 change.
+
+**Date:** 2026-09-16
 
 ## 4. Requirement transition protocol
 
@@ -171,6 +193,8 @@ The discovery card must preserve the source identity and provide a clear route t
 - Supabase-backed discovery pool is populated with real YouTube metadata, snapshots/channel context, and RALLIVIO-derived signal metadata.
 - Discover UI has been field-tested with real data and a working YouTube embed/source route.
 - Vercel Preview Authentication was disabled for QA so automated route testing can reach the Preview deployment.
+- **Living Discovery Environment V1 implementation is now present:** signal-driven visual nodes, real thumbnails, dynamic focus/selection, periodic persisted-pool refresh, responsive layout, and reduced-motion handling.
+- Living Discovery Environment V1 specification exists at `docs/specs/living-discovery-environment-v1.md`.
 - Living requirements/continuity protocol is registered as canonical in `docs/CANONICAL.md`.
 
 ## 10. What is not yet implemented / verified
@@ -179,14 +203,16 @@ The discovery card must preserve the source identity and provide a clear route t
 - Robust relevance classification beyond the initial narrow acquisition approach.
 - Mature historical baseline/acceleration model with enough repeated observations for production-grade signal claims.
 - Complete truthful fallback state machine and multi-path acquisition/replenishment architecture.
+- Full production-grade Living Discovery Environment with discovery graph relationships and platform-specific environments.
 - Creator OAuth/claim flow.
 - User subscriptions/following.
 - Brand marketplace/matching.
-- Additional social platforms.
+- Additional social platforms and their platform-specific environments.
 - Production ranking history and final production operational controls.
 - Full user acceptance of the current Discover experience.
 - Signal-filter/card consistency is **not yet verified**; current QA observed a possible **Breaking Out vs Just Dropped** mismatch.
 - Temporary `/api/qa/bootstrap` must be removed or replaced with a safer operational mechanism before production promotion.
+- V1 living-environment automated verification and Preview field test after the latest UI change are pending.
 
 ## 11. Change ledger
 
@@ -214,16 +240,13 @@ The discovery card must preserve the source identity and provide a clear route t
 - A signal consistency issue was discovered during field testing and is now tracked as KI-004 in `docs/KNOWN_ISSUES.md`.
 - This checkpoint is implementation/QA progress, not a claim that the full production discovery engine is complete.
 
-### 2026-09-16 — PROPOSED: Living simulated discovery ecosystem
-- **Current requirement:** RALLIVIO should primarily behave as a signal-first discovery page with real YouTube-backed content and a conventional navigation/feed presentation.
-- **New proposed requirement:** Evolve RALLIVIO into a **living simulated discovery ecosystem**: a dynamic visual environment where verified real-world platform signals drive what is shown, while motion, transitions, ambient visualization, responsive cards, video, imagery, and interaction make the ecosystem feel continuously alive.
-- **Why it changed:** The user wants visitors to immediately understand that RALLIVIO is not a static dashboard or video directory. The experience should communicate movement, trend changes, discovery chains, creator emergence, and cross-platform activity through the interface itself.
-- **Impact:** Home/Discover becomes an adaptive experience rather than a fixed screen. Each platform (YouTube first; later Instagram, X, TikTok, etc.) gets a platform-specific environment whose visual language and content composition adapt to current verified signals. Video, thumbnails/images, motion graphics, signal particles/lines, trend transitions, and responsive interaction become presentation layers over the real discovery intelligence.
-- **Truth boundary:** The ecosystem may **simulate the feeling of a live environment**, but it must never simulate fake metrics or pretend fabricated activity is real. Real data determines the factual state; animation and spatial presentation communicate that state. If a value is simulated for presentation, it must not be presented as a real platform metric.
-- **Interaction model proposed:** The page should respond to pointer/touch movement, selection, scrolling, signal changes, card focus, and navigation. Interaction should influence presentation (for example, cards/visual layers can subtly react to pointer proximity or touch, selected creators can become a discovery focus, and related signals can animate into view) without interfering with normal scrolling or accessibility.
-- **Real-time interpretation:** “Live” means **continuously refreshed and visually responsive**, not necessarily second-by-second source API truth. Source acquisition remains quota-aware and scheduled/persisted; the UI can update from the verified discovery pool as new observations arrive.
-- **Core ecosystem loop:** `Verified signals → dynamic visual state → user interaction → deeper discovery → creator/content context → related opportunities → refreshed signals`.
-- **Status:** **PROPOSED — not yet approved for implementation.** Do not rewrite the current UI into this architecture until the user explicitly approves the direction and the design/interaction specification is locked.
+### 2026-09-16 — Living Discovery Environment approved and V1 implemented
+- The user explicitly approved the transition from a mostly conventional discovery feed toward a living simulated discovery ecosystem.
+- Added the canonical V1 experience specification at `docs/specs/living-discovery-environment-v1.md`.
+- Implemented a signal-driven visual discovery field in `app/page.tsx` with real YouTube thumbnails, selected-content focus, signal filtering, periodic read refresh, responsive interaction, and reduced-motion handling.
+- Updated styling in `app/globals.css` for the living field, node motion, focus state, orbits and responsive layout.
+- The V1 implementation uses real persisted discovery records; visual motion is presentation and is not a claim of real-time platform activity.
+- Automated verification and post-deploy field testing remain pending.
 
 ## 12. Session handoff rule
 
@@ -236,20 +259,20 @@ At the end of every development session:
 5. State the exact next action/file so the next session resumes without guessing.
 6. Do not leave an undocumented requirement transition, decision, failure, gotcha, or deferred task behind.
 
-## 13. Current recovery checkpoint — 2026-09-15
+## 13. Current recovery checkpoint — 2026-09-16
 
 **Branch:** `feature/youtube-real-discovery`
 
-**Latest documented state:** The first real-data vertical slice has successfully crossed the acquisition boundary and has been field-tested in the Preview UI.
+**Latest documented state:** The first real-data vertical slice is working, and Living Discovery Environment V1 has been implemented on top of the verified discovery pool.
 
-**Verified flow:**
+**Verified foundation:**
 
-`YouTube API → acquisition route → Supabase persisted pool → /api/discovery read path → Discover UI → YouTube player/source`
+`YouTube API → acquisition route → Supabase persisted pool → /api/discovery read path → Living Discovery Environment → Discover UI → YouTube player/source`
 
 **Observed successful acquisition:** 25 records, cell `INDIA:Technology:all`.
 
-**Current blocker for the next implementation step:** signal selection/display consistency. The user observed the Breaking Out view while the displayed item metadata indicated Just Dropped. Root cause is not yet confirmed.
+**Current implementation step:** Validate the Living Discovery Environment V1 deployment and interaction behavior, then fix the signal-selection consistency issue without mixing it into unrelated platform work.
 
 **Security/cleanup:** the temporary QA bootstrap token is development-only and considered exposed. It must not be promoted to Production or reused as a production credential. The bootstrap route must be removed or replaced before production.
 
-**Exact next action:** inspect `app/page.tsx` and `app/api/discovery/route.ts`, reproduce the selected-signal/item-signal mismatch, fix only that isolated issue, run `npm run verify`, deploy Preview, and field-test again.
+**Exact next action:** run `npm run verify`, inspect the resulting checks, deploy/confirm Preview, field-test the Living Discovery Environment, then reproduce and fix the **Breaking Out vs Just Dropped** signal mismatch in isolation.
