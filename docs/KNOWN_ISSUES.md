@@ -13,6 +13,7 @@
 | KI-003 | YouTube channel id, attribution redirect, validation | 2 | Resolved |
 | KI-004 | insufficient observations, ranking too early, signal baseline | 2 | Resolved |
 | KI-005 | Supabase security advisor, quota RPC, security definer, anon execute | 3 | Resolved |
+| KI-006 | duplicate object key, channels specified more than once, TS2783 | 2 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -22,7 +23,7 @@
 | Level | Count |
 |---|---|
 | 1 — Documented | 0 |
-| 2 — Detected | 3 |
+| 2 — Detected | 4 |
 | 3 — Auto-recovered | 2 |
 | 4 — Prevented | 0 |
 
@@ -163,3 +164,25 @@ Every new security-definer RPC is reviewed with the Supabase security advisor im
 
 ### Related
 `supabase/migrations/20260915152000_lock_down_youtube_quota_rpc.sql`
+
+---
+
+## KI-006 — Duplicate acquisition result field failed TypeScript verification
+First seen: 2026-09-15 · Status: Resolved · Ladder level: 2 → target 3
+Severity: MEDIUM
+
+### Symptom
+GitHub Actions failed typecheck with:
+`TS2783: 'channels' is specified more than once, so this usage will be overwritten.`
+
+### Cause
+The worker created an object with `channels` and then spread a signal result object containing another `channels` field.
+
+### Fix
+The worker now names the signal count `scoredChannels` and keeps the acquisition channel count separate.
+
+### Prevention
+Keep result objects explicitly shaped when combining independently named metrics; typecheck remains a required first gate in `npm run verify`.
+
+### Related
+`features/discovery/acquisition/worker.ts`
