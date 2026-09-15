@@ -29,6 +29,38 @@ line in the entire documentation system.]
 - Which specs or design assets changed, and whether CANONICAL.md was updated
 ```
 
+## 2026-09-16 — Proposed living simulated discovery ecosystem
+Branch: feature/youtube-real-discovery
+Status: In progress
+
+### Done
+- Reviewed the user's desired evolution of RALLIVIO from a conventional discovery feed into a visually living discovery environment.
+- Recorded the proposal in `docs/RALLIVIO_STATE.md` as **PROPOSED**, so the idea is preserved without silently changing the canonical implementation requirements.
+- Defined the intended distinction between a **live-feeling simulated environment** and fabricated data: verified platform data controls factual state; animation, motion, spatial layout, video, imagery, and interaction communicate that state.
+- Recorded the proposed cross-platform direction: YouTube first, then platform-specific environments for Instagram, X, TikTok and others as source adapters become available.
+
+### Not done
+- No implementation has been changed for this proposal yet.
+- No current Discover UI has been replaced.
+- No new canonical design specification has been created or approved.
+- The existing signal-consistency QA bug remains the immediate implementation issue until this proposal is approved and the design direction is locked.
+
+### Next session should
+If the owner approves the living-ecosystem direction, create the design/interaction specification first (before rewriting `app/page.tsx`), covering the Home/Discover environment, motion rules, real-data vs presentation-simulation boundaries, platform-specific environments, responsive/touch behavior, accessibility/reduced-motion behavior, and the first YouTube implementation slice.
+
+### Gotchas discovered
+- RALLIVIO must not fake a metric simply to make the interface look alive. “Simulation” is for presentation/state transitions, not fabricated views, likes, rankings, creator activity, or trend claims.
+- Source APIs are not guaranteed to provide second-by-second truth. The product should present continuously refreshed verified observations as a living state rather than claiming impossible real-time precision.
+- The design should make movement understandable: users should be able to tell why something is moving, not just see decorative animation.
+- Platform environments should share a common RALLIVIO discovery/intelligence layer while allowing platform-specific visual behavior and source rules.
+
+### Documents touched
+- Updated `docs/RALLIVIO_STATE.md` with a full requirement-transition record for the proposed ecosystem direction.
+- Updated this session log.
+- `docs/CANONICAL.md` was intentionally not changed because the proposal is not yet approved/current.
+
+---
+
 ## 2026-09-15 — Real-data QA checkpoint: YouTube acquisition verified
 Branch: feature/youtube-real-discovery
 Status: In progress
