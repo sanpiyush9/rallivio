@@ -29,6 +29,49 @@ line in the entire documentation system.]
 - Which specs or design assets changed, and whether CANONICAL.md was updated
 ```
 
+## 2026-09-15 — Real-data QA checkpoint: YouTube acquisition verified
+Branch: feature/youtube-real-discovery
+Status: In progress
+
+### Done
+- User disabled Vercel Authentication's **Require Log In** for the RALLIVIO Preview deployment and saved the setting.
+- Re-checked the latest Preview deployment after the change. Deployment is `READY` and is serving the `feature/youtube-real-discovery` branch.
+- Confirmed the temporary Preview-only `/api/qa/bootstrap` endpoint is now reachable and executes successfully.
+- Confirmed the bootstrap returned: `ok: true`, job `youtube-discovery-refresh`, `acquired: 25`, cell `INDIA:Technology:all`.
+- Confirmed the normal `/api/discovery` serving path returns real persisted RALLIVIO discovery-pool records after acquisition.
+- Confirmed real YouTube metadata is flowing through the complete first vertical slice: YouTube API → acquisition → Supabase discovery pool → RALLIVIO signal/score metadata → Discover UI.
+- Confirmed the deployed UI renders real YouTube discovery content and the YouTube embedded player/source link path is working in user field testing.
+- Confirmed the current data includes both large established channels and smaller channels marked `Under the Radar`, demonstrating that the first slice is not simply a subscriber-count-only list.
+- User provided a screen recording of the live QA experience; the current page is visibly populated instead of the previous empty `Waiting for first refresh` state.
+
+### Not done
+- The current signal presentation still needs QA: a user test showed a video displayed while the selected feed was **Breaking Out**, while the item's metadata showed **Just Dropped**. This may be a serving/UI signal-mapping bug and must be investigated before calling signal behavior verified.
+- The initial scoring/relevance model is still a thin Phase 0 implementation and is not yet the full production discovery-intelligence mechanism described by the product vision and validation specification.
+- Historical observations are only beginning; acceleration/baseline-relative signals need more repeated snapshots before they can be treated as fully validated.
+- Topic/region/format cell coverage and the complete truthful fallback state machine are not yet production-complete.
+- The temporary `/api/qa/bootstrap` endpoint must be removed or replaced by a safer operational mechanism before production promotion.
+- The bootstrap token is considered exposed because it appeared in development chat/URLs; do not reuse it as a production secret.
+- Full user acceptance of the current UI has not yet been completed.
+
+### Next session should
+First inspect `app/page.tsx` and `app/api/discovery/route.ts` together and trace how the selected signal is mapped to the returned item's displayed signal. Reproduce the **Breaking Out vs Just Dropped** mismatch, fix it in isolation, run `npm run verify`, redeploy Preview, and re-test the affected signal path before expanding the discovery model.
+
+### Gotchas discovered
+- Vercel Preview Deployment Protection was the blocker preventing automated access to the QA bootstrap. With **Require Log In** disabled, the same deployment and endpoint returned HTTP 200 and the acquisition executed successfully.
+- A `READY` Vercel deployment does not by itself prove the application route is reachable; Deployment Protection can intercept the request before Next.js.
+- The normal request-time discovery route is intentionally a read path. Acquisition is separate and should not spend YouTube search quota for each visitor.
+- The first acquisition produced 25 real records in the `INDIA:Technology:all` cell. The serving API then returned those persisted records without fabricating fallback content.
+- Do not treat `acquired_at` as YouTube publication time; they are different timestamps.
+- The current `Under the Radar` examples demonstrate the intended audience-relative direction, but the scoring model still needs deeper validation before making strong product claims.
+
+### Documents touched
+- Updated this session log to preserve the complete QA checkpoint and exact next action.
+- `docs/RALLIVIO_STATE.md` remains the living requirements/state document and should be synchronized when implementation status is next updated.
+- `docs/KNOWN_ISSUES.md` should contain the Deployment Protection incident and the signal-mapping bug once confirmed.
+- No product scope change was authorized in this session; this entry records implementation and QA state only.
+
+---
+
 ## 2026-09-15 — Preview deployment refresh for QA bootstrap
 Branch: feature/youtube-real-discovery
 Status: In progress
