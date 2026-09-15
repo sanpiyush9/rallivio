@@ -54,7 +54,7 @@ export default function Home() {
 
         <aside className="side">
           <div className="insight"><p className="eyebrow">WHY THIS IS MOVING</p><h3>{selected.name}</h3><div className="metric"><span>Momentum</span><strong>{selected.growth}</strong></div><div className="bar"><i /></div><ul><li>Recent views accelerating</li><li>Engagement above creator baseline</li><li>Fresh uploads attracting new viewers</li></ul><button className="outline">View creator profile ↗</button></div>
-          <div className="next"><p className="eyebrow">WHAT'S NEXT</p><h3>Follow the signal</h3><p>Save this creator and return when the next momentum update lands.</p><button className="save">＋ Save signal</button></div>
+          <div className="next"><p className="eyebrow">WHAT&apos;S NEXT</p><h3>Follow the signal</h3><p>Save this creator and return when the next momentum update lands.</p><button className="save">＋ Save signal</button></div>
         </aside>
       </section>
 
