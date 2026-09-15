@@ -3,6 +3,8 @@
 > **Purpose:** This is the living memory of the project. It records what RALLIVIO is required to do, what has changed, what is currently implemented, and what is deliberately not implemented. Future AI sessions must read this file before changing product behavior.
 >
 > **Rule:** Never rewrite history to make the project look cleaner. Append dated changes. If a requirement changes, record the old requirement, the new requirement, the reason, and the implementation impact.
+>
+> **Continuity rule:** This repository documentation is the source of truth for project continuity. A new AI session must not reconstruct requirements from chat history or guess from existing code when the documented state is available.
 
 ## 1. Current product direction
 
@@ -49,7 +51,71 @@ The broader product vision now explicitly includes Trending content, Rising/Brea
 
 **Implementation boundary for this step:** YouTube only; start narrow; no scraping; no fabricated fallback data; no full marketplace/auth/subscription system yet.
 
-## 4. Data contract — first real slice
+## 4. Requirement transition protocol
+
+RALLIVIO is expected to evolve as real data, UI testing, QA, and business decisions reveal better requirements. Evolution is allowed. **Silent requirement mutation is not.**
+
+Every meaningful requirement transition must be recorded using this exact chain:
+
+`Current requirement → New requirement → Why it changed → Impact → Implementation status → Validation/QA → Date`
+
+A requirement transition includes changes to any of these: product scope, user journey, ranking behavior, data truth rules, architecture, security, integrations, design behavior, monetization rules, or acceptance criteria.
+
+### Transition rules
+
+1. The current canonical document remains authoritative until the transition is explicitly recorded.
+2. The old requirement is never erased from history.
+3. The new requirement must state whether it is **proposed**, **approved/current**, or **implemented**.
+4. If a canonical specification changes, `docs/CANONICAL.md` must be updated in the same change.
+5. Implementation must not begin from an unapproved requirement when the change affects product scope, architecture, security, or business rules.
+6. After implementation, QA/verification status is recorded before the requirement is considered complete.
+7. Deferred work remains visible in this file and in the session log until completed or explicitly superseded.
+
+### Requirement status vocabulary
+
+- **CURRENT** — approved requirement used for implementation.
+- **PROPOSED** — suggested change; not yet authorized for implementation when approval is required.
+- **IMPLEMENTING** — current requirement is being built.
+- **VERIFIED** — implementation has passed the applicable automated/user QA.
+- **DEFERRED** — intentionally postponed; reason recorded.
+- **SUPERSEDED** — replaced by a later approved requirement; history retained.
+
+## 5. AI operating contract
+
+The AI working on RALLIVIO is responsible for maintaining continuity, not merely writing code.
+
+### Before work
+
+- Read `docs/CANONICAL.md`.
+- Read this file.
+- Read the latest 3 `docs/SESSION_LOG.md` entries.
+- Search `docs/KNOWN_ISSUES.md` before debugging.
+- Inspect the branch, current implementation, and relevant diffs.
+- Identify the requirement and decision that authorize the intended change.
+
+### During work
+
+- Make the smallest isolated change that satisfies the current requirement.
+- Do not silently change unrelated behavior.
+- Reuse documented architecture and decisions.
+- If a requirement conflict is discovered, stop and reconcile it rather than choosing randomly.
+- If a failure matches a known issue, follow its documented recovery path before inventing a new one.
+
+### After work
+
+The AI must synchronize project memory without waiting for the owner to request it:
+
+- Requirement/scope change → update this file's transition/change ledger.
+- Code change → update `docs/SESSION_LOG.md`.
+- Bug/failure → update `docs/KNOWN_ISSUES.md` and regression coverage where practical.
+- Canonical spec/design change → update `docs/CANONICAL.md` in the same change.
+- Important architecture/decision change → record the decision and rationale in the project's decision record when available.
+- Run verification before proposing a PR.
+- Leave an exact next action for the next session.
+
+This means the project should become **more documented as it changes**, rather than depending on the owner to remember what changed.
+
+## 6. Data contract — first real slice
 
 A discovery item should contain, where available:
 
@@ -71,7 +137,7 @@ A discovery item should contain, where available:
 
 Missing fields remain missing. They are never replaced with invented values.
 
-## 5. First ranking model
+## 7. First ranking model
 
 The initial RALLIVIO score is intentionally transparent and versioned. It should combine measurable factors such as:
 
@@ -86,13 +152,13 @@ Large absolute audience alone must not be enough to dominate an emerging-creator
 
 If insufficient history exists to calculate acceleration or baseline-relative performance, the UI must say that the signal is limited rather than pretending the metric is precise.
 
-## 6. Playback rule
+## 8. Playback rule
 
 The RALLIVIO UI may show a real YouTube video using its official embed/player URL. RALLIVIO does not download, proxy, or store the video itself.
 
 The discovery card must preserve the source identity and provide a clear route to YouTube.
 
-## 7. What is implemented right now
+## 9. What is implemented right now
 
 - Next.js/TypeScript UI scaffold and QA surface.
 - GitHub feature-branch workflow.
@@ -100,8 +166,9 @@ The discovery card must preserve the source identity and provide a clear route t
 - Living known-issues register and session log.
 - Repository-level Vercel configuration for the Next.js `.next` output.
 - **Real-data YouTube discovery slice: implementation in progress on `feature/youtube-real-discovery`.**
+- Living requirements/continuity protocol registered as canonical in `docs/CANONICAL.md`.
 
-## 8. What is not yet implemented
+## 10. What is not yet implemented
 
 - YouTube API credential/configuration in the deployment environment.
 - Scheduled acquisition worker and quota-aware search strategy.
@@ -112,7 +179,7 @@ The discovery card must preserve the source identity and provide a clear route t
 - Brand marketplace/matching.
 - Additional social platforms.
 
-## 9. Change ledger
+## 11. Change ledger
 
 ### 2026-09-15 — Living documentation introduced
 - Established this file as the living product-state record.
@@ -124,12 +191,19 @@ The discovery card must preserve the source identity and provide a clear route t
 - YouTube playback should use the official embed mechanism.
 - RALLIVIO's differentiated work is discovery, fair ranking, signal calculation, and historical measurement.
 
-## 10. Session handoff rule
+### 2026-09-15 — Requirement continuity protocol strengthened
+- `docs/CANONICAL.md` now registers this file as CURRENT.
+- Requirement transitions now have an explicit old→new→reason→impact→implementation→QA→date chain.
+- AI sessions are required to use repository documentation as project memory instead of reconstructing history from chat or assumptions.
+- Meaningful implementation, bug, decision, and deferral changes must update the corresponding project record before the session ends.
+
+## 12. Session handoff rule
 
 At the end of every development session:
 
-1. Update this file when product behavior, scope, architecture, or implementation status changes.
+1. Update this file when product behavior, scope, architecture, requirement status, or implementation status changes.
 2. Append to `docs/SESSION_LOG.md`.
 3. Update `docs/KNOWN_ISSUES.md` for bugs/failures according to the resilience ladder.
 4. Run `npm run verify` before proposing a PR.
 5. State the exact next action/file so the next session resumes without guessing.
+6. Do not leave an undocumented requirement transition, decision, failure, gotcha, or deferred task behind.
