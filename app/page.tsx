@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 
 type DiscoveryItem = {
   id: string;
@@ -118,7 +118,7 @@ export default function Home() {
     setActivity((selected.metadata?.momentum_score ?? 0) / 100);
   }, [selected]);
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     setTouchX(((event.clientX - rect.left) / rect.width - 0.5) * 2);
     setTouchY(((event.clientY - rect.top) / rect.height - 0.5) * 2);
@@ -138,11 +138,7 @@ export default function Home() {
       </header>
 
       <section className="hero" id="discover">
-        <div>
-          <p className="eyebrow">DISCOVER · YOUTUBE · INDIA · TECHNOLOGY</p>
-          <h1>What is moving <em>right now?</em></h1>
-          <p className="lede">Watch real signals. Discover creators. Follow opportunities.</p>
-        </div>
+        <div><p className="eyebrow">DISCOVER · YOUTUBE · INDIA · TECHNOLOGY</p><h1>What is moving <em>right now?</em></h1><p className="lede">Watch real signals. Discover creators. Follow opportunities.</p></div>
         <div className="journey">Discover <span>→</span> Watch <span>→</span> Follow <span>→</span> Collaborate <span>→</span> Grow</div>
       </section>
 
@@ -180,7 +176,7 @@ export default function Home() {
                 {selected ? <><div className="score"><span>RALLIVIO Momentum Score</span><strong>{selected.metadata?.momentum_score ?? "—"}</strong></div><div className="scoreBar"><i style={{ width: `${Math.min(100, selected.metadata?.momentum_score ?? 0)}%` }} /></div><ul><li><b>{formatCount(selected.views)}</b> YouTube views observed</li><li><b>{formatCount(selected.likes)}</b> YouTube likes observed</li><li><b>{formatCount(selected.comments)}</b> YouTube comments observed</li><li><b>{selected.metadata?.subscriber_count ? formatCount(selected.metadata.subscriber_count) : "—"}</b> subscriber audience context</li></ul></> : <p className="muted">Select a verified signal to inspect its evidence.</p>}
               </div>
               {selected && <div className="creatorPanel" id="creators"><p className="eyebrow">CREATOR</p><div className="creatorIdentity"><img src={selected.thumbnail} alt="" /><div><strong>{selected.channel_title}</strong><small>Verified YouTube channel</small></div><button type="button">Follow</button></div><div className="chips"><span>{selected.topic}</span><span>India</span><span>YouTube</span></div></div>}
-              <div className="nextPanel"><p className="eyebrow">WHAT'S NEXT?</p><button type="button" onClick={() => setActive("All signals")}>Explore more like this <span>→</span></button><button type="button" onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}>Find similar creators <span>→</span></button></div>
+              <div className="nextPanel"><p className="eyebrow">WHAT&apos;S NEXT?</p><button type="button" onClick={() => setActive("All signals")}>Explore more like this <span>→</span></button><button type="button" onClick={() => document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" })}>Find similar creators <span>→</span></button></div>
             </aside>
           </section>
 
