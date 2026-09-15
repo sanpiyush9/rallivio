@@ -18,6 +18,8 @@
 | Session entry point | `docs/AI_START_HERE.md` | 1.0 | 2026-09-15 |
 | Resilience & learning | `docs/RESILIENCE_SYSTEM.md` | 1.0 | 2026-09-15 |
 | Kickoff instructions | `docs/KICKOFF_INSTRUCTIONS.md` | 1.0 | 2026-09-15 |
+| Session log | `docs/SESSION_LOG.md` | 1.0 | 2026-09-15 |
+| Known issues | `docs/KNOWN_ISSUES.md` | 1.0 | 2026-09-15 |
 | Design system | `docs/DESIGN_SYSTEM.md` | — | not yet written |
 | Discovery page | `docs/specs/discovery-page-v1.md` | — | not yet written |
 | Data model | `docs/specs/data-model-v1.md` | — | not yet written |
