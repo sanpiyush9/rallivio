@@ -44,26 +44,28 @@ Status: In progress
 - Replaced the static Discover page with a database-backed Phase 0 leaderboard that refuses to fabricate creators when history is insufficient.
 - Added outbound YouTube click attribution and deterministic tests for quota limits, shrinkage, and freshness.
 - Added a daily Vercel Cron entry. The cron is protected by `CRON_SECRET` and the worker requires `YOUTUBE_API_KEY` plus `SUPABASE_SERVICE_ROLE_KEY` at runtime.
-- Recorded the provider-ID and insufficient-history fixes in `docs/KNOWN_ISSUES.md`.
+- Ran the Supabase security advisor and immediately hardened the new quota RPC: public/authenticated execution was revoked and only `service_role` can reserve quota.
+- Recorded the provider-ID, insufficient-history, and quota-RPC security fixes in `docs/KNOWN_ISSUES.md`.
 
 ### Not done
 - The connected Supabase project has zero discovery rows and zero video snapshots, so the live leaderboard cannot contain real creators until a successful YouTube acquisition run occurs.
 - Vercel environment variables `YOUTUBE_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `CRON_SECRET` still need to exist in the deployment environment. These are secrets and are not committed to the repository.
-- The full `npm run verify` result for this branch has not yet been observed in GitHub Actions.
+- The full `npm run verify` result for this branch has not yet been observed in GitHub Actions; the latest run is still executing its dependency installation step.
 - The branch still needs the first live deployment and end-to-end acquisition check before it can be proposed for staging.
 
 ### Next session should
-Run the GitHub Actions `verify` check for `feature/phase0-data-foundation`; if it fails, fix the first failing typecheck/lint/test/build error before changing the data architecture.
+Open GitHub Actions run `34977793210` for `feature/phase0-data-foundation`; if `verify` is red, fix the first failing step before changing the data architecture.
 
 ### Gotchas discovered
 - The connected Supabase project already contained the discovery foundation tables from earlier migrations but the tables were empty; the new migration therefore adds missing Phase 0 tables and policies without fabricating seed data.
 - The official YouTube API currently documents `search.list` as a separately budgeted method; this project still follows the canonical Phase 0 budget of at most 60 search calls/day and 10,000 total units.
 - Vercel Cron runs on the production deployment, so feature-branch previews are useful for UI verification but do not by themselves prove the scheduled worker has executed.
 - The public Supabase key is safe to expose to the browser, but the service-role key and YouTube key must remain server-side.
+- Supabase's security advisor should be run after every DDL change; the first run caught a public execution grant on the new security-definer quota RPC and it was fixed before proceeding.
 
 ### Documents touched
 - Added `docs/specs/data-model-v1.md`, `docs/specs/signals-v1.md`, and `docs/specs/leaderboard-v1.md` and updated `docs/CANONICAL.md`.
-- Added `supabase/migrations/20260915150000_phase0_data_foundation.sql` and `supabase/migrations/20260915151000_youtube_quota_usage.sql`.
+- Added `supabase/migrations/20260915150000_phase0_data_foundation.sql`, `20260915151000_youtube_quota_usage.sql`, and `20260915152000_lock_down_youtube_quota_rpc.sql`.
 - Updated `docs/KNOWN_ISSUES.md` and this session log.
 - No changes were made to the product strategy outside the Phase 0 data implementation.
 
