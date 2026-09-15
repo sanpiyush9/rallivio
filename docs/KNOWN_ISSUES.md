@@ -10,6 +10,8 @@
 |---|---|---|---|
 | KI-001 | dist, output directory, deployment fails after successful build | 3 | Resolved |
 | KI-002 | eslint, nextVitals, not iterable, lint not enforced | 2 | Resolved |
+| KI-003 | YouTube channel id, attribution redirect, validation | 2 | Resolved |
+| KI-004 | insufficient observations, ranking too early, signal baseline | 2 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -19,7 +21,7 @@
 | Level | Count |
 |---|---|
 | 1 — Documented | 0 |
-| 2 — Detected | 1 |
+| 2 — Detected | 3 |
 | 3 — Auto-recovered | 1 |
 | 4 — Prevented | 0 |
 
@@ -96,3 +98,46 @@ Keep `eslint-config-next` and `next` aligned, run lint independently, and fail C
 
 ### Related
 None yet.
+
+---
+
+## KI-003 — Attribution validation rejected real YouTube channel IDs
+First seen: 2026-09-15 · Status: Resolved · Ladder level: 2 → target 3
+Severity: MEDIUM
+
+### Symptom
+The outbound attribution route initially limited YouTube IDs to 20 characters, which is too restrictive for real channel IDs.
+
+### Cause
+The validation pattern was copied from an assumed short identifier shape rather than accepting the actual channel ID format.
+
+### Fix
+Expanded the safe identifier validation to accept YouTube IDs up to 64 characters while retaining an allow-list of URL-safe characters.
+
+### Prevention
+Keep provider identifiers validated by documented character constraints, not guessed length assumptions. Add integration coverage when the attribution path is exercised against live provider IDs.
+
+### Related
+`app/api/attribution/route.ts`
+
+---
+
+## KI-004 — Ranking could be produced before enough observation history existed
+First seen: 2026-09-15 · Status: Resolved · Ladder level: 2 → target 3
+Severity: HIGH
+
+### Symptom
+A ranking computation could consider a creator before the minimum three observations needed for the Phase 0 signal history were present.
+
+### Cause
+The first scoring implementation counted recent videos but did not require each video in the sample to have three stored observations.
+
+### Fix
+The signal engine now requires at least three recent videos with at least three stored observations each before computing the audience-relative ranking.
+
+### Prevention
+Keep minimum-history gates in the scoring implementation and cover shrinkage/freshness/history requirements with deterministic tests.
+
+### Related
+`features/discovery/signals/compute.ts`
+`tests/signals.test.ts`
