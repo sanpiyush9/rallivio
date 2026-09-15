@@ -1,15 +1,16 @@
 # KNOWN ISSUES
 
 > **Search this file before debugging anything.**
-> Scan the index below for symptom keywords. If you find a match,
-> read that entry before investigating from scratch.
+> Scan the index below for symptom keywords. If you find a match, read that entry before investigating from scratch.
 
 ## Index
 
 | ID | Symptom keywords | Level | Status |
-|---|---|---|---|
+|---|---|---:|---|
 | KI-001 | dist, output directory, deployment fails after successful build | 3 | Resolved |
 | KI-002 | eslint, nextVitals, not iterable, lint not enforced | 2 | Resolved |
+| KI-003 | Vercel Authentication, Preview SSO, 302, bootstrap blocked | 3 | Resolved for QA |
+| KI-004 | Breaking Out, Just Dropped, signal mismatch, selected signal | 1 | Open |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -17,10 +18,10 @@
 ## Maturity report
 
 | Level | Count |
-|---|---|
-| 1 — Documented | 0 |
+|---|---:|
+| 1 — Documented | 1 |
 | 2 — Detected | 1 |
-| 3 — Auto-recovered | 1 |
+| 3 — Auto-recovered | 2 |
 | 4 — Prevented | 0 |
 
 > Update this table whenever an entry changes level.
@@ -96,3 +97,49 @@ Keep `eslint-config-next` and `next` aligned, run lint independently, and fail C
 
 ### Related
 None yet.
+
+---
+
+## KI-003 — Vercel Preview Authentication blocks QA bootstrap
+First seen: 2026-09-15 · Status: Resolved for QA · Ladder level: 3 → target 4
+Severity: HIGH
+
+### Symptom
+Requests to the Preview deployment, including `/api/qa/bootstrap`, were intercepted by Vercel and returned HTTP `302` to Vercel SSO instead of reaching the Next.js route.
+
+### Cause
+Vercel Authentication had **Require Log In** enabled for the project Preview deployment.
+
+### Fix
+During QA, the project owner disabled **Require Log In** under Vercel → RALLIVIO → Settings → Deployment Protection → Vercel Authentication and saved the setting. After the change, the same Preview bootstrap route returned HTTP `200` and executed the acquisition job.
+
+### Prevention
+Keep QA Preview access compatible with automated field testing, while protecting Production appropriately. Before production promotion, replace the temporary QA bootstrap with a proper secured operational mechanism and restore the appropriate deployment protection policy.
+
+### Related
+`app/api/qa/bootstrap/route.ts`
+`docs/SESSION_LOG.md`
+
+---
+
+## KI-004 — Selected signal may not match displayed item signal
+First seen: 2026-09-15 · Status: Open · Ladder level: 1 → target 3
+Severity: MEDIUM
+
+### Symptom
+During live QA, the user tested the **Breaking Out** feed and observed a displayed video whose item metadata showed **Just Dropped**. The current evidence is a user screen recording; the exact code path causing the mismatch is not yet confirmed.
+
+### Cause
+NOT YET CONFIRMED — inspect `app/page.tsx` and `app/api/discovery/route.ts` together and trace selected-signal filtering, item metadata, and card rendering.
+
+### Fix
+Pending reproduction and root-cause confirmation.
+
+### Prevention
+Add automated coverage asserting that when a signal filter is selected, every returned/rendered item either matches that signal or is explicitly classified according to the documented feed contract. Never silently mix signal labels.
+
+### Related
+`app/page.tsx`
+`app/api/discovery/route.ts`
+`docs/RALLIVIO_STATE.md`
+`docs/SESSION_LOG.md`
