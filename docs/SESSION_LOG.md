@@ -46,16 +46,17 @@ Status: In progress
 - Added outbound YouTube click attribution and deterministic tests for quota limits, shrinkage, and freshness.
 - Added a daily Vercel Cron entry. The cron is protected by `CRON_SECRET` and the worker requires `YOUTUBE_API_KEY` plus `SUPABASE_SERVICE_ROLE_KEY` at runtime.
 - Ran the Supabase security advisor and immediately hardened the new quota RPC: public/authenticated execution was revoked and only `service_role` can reserve quota.
-- Recorded the provider-ID, insufficient-history, and quota-RPC security fixes in `docs/KNOWN_ISSUES.md`.
+- Diagnosed the first Phase 0 typecheck failure from GitHub Actions and fixed the duplicate `channels` result field in the acquisition worker.
+- Recorded the provider-ID, insufficient-history, quota-RPC security, and acquisition-result fixes in `docs/KNOWN_ISSUES.md`.
 
 ### Not done
 - The connected Supabase project has zero discovery rows and zero video snapshots, so the live leaderboard cannot contain real creators until a successful YouTube acquisition run occurs.
 - Vercel environment variables `YOUTUBE_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `CRON_SECRET` still need to exist in the deployment environment. These are secrets and are not committed to the repository.
-- The full `npm run verify` result for this branch has not yet been observed in GitHub Actions; the latest run is still executing its dependency installation step.
+- The full `npm run verify` result for the newest commit has not yet been observed; the previous run failed only at typecheck on the duplicate result field and the fix has triggered a new run.
 - The branch still needs the first live deployment and end-to-end acquisition check before it can be proposed for staging.
 
 ### Next session should
-Open the latest GitHub Actions `verify` run for `feature/phase0-data-foundation`; if it is red, fix the first failing step before changing the data architecture.
+Open the newest GitHub Actions `verify` run for `feature/phase0-data-foundation`; confirm typecheck passes, then fix the next failing gate if one appears before changing the data architecture.
 
 ### Gotchas discovered
 - The connected Supabase project already contained the discovery foundation tables from earlier migrations but the tables were empty; the new migrations add missing Phase 0 tables and make the discovery schema reproducible without fabricating seed data.
@@ -63,6 +64,7 @@ Open the latest GitHub Actions `verify` run for `feature/phase0-data-foundation`
 - Vercel Cron runs on the production deployment, so feature-branch previews are useful for UI verification but do not by themselves prove the scheduled worker has executed.
 - The public Supabase key is safe to expose to the browser, but the service-role key and YouTube key must remain server-side.
 - Supabase's security advisor should be run after every DDL change; the first run caught a public execution grant on the new security-definer quota RPC and it was fixed before proceeding.
+- TypeScript can flag duplicate object keys created indirectly by object spread; keeping independently sourced metrics explicitly named avoids this class of acquisition-worker failure.
 
 ### Documents touched
 - Added `docs/specs/data-model-v1.md`, `docs/specs/signals-v1.md`, and `docs/specs/leaderboard-v1.md` and updated `docs/CANONICAL.md`.
