@@ -1,64 +1,124 @@
-"use client";
+import { getPhase0Leaderboard } from "@/features/discovery/serving/leaderboard";
 
-import { useMemo, useState } from "react";
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 }).format(value);
+}
 
-const creators = [
-  { name: "Tech Burner", handle: "@techburner", followers: "4.2M", growth: "+18.4%", topic: "Tech" },
-  { name: "Beebom", handle: "@beebomco", followers: "3.8M", growth: "+14.1%", topic: "Tech" },
-  { name: "Geeky Ranjit", handle: "@geekyranjit", followers: "3.1M", growth: "+11.8%", topic: "Reviews" },
-  { name: "Mrwhosetheboss", handle: "@Mrwhosetheboss", followers: "20.8M", growth: "+9.7%", topic: "Tech" },
-];
+function momentumPercent(score: number) {
+  const percent = (Math.exp(score) - 1) * 100;
+  return `${percent >= 0 ? "+" : ""}${percent.toFixed(1)}%`;
+}
 
-const filters = ["All signals", "Rising fast", "Breakout", "Fresh voices"];
+function ageLabel(iso: string | null) {
+  if (!iso) return "not available";
+  const minutes = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
 
-export default function Home() {
-  const [active, setActive] = useState("All signals");
-  const [selected, setSelected] = useState(creators[0]);
-  const visible = useMemo(() => (active === "All signals" ? creators : creators.filter((creator) => creator.growth !== "")), [active]);
+export default async function Home() {
+  const data = await getPhase0Leaderboard();
+  const featured = data.items[0];
 
   return (
     <main className="shell">
       <header className="topbar">
         <div className="brand"><span className="brandMark">R</span><span>RALLIVIO</span></div>
         <nav><a className="active">Discover</a><a>Watch</a><a>Creators</a><a>Explore</a></nav>
-        <button className="search">⌕ <span>Search creators, topics...</span></button>
+        <span className="search">YOUTUBE · INDIA</span>
       </header>
 
       <section className="hero">
         <div>
-          <p className="eyebrow">LIVE DISCOVERY · INDIA</p>
-          <h1>What is moving <em>right now?</em></h1>
-          <p className="lede">Find creators gaining real momentum before everyone else notices.</p>
+          <p className="eyebrow">PHASE 0 · WEEKLY LEADERBOARD</p>
+          <h1>The fastest-rising <em>tech creators</em> in India.</h1>
+          <p className="lede">Ranked from measured YouTube observations and compared with creators of similar audience size.</p>
         </div>
-        <div className="pulse"><span /> Signals updated continuously</div>
+        <div className="pulse"><span /> {data.ready ? `Data updated ${ageLabel(data.updatedAt)}` : "Collecting observations"}</div>
       </section>
 
-      <div className="filters">
-        {filters.map((filter) => <button key={filter} className={active === filter ? "selected" : ""} onClick={() => setActive(filter)}>{filter}</button>)}
-        <button>India ▾</button><button>YouTube ▾</button><button>All topics ▾</button>
-      </div>
+      {!data.ready ? (
+        <section className="videoCard">
+          <div className="video">
+            <div className="videoLabel">REAL DATA PIPELINE</div>
+            <div className="fakeVideo">BUILDING THE FIRST WEEK</div>
+          </div>
+          <div className="videoMeta">
+            <div>
+              <p className="eyebrow">NO PLACEHOLDERS</p>
+              <h2>RALLIVIO is collecting YouTube observations.</h2>
+              <p>{data.latest.length} real videos are currently in the discovery pool. A creator enters the ranking only after enough observations exist to calculate a defensible audience-relative signal.</p>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="grid">
+          <div className="mainColumn">
+            <div className="sectionHead">
+              <div><p className="eyebrow">THIS WEEK · {data.week}</p><h2>Creators breaking through</h2></div>
+              <span>{data.items.length} qualified creators</span>
+            </div>
 
-      <section className="grid">
-        <div className="mainColumn">
-          <div className="sectionHead"><div><p className="eyebrow">SIGNAL FEED</p><h2>Creators breaking through</h2></div><span>Updated 2 min ago</span></div>
-          <div className="videoCard">
-            <div className="video"><div className="play">▶</div><div className="videoLabel">NOW MOVING</div><div className="fakeVideo">THE FUTURE OF AI PHONES</div></div>
-            <div className="videoMeta"><div><p className="eyebrow">TECH · BREAKOUT</p><h2>Why this creator is moving right now</h2><p>Momentum is accelerating across views, engagement and recent publishing velocity.</p></div><button className="watch">Watch on YouTube ↗</button></div>
+            {featured?.video && (
+              <div className="videoCard">
+                <div className="video">
+                  <div className="videoLabel">#1 · RALLIVIO MOMENTUM</div>
+                  <div className="fakeVideo">{featured.video.title}</div>
+                </div>
+                <div className="videoMeta">
+                  <div>
+                    <p className="eyebrow">{featured.creator}</p>
+                    <h2>{momentumPercent(featured.momentum_score)} vs peer baseline</h2>
+                    <p>{formatNumber(Number(featured.evidence.median_views ?? 0))} median recent views against a {formatNumber(Number(featured.evidence.peer_expected_views ?? 0))} peer baseline.</p>
+                  </div>
+                  <a className="watch" href={`/api/attribution?channel_id=${encodeURIComponent(featured.channel_id)}&video_id=${encodeURIComponent(featured.video.id)}&source_page=/`}>Watch on YouTube ↗</a>
+                </div>
+              </div>
+            )}
+
+            <div className="sectionHead lower"><div><p className="eyebrow">RANKED SIGNALS</p><h2>Top creators this week</h2></div></div>
+            <div className="cards">
+              {data.items.map((item) => (
+                <article className="creatorCard" key={item.channel_id}>
+                  <div className="avatar">{item.rank}</div>
+                  <div className="creatorText">
+                    <strong>{item.creator}</strong>
+                    <span>{formatNumber(Number(item.evidence.subscriber_count ?? 0))} subscribers</span>
+                    <small>{formatNumber(Number(item.evidence.median_views ?? 0))} median views · {Number(item.evidence.recent_video_count ?? 0)} recent videos</small>
+                  </div>
+                  <b>{momentumPercent(item.momentum_score)}</b>
+                </article>
+              ))}
+            </div>
           </div>
 
-          <div className="sectionHead lower"><div><p className="eyebrow">UP NEXT</p><h2>More signals worth watching</h2></div></div>
-          <div className="cards">
-            {visible.slice(0, 3).map((creator) => <button className={`creatorCard ${selected.name === creator.name ? "chosen" : ""}`} key={creator.name} onClick={() => setSelected(creator)}><div className="avatar">{creator.name[0]}</div><div className="creatorText"><strong>{creator.name}</strong><span>{creator.handle}</span><small>{creator.followers} · {creator.topic}</small></div><b>{creator.growth}</b></button>)}
-          </div>
-        </div>
+          <aside className="side">
+            {featured && (
+              <div className="insight">
+                <p className="eyebrow">WHY THIS IS RANKED #1</p>
+                <h3>{featured.creator}</h3>
+                <div className="metric"><span>RALLIVIO Momentum Score</span><strong>{momentumPercent(featured.momentum_score)}</strong></div>
+                <div className="bar"><i /></div>
+                <ul>
+                  <li>{formatNumber(Number(featured.evidence.median_views ?? 0))} median recent views</li>
+                  <li>{formatNumber(Number(featured.evidence.peer_expected_views ?? 0))} expected for its audience bucket</li>
+                  <li>{Number(featured.evidence.recent_video_count ?? 0)} recent videos in the sample</li>
+                </ul>
+                <a className="outline" href={`/api/attribution?channel_id=${encodeURIComponent(featured.channel_id)}&source_page=/`}>View channel on YouTube ↗</a>
+              </div>
+            )}
+            <div className="next">
+              <p className="eyebrow">DATA STATUS</p>
+              <h3>Measured, not fabricated.</h3>
+              <p>RALLIVIO stores source observations separately from its derived score. If history is insufficient, the creator is not padded into the ranking.</p>
+            </div>
+          </aside>
+        </section>
+      )}
 
-        <aside className="side">
-          <div className="insight"><p className="eyebrow">WHY THIS IS MOVING</p><h3>{selected.name}</h3><div className="metric"><span>Momentum</span><strong>{selected.growth}</strong></div><div className="bar"><i /></div><ul><li>Recent views accelerating</li><li>Engagement above creator baseline</li><li>Fresh uploads attracting new viewers</li></ul><button className="outline">View creator profile ↗</button></div>
-          <div className="next"><p className="eyebrow">WHAT&apos;S NEXT</p><h3>Follow the signal</h3><p>Save this creator and return when the next momentum update lands.</p><button className="save">＋ Save signal</button></div>
-        </aside>
-      </section>
-
-      <footer><span>RALLIVIO · Signal-first creator discovery</span><span>QA BUILD · UI PREVIEW</span></footer>
+      <footer><span>RALLIVIO · Signal-first creator discovery</span><span>PHASE 0 · YOUTUBE DATA</span></footer>
     </main>
   );
 }
