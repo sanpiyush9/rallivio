@@ -138,6 +138,7 @@ describe("documentation enforcement", () => {
       writeFileSync(join(cwd, "docs/SESSION_LOG.md"), validSession);
       commitChange(cwd, "fix: correct example behavior");
       const result = runCheck(cwd);
+      console.log(`[Check A observed failure]\n${result.output.trim()}`);
       expect(result.status).toBe(1);
       expect(result.output).toContain("This looks like a bug fix");
       expect(result.output).toContain("docs/KNOWN_ISSUES.md was not updated");
@@ -152,6 +153,7 @@ describe("documentation enforcement", () => {
       writeFileSync(join(cwd, "lib/example.js"), "export const example = false;\n");
       commitChange(cwd, "chore: update implementation");
       const result = runCheck(cwd);
+      console.log(`[Check B observed failure]\n${result.output.trim()}`);
       expect(result.status).toBe(1);
       expect(result.output).toContain("Code changed but docs/SESSION_LOG.md was not updated");
     } finally {
@@ -165,6 +167,7 @@ describe("documentation enforcement", () => {
       writeFileSync(join(cwd, "docs/KNOWN_ISSUES.md"), knownIssues.replace("| KI-001 | example | 1 | Open |", "| KI-002 | example | 1 | Open |"));
       commitChange(cwd, "docs: break known issue index");
       const result = runCheck(cwd);
+      console.log(`[Check C observed failure]\n${result.output.trim()}`);
       expect(result.status).toBe(1);
       expect(result.output).toContain("KNOWN_ISSUES entry/index mismatch");
     } finally {
@@ -178,6 +181,7 @@ describe("documentation enforcement", () => {
       writeFileSync(join(cwd, "docs/SESSION_LOG.md"), validSession.replace("Open lib/example.js line 1 and continue the documented verification work.", "[fill in]"));
       commitChange(cwd, "docs: break next-session guidance");
       const result = runCheck(cwd);
+      console.log(`[Check D observed failure]\n${result.output.trim()}`);
       expect(result.status).toBe(1);
       expect(result.output).toContain("Next session should");
       expect(result.output).toContain("specific next action");
