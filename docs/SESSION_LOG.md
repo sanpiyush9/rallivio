@@ -29,31 +29,33 @@ line in the entire documentation system.]
 - Which specs or design assets changed, and whether CANONICAL.md was updated
 ```
 
----
-
-## 2026-09-15 — QA deployment environment activated
+## 2026-09-15 — Preview acquisition bootstrap for first real-data QA
 Branch: feature/youtube-real-discovery
 Status: In progress
 
 ### Done
-- Confirmed the Vercel Preview environment now contains `YOUTUBE_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `CRON_SECRET` for `feature/youtube-real-discovery`.
-- Chose the Preview environment deliberately; Production remains untouched for this QA stage.
-- Triggered the repository-backed redeployment path by recording this state in the branch session log; the resulting feature-branch deployment must consume the newly configured Preview variables.
+- Confirmed the Preview deployment is building successfully with the required server environment variables.
+- Confirmed the Supabase discovery tables remain empty because the scheduled acquisition has not executed yet.
+- Added a temporary Preview-only, token-gated QA bootstrap endpoint at `app/api/qa/bootstrap/route.ts` that invokes the existing authenticated discovery refresh without exposing `CRON_SECRET` to the browser.
+- The bootstrap is intentionally unavailable outside Vercel Preview and is a QA execution aid, not a production data path.
 
 ### Not done
-- The new deployment has not yet been verified as Ready with the new environment variables.
-- The acquisition job has not yet been executed, so the Supabase discovery pool may still be empty.
+- The bootstrap has not yet been invoked against the live Preview deployment.
+- The temporary QA endpoint must be removed after the first successful real-data acquisition and verification.
+- Full `npm run verify` has not yet been run after this small QA-only addition.
 
 ### Next session should
-Verify the newest `feature/youtube-real-discovery` Vercel deployment is Ready, then request `/api/discovery` and inspect Supabase discovery counts before deciding whether to trigger the scheduled acquisition path.
+Open the Preview deployment's `/api/qa/bootstrap?token=...` once, verify the response reports an acquired video count, then query Supabase for non-zero discovery_pool/video_snapshots/discovery_signals before testing the Discover page.
 
 ### Gotchas discovered
-- Vercel environment-variable changes apply to new deployments, not already-built deployments.
-- The Redeploy dialog initially defaulted to the Production `main` deployment; Production must not be redeployed for this QA step.
-- The Vercel connector does not currently have access to this personal Vercel project scope, so the repository-backed deployment trigger is preferred when possible.
+- Vercel's documented manual cron trigger is production-oriented; the current QA deployment is Preview, so waiting for the daily schedule would unnecessarily delay first field testing.
+- The existing `/api/discovery` route correctly requires `CRON_SECRET`; the temporary bootstrap calls it server-side so the secret is never exposed to the client.
+- The bootstrap must be deleted before any production promotion.
 
 ### Documents touched
-- Updated `docs/SESSION_LOG.md` only; no product requirement or production configuration was changed.
+- Added temporary `app/api/qa/bootstrap/route.ts`.
+- Updated this session log.
+- No product requirements changed.
 
 ---
 
