@@ -8,7 +8,7 @@
 
 ## 1. Current product direction
 
-**Last updated:** 2026-09-15
+**Last updated:** 2026-09-16
 
 RALLIVIO is a creator-discovery intelligence platform. YouTube remains the source for video/content playback and source metadata; RALLIVIO adds discovery, normalization, signal calculation, ranking, fair-opportunity logic, and attribution.
 
@@ -213,6 +213,17 @@ The discovery card must preserve the source identity and provide a clear route t
 - The user field-tested the Preview UI and confirmed the real-data/player experience is visible.
 - A signal consistency issue was discovered during field testing and is now tracked as KI-004 in `docs/KNOWN_ISSUES.md`.
 - This checkpoint is implementation/QA progress, not a claim that the full production discovery engine is complete.
+
+### 2026-09-16 — PROPOSED: Living simulated discovery ecosystem
+- **Current requirement:** RALLIVIO should primarily behave as a signal-first discovery page with real YouTube-backed content and a conventional navigation/feed presentation.
+- **New proposed requirement:** Evolve RALLIVIO into a **living simulated discovery ecosystem**: a dynamic visual environment where verified real-world platform signals drive what is shown, while motion, transitions, ambient visualization, responsive cards, video, imagery, and interaction make the ecosystem feel continuously alive.
+- **Why it changed:** The user wants visitors to immediately understand that RALLIVIO is not a static dashboard or video directory. The experience should communicate movement, trend changes, discovery chains, creator emergence, and cross-platform activity through the interface itself.
+- **Impact:** Home/Discover becomes an adaptive experience rather than a fixed screen. Each platform (YouTube first; later Instagram, X, TikTok, etc.) gets a platform-specific environment whose visual language and content composition adapt to current verified signals. Video, thumbnails/images, motion graphics, signal particles/lines, trend transitions, and responsive interaction become presentation layers over the real discovery intelligence.
+- **Truth boundary:** The ecosystem may **simulate the feeling of a live environment**, but it must never simulate fake metrics or pretend fabricated activity is real. Real data determines the factual state; animation and spatial presentation communicate that state. If a value is simulated for presentation, it must not be presented as a real platform metric.
+- **Interaction model proposed:** The page should respond to pointer/touch movement, selection, scrolling, signal changes, card focus, and navigation. Interaction should influence presentation (for example, cards/visual layers can subtly react to pointer proximity or touch, selected creators can become a discovery focus, and related signals can animate into view) without interfering with normal scrolling or accessibility.
+- **Real-time interpretation:** “Live” means **continuously refreshed and visually responsive**, not necessarily second-by-second source API truth. Source acquisition remains quota-aware and scheduled/persisted; the UI can update from the verified discovery pool as new observations arrive.
+- **Core ecosystem loop:** `Verified signals → dynamic visual state → user interaction → deeper discovery → creator/content context → related opportunities → refreshed signals`.
+- **Status:** **PROPOSED — not yet approved for implementation.** Do not rewrite the current UI into this architecture until the user explicitly approves the direction and the design/interaction specification is locked.
 
 ## 12. Session handoff rule
 
