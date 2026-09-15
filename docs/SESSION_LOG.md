@@ -31,6 +31,46 @@ line in the entire documentation system.]
 
 ---
 
+## 2026-09-15 — Real YouTube discovery vertical slice
+Branch: feature/youtube-real-discovery
+Status: In progress
+
+### Done
+- Created the dedicated `feature/youtube-real-discovery` branch from the documented deployment/verification state.
+- Added a living product-state and requirements ledger at `docs/RALLIVIO_STATE.md` so product transitions, constraints, implementation status, and deferred work are recorded instead of inferred from old code.
+- Replaced the hard-coded Discover data path with `/api/discovery` backed by the existing Supabase discovery tables.
+- Added a scheduled YouTube acquisition path that uses the official YouTube Data API, persists metadata and historical statistics, and calculates an initial RALLIVIO Momentum Score.
+- Added truthful signal labels for Trending, Rising, Breaking Out, Under the Radar, Just Dropped, and Live based on available evidence.
+- Replaced fake creator/video cards with real discovery-pool records and official YouTube iframe playback when a video is embeddable.
+- Added a daily Vercel Cron entry for the acquisition job. Daily cadence is deliberate for the current Phase 0/quota-safe slice; it can be increased later after deployment-plan verification.
+- Confirmed the existing Supabase project already contains the intended discovery tables (`youtube_discovery_pool`, `video_stats_snapshots`, `channel_stats`, `discovery_signals`, `weekly_creator_rankings`, `click_attribution`, `relaxation_log`, and `youtube_quota_usage`) and they are currently empty.
+- Verified current YouTube API documentation: `search.list` is quota-controlled and should be scheduled, `videos.list`/`channels.list` are low-cost reads, and official video IDs can be embedded with `https://www.youtube.com/embed/VIDEO_ID`.
+
+### Not done
+- `YOUTUBE_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `CRON_SECRET` have not yet been confirmed in the Vercel deployment environment, so the live preview cannot populate real data until those server secrets exist.
+- The new living-state file has not yet been registered in `docs/CANONICAL.md`; this is intentionally the next documentation step because this session already crossed the project's five-file modification limit.
+- The existing CSS still needs a small pass for the iframe player and truthful empty-state presentation.
+- `npm run verify` has not yet been run against this branch's complete final state.
+- Creator OAuth/subscription/following and weekly leaderboard computation are not part of this first real-data slice yet.
+
+### Next session should
+First update `docs/CANONICAL.md` to register `docs/RALLIVIO_STATE.md` as CURRENT, then update `app/globals.css` for the real iframe/empty-state surface before running `npm run verify` on `feature/youtube-real-discovery`.
+
+### Gotchas discovered
+- The existing Supabase project already contains a substantial discovery schema, so a new database migration was not necessary for this vertical slice.
+- The discovery tables are empty; a successful build alone does not mean the live page has real data.
+- YouTube subscriber counts are rounded by YouTube, so RALLIVIO must treat them as audience context rather than precise measurements.
+- The current repository rule limits a feature session to five modified files unless a plan is described first; do not silently cross that boundary.
+- Vercel cron cadence must remain compatible with the deployed Vercel plan; the first committed schedule is daily to avoid making an unverified plan assumption.
+
+### Documents touched
+- Added `docs/RALLIVIO_STATE.md` as the living product/requirements ledger.
+- Updated `docs/SESSION_LOG.md`.
+- `docs/CANONICAL.md` still needs the explicit registration step in the next session.
+- No old canonical product specification was silently replaced.
+
+---
+
 ## 2026-09-15 — Vercel deployment self-healing
 Branch: feature/docs-enforcement
 Status: In progress
