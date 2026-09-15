@@ -31,6 +31,40 @@ line in the entire documentation system.]
 
 ---
 
+## 2026-09-15 — Requirements continuity and living-memory hardening
+Branch: feature/youtube-real-discovery
+Status: In progress
+
+### Done
+- Registered `docs/RALLIVIO_STATE.md` as CURRENT in `docs/CANONICAL.md` so the living requirements/state ledger is part of the official project source of truth.
+- Strengthened `docs/RALLIVIO_STATE.md` with a formal requirement-transition protocol: current requirement → new requirement → reason → impact → implementation status → validation/QA → date.
+- Added explicit requirement status vocabulary so proposed, current, implementing, verified, deferred, and superseded requirements cannot be confused.
+- Added an AI operating contract covering what must be read before work, what must be checked before debugging, and what records must be synchronized after changes.
+- Strengthened `docs/AI_START_HERE.md` so future AI sessions treat repository documentation as project memory and do not reconstruct requirements from chat history, assumptions, or unrelated old code.
+- Made the session-end rule explicit: no undocumented requirement transition, decision, failure, gotcha, or deferred task may be left behind.
+
+### Not done
+- The actual code/feature work remains in progress on `feature/youtube-real-discovery`.
+- Automated verification has not yet been run after these documentation updates.
+- A dedicated decision-history file is referenced by the existing workflow but still needs to be created/registered only when the project reaches the point where it is required; no decision history is being invented now.
+
+### Next session should
+Run `npm run verify` on `feature/youtube-real-discovery`, then inspect the first failing check (if any) and update the corresponding documentation or implementation before continuing the YouTube vertical slice.
+
+### Gotchas discovered
+- Documentation itself is now part of the implementation contract: changing code without synchronizing the session state is considered incomplete work.
+- Canonical registration is required when a living/current specification is introduced; the state ledger is now explicitly canonical.
+- Requirement evolution is expected, but old requirements must remain traceable rather than being overwritten.
+- The five-file modification guardrail remains active; describe the plan before intentionally crossing it.
+
+### Documents touched
+- Updated `docs/CANONICAL.md` to register `docs/RALLIVIO_STATE.md` as CURRENT.
+- Updated `docs/AI_START_HERE.md` with the continuity/transition protocol.
+- Updated `docs/RALLIVIO_STATE.md` with the formal requirement-transition and AI operating contract.
+- Updated this `docs/SESSION_LOG.md`.
+
+---
+
 ## 2026-09-15 — Real YouTube discovery vertical slice
 Branch: feature/youtube-real-discovery
 Status: In progress
