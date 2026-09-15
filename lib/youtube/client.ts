@@ -8,6 +8,7 @@ export type YouTubeVideo = {
   snippet?: { channelId: string; channelTitle: string; title: string; description: string; publishedAt: string; categoryId?: string; liveBroadcastContent?: string; thumbnails?: { high?: { url: string }; medium?: { url: string } } };
   contentDetails?: { duration?: string; dimension?: string; definition?: string; caption?: string };
   statistics?: { viewCount?: string; likeCount?: string; commentCount?: string };
+  status?: { embeddable?: boolean };
 };
 
 export type YouTubeChannel = {
@@ -52,7 +53,7 @@ export async function searchRecentTechnologyIndia(publishedAfter: string) {
 export async function getVideos(ids: string[]) {
   if (!ids.length) return [] as YouTubeVideo[];
   const result = await request<{ items: YouTubeVideo[] }>("videos", {
-    part: "snippet,contentDetails,statistics",
+    part: "snippet,contentDetails,statistics,status",
     id: ids.join(","),
   });
   return result.items;
