@@ -8,7 +8,7 @@
 
 | ID | Symptom keywords | Level | Status |
 |---|---|---|---|
-| KI-001 | dist, output directory, deployment fails after successful build | 1 | Open |
+| KI-001 | dist, output directory, deployment fails after successful build | 3 | Resolved |
 | KI-002 | eslint, nextVitals, not iterable, lint not enforced | 2 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
@@ -18,14 +18,12 @@
 
 | Level | Count |
 |---|---|
-| 1 — Documented | 1 |
+| 1 — Documented | 0 |
 | 2 — Detected | 1 |
-| 3 — Auto-recovered | 0 |
+| 3 — Auto-recovered | 1 |
 | 4 — Prevented | 0 |
 
 > Update this table whenever an entry changes level.
-> If most entries stay at level 1, the project is accumulating
-> documentation rather than becoming more robust.
 
 ---
 
@@ -48,8 +46,7 @@ Never write a speculative cause as though it were established.
 The steps that resolve it.
 
 ### Prevention
-The specific change that would raise the ladder level, and what
-level that reaches. If level 4 is not achievable, state why.
+The specific change that would raise the ladder level.
 
 ### Related
 Runbook entries and other KI ids.
@@ -58,7 +55,7 @@ Runbook entries and other KI ids.
 ---
 
 ## KI-001 — Vercel expects "dist", Next.js outputs ".next"
-First seen: 2026-09-15 · Status: Open · Ladder level: 1 → target 4
+First seen: 2026-09-15 · Status: Resolved · Ladder level: 3 → target 4
 Severity: HIGH
 
 ### Symptom
@@ -66,16 +63,16 @@ Vercel completed the Next.js build and prerendering successfully, then failed wi
 `Error: No Output Directory named "dist" found after the Build completed.`
 
 ### Cause
-The Vercel project was configured to expect an output directory named `dist`, while the Next.js application produces its build output in `.next`.
+The Vercel project was configured to expect `dist`, while the Next.js application produces `.next`.
 
 ### Fix
-Remove the `dist` output-directory override from the Vercel project, or configure the project for the output produced by the Next.js build. The repository should not be changed to emit `dist` solely to satisfy an incorrect Vercel setting.
+Added repository-level `vercel.json` declaring the Next.js framework and `.next` output directory. This makes the known mismatch self-correcting at deployment configuration level.
 
 ### Prevention
-Keep Vercel's Next.js framework/build settings aligned with the repository and verify a production build through CI before promoting a deployment. Target level 4 is achievable by making the deployment configuration structurally match Next.js output.
+Keep Vercel's framework/build settings aligned with the repository and verify deployments through CI. Level 3 is reached because the repository now auto-recovers this known configuration mismatch. Level 4 would require preventing dashboard drift entirely.
 
 ### Related
-None yet.
+`vercel.json`
 
 ---
 
@@ -84,18 +81,18 @@ First seen: 2026-09-15 · Status: Resolved · Ladder level: 2 → target 2
 Severity: HIGH
 
 ### Symptom
-The Next.js build compiled successfully, but the build reported:
+The Next.js build compiled successfully, but reported:
 `⨯ ESLint: nextVitals is not iterable`
-while continuing through page generation. This means linting was not successfully enforced by the build step.
+while continuing through page generation.
 
 ### Cause
-The flat ESLint configuration imported `eslint-config-next` configuration modules in a shape that did not match the iterable flat-config form expected by `defineConfig`.
+The initial flat ESLint configuration loaded `eslint-config-next` in a shape that did not match the expected flat-config iterable form.
 
 ### Fix
-Use `FlatCompat` from `@eslint/eslintrc` to load `next/core-web-vitals` and `next/typescript`, keep `next` and `eslint-config-next` aligned at 15.5.24, and run the standalone `npm run lint` check in CI.
+Use `FlatCompat` from `@eslint/eslintrc`, load `next/core-web-vitals` and `next/typescript`, keep `next` and `eslint-config-next` aligned at 15.5.24, and run standalone `npm run lint` in CI.
 
 ### Prevention
-Keep `eslint-config-next` and `next` versions aligned, test `npm run lint` independently, and make CI fail on lint/configuration errors. Level 2 is reached because CI now detects and reports this failure before deployment.
+Keep `eslint-config-next` and `next` aligned, run lint independently, and fail CI on lint/configuration errors.
 
 ### Related
 None yet.
