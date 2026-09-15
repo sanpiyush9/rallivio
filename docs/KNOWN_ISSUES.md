@@ -9,7 +9,7 @@
 | ID | Symptom keywords | Level | Status |
 |---|---|---|---|
 | KI-001 | dist, output directory, deployment fails after successful build | 1 | Open |
-| KI-002 | eslint, nextVitals, not iterable, lint not enforced | 1 | Open |
+| KI-002 | eslint, nextVitals, not iterable, lint not enforced | 2 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -18,8 +18,8 @@
 
 | Level | Count |
 |---|---|
-| 1 — Documented | 2 |
-| 2 — Detected | 0 |
+| 1 — Documented | 1 |
+| 2 — Detected | 1 |
 | 3 — Auto-recovered | 0 |
 | 4 — Prevented | 0 |
 
@@ -80,7 +80,7 @@ None yet.
 ---
 
 ## KI-002 — ESLint crashes silently during build
-First seen: 2026-09-15 · Status: Open · Ladder level: 1 → target 2
+First seen: 2026-09-15 · Status: Resolved · Ladder level: 2 → target 2
 Severity: HIGH
 
 ### Symptom
@@ -92,10 +92,10 @@ while continuing through page generation. This means linting was not successfull
 The flat ESLint configuration spread `nextVitals` as an iterable after importing `eslint-config-next/core-web-vitals.js`, but the imported value was not iterable. The configuration therefore failed when Next.js invoked ESLint during the build.
 
 ### Fix
-Use an ESLint flat-config composition that matches the actual exports of the installed `eslint-config-next` version, and run the standalone `npm run lint` check in CI so a build-time lint integration failure cannot be mistaken for a successful lint pass.
+Use the package's documented `eslint-config-next/core-web-vitals` and `eslint-config-next/typescript` exports without forcing `.js` subpaths, keep the Next.js and eslint-config-next versions aligned at 15.5.24, and run the standalone `npm run lint` check in CI.
 
 ### Prevention
-Keep `eslint-config-next` and `next` versions aligned, test `npm run lint` independently, and make CI fail on lint/configuration errors. Target level 2 is achievable because CI can detect and report this failure before deployment.
+Keep `eslint-config-next` and `next` versions aligned, test `npm run lint` independently, and make CI fail on lint/configuration errors. Level 2 is reached because CI now detects and reports this failure before deployment.
 
 ### Related
 None yet.
