@@ -12,6 +12,7 @@
 | KI-002 | eslint, nextVitals, not iterable, lint not enforced | 2 | Resolved |
 | KI-003 | YouTube channel id, attribution redirect, validation | 2 | Resolved |
 | KI-004 | insufficient observations, ranking too early, signal baseline | 2 | Resolved |
+| KI-005 | Supabase security advisor, quota RPC, security definer, anon execute | 3 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -22,7 +23,7 @@
 |---|---|
 | 1 — Documented | 0 |
 | 2 — Detected | 3 |
-| 3 — Auto-recovered | 1 |
+| 3 — Auto-recovered | 2 |
 | 4 — Prevented | 0 |
 
 > Update this table whenever an entry changes level.
@@ -141,3 +142,24 @@ Keep minimum-history gates in the scoring implementation and cover shrinkage/fre
 ### Related
 `features/discovery/signals/compute.ts`
 `tests/signals.test.ts`
+
+---
+
+## KI-005 — Quota reservation RPC was exposed to public roles
+First seen: 2026-09-15 · Status: Resolved · Ladder level: 3 → target 4
+Severity: HIGH
+
+### Symptom
+The Supabase security advisor reported that `public.reserve_youtube_quota()` was a `SECURITY DEFINER` function executable by `anon` and `authenticated` roles.
+
+### Cause
+The quota RPC was intentionally security-definer for atomic server-side reservation but its default `PUBLIC` execute grant had not been revoked.
+
+### Fix
+Enabled RLS on the quota table, revoked function execution from `public`, `anon`, and `authenticated`, and granted execution only to `service_role`.
+
+### Prevention
+Every new security-definer RPC is reviewed with the Supabase security advisor immediately after creation and receives an explicit execution grant/revoke policy in its migration.
+
+### Related
+`supabase/migrations/20260915152000_lock_down_youtube_quota_rpc.sql`
