@@ -16,6 +16,7 @@
 |---|---|---|---|
 | Master plan | `docs/RALLIVIO_MASTER_v2.md` | 2.0 | 2026-09-15 |
 | Session entry point | `docs/AI_START_HERE.md` | 1.0 | 2026-09-15 |
+| Living requirements & project state | `docs/RALLIVIO_STATE.md` | 1.0 | 2026-09-15 |
 | Resilience & learning | `docs/RESILIENCE_SYSTEM.md` | 1.0 | 2026-09-15 |
 | Kickoff instructions | `docs/KICKOFF_INSTRUCTIONS.md` | 1.0 | 2026-09-15 |
 | Session log | `docs/SESSION_LOG.md` | 1.0 | 2026-09-15 |
