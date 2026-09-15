@@ -89,10 +89,10 @@ The Next.js build compiled successfully, but the build reported:
 while continuing through page generation. This means linting was not successfully enforced by the build step.
 
 ### Cause
-The flat ESLint configuration spread `nextVitals` as an iterable after importing `eslint-config-next/core-web-vitals.js`, but the imported value was not iterable. The configuration therefore failed when Next.js invoked ESLint during the build.
+The flat ESLint configuration imported `eslint-config-next` configuration modules in a shape that did not match the iterable flat-config form expected by `defineConfig`.
 
 ### Fix
-Use the package's documented `eslint-config-next/core-web-vitals` and `eslint-config-next/typescript` exports without forcing `.js` subpaths, keep the Next.js and eslint-config-next versions aligned at 15.5.24, and run the standalone `npm run lint` check in CI.
+Use `FlatCompat` from `@eslint/eslintrc` to load `next/core-web-vitals` and `next/typescript`, keep `next` and `eslint-config-next` aligned at 15.5.24, and run the standalone `npm run lint` check in CI.
 
 ### Prevention
 Keep `eslint-config-next` and `next` versions aligned, test `npm run lint` independently, and make CI fail on lint/configuration errors. Level 2 is reached because CI now detects and reports this failure before deployment.
