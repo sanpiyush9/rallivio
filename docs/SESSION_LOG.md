@@ -31,6 +31,32 @@ line in the entire documentation system.]
 
 ---
 
+## 2026-09-15 — QA deployment environment activated
+Branch: feature/youtube-real-discovery
+Status: In progress
+
+### Done
+- Confirmed the Vercel Preview environment now contains `YOUTUBE_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `CRON_SECRET` for `feature/youtube-real-discovery`.
+- Chose the Preview environment deliberately; Production remains untouched for this QA stage.
+- Triggered the repository-backed redeployment path by recording this state in the branch session log; the resulting feature-branch deployment must consume the newly configured Preview variables.
+
+### Not done
+- The new deployment has not yet been verified as Ready with the new environment variables.
+- The acquisition job has not yet been executed, so the Supabase discovery pool may still be empty.
+
+### Next session should
+Verify the newest `feature/youtube-real-discovery` Vercel deployment is Ready, then request `/api/discovery` and inspect Supabase discovery counts before deciding whether to trigger the scheduled acquisition path.
+
+### Gotchas discovered
+- Vercel environment-variable changes apply to new deployments, not already-built deployments.
+- The Redeploy dialog initially defaulted to the Production `main` deployment; Production must not be redeployed for this QA step.
+- The Vercel connector does not currently have access to this personal Vercel project scope, so the repository-backed deployment trigger is preferred when possible.
+
+### Documents touched
+- Updated `docs/SESSION_LOG.md` only; no product requirement or production configuration was changed.
+
+---
+
 ## 2026-09-15 — Requirements continuity and living-memory hardening
 Branch: feature/youtube-real-discovery
 Status: In progress
