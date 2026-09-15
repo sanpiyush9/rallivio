@@ -165,19 +165,28 @@ The discovery card must preserve the source identity and provide a clear route t
 - CI verification for typecheck, lint, test, build, canonical checks, and documentation checks.
 - Living known-issues register and session log.
 - Repository-level Vercel configuration for the Next.js `.next` output.
-- **Real-data YouTube discovery slice: implementation in progress on `feature/youtube-real-discovery`.**
-- Living requirements/continuity protocol registered as canonical in `docs/CANONICAL.md`.
+- **Real-data YouTube discovery vertical slice is running on `feature/youtube-real-discovery` Preview.**
+- Temporary Preview-only QA bootstrap successfully acquired 25 real YouTube records for `INDIA:Technology:all`.
+- Normal request-time `/api/discovery` serving path successfully returns persisted discovery-pool records after acquisition.
+- Supabase-backed discovery pool is populated with real YouTube metadata, snapshots/channel context, and RALLIVIO-derived signal metadata.
+- Discover UI has been field-tested with real data and a working YouTube embed/source route.
+- Vercel Preview Authentication was disabled for QA so automated route testing can reach the Preview deployment.
+- Living requirements/continuity protocol is registered as canonical in `docs/CANONICAL.md`.
 
-## 10. What is not yet implemented
+## 10. What is not yet implemented / verified
 
-- YouTube API credential/configuration in the deployment environment.
-- Scheduled acquisition worker and quota-aware search strategy.
-- Persistent discovery/time-series schema in Supabase.
-- Production ranking history.
+- Full production discovery-intelligence mechanism across Region × Topic × Format × Signal.
+- Robust relevance classification beyond the initial narrow acquisition approach.
+- Mature historical baseline/acceleration model with enough repeated observations for production-grade signal claims.
+- Complete truthful fallback state machine and multi-path acquisition/replenishment architecture.
 - Creator OAuth/claim flow.
 - User subscriptions/following.
 - Brand marketplace/matching.
 - Additional social platforms.
+- Production ranking history and final production operational controls.
+- Full user acceptance of the current Discover experience.
+- Signal-filter/card consistency is **not yet verified**; current QA observed a possible **Breaking Out vs Just Dropped** mismatch.
+- Temporary `/api/qa/bootstrap` must be removed or replaced with a safer operational mechanism before production promotion.
 
 ## 11. Change ledger
 
@@ -197,6 +206,14 @@ The discovery card must preserve the source identity and provide a clear route t
 - AI sessions are required to use repository documentation as project memory instead of reconstructing history from chat or assumptions.
 - Meaningful implementation, bug, decision, and deferral changes must update the corresponding project record before the session ends.
 
+### 2026-09-15 — First real-data QA checkpoint completed
+- Vercel Preview Authentication was identified as the blocker preventing route-level QA and was disabled for the QA Preview environment.
+- The temporary QA bootstrap executed successfully and acquired 25 real YouTube records into the RALLIVIO discovery flow for `INDIA:Technology:all`.
+- The normal discovery read path returned persisted records after acquisition.
+- The user field-tested the Preview UI and confirmed the real-data/player experience is visible.
+- A signal consistency issue was discovered during field testing and is now tracked as KI-004 in `docs/KNOWN_ISSUES.md`.
+- This checkpoint is implementation/QA progress, not a claim that the full production discovery engine is complete.
+
 ## 12. Session handoff rule
 
 At the end of every development session:
@@ -207,3 +224,21 @@ At the end of every development session:
 4. Run `npm run verify` before proposing a PR.
 5. State the exact next action/file so the next session resumes without guessing.
 6. Do not leave an undocumented requirement transition, decision, failure, gotcha, or deferred task behind.
+
+## 13. Current recovery checkpoint — 2026-09-15
+
+**Branch:** `feature/youtube-real-discovery`
+
+**Latest documented state:** The first real-data vertical slice has successfully crossed the acquisition boundary and has been field-tested in the Preview UI.
+
+**Verified flow:**
+
+`YouTube API → acquisition route → Supabase persisted pool → /api/discovery read path → Discover UI → YouTube player/source`
+
+**Observed successful acquisition:** 25 records, cell `INDIA:Technology:all`.
+
+**Current blocker for the next implementation step:** signal selection/display consistency. The user observed the Breaking Out view while the displayed item metadata indicated Just Dropped. Root cause is not yet confirmed.
+
+**Security/cleanup:** the temporary QA bootstrap token is development-only and considered exposed. It must not be promoted to Production or reused as a production credential. The bootstrap route must be removed or replaced before production.
+
+**Exact next action:** inspect `app/page.tsx` and `app/api/discovery/route.ts`, reproduce the selected-signal/item-signal mismatch, fix only that isolated issue, run `npm run verify`, deploy Preview, and field-test again.
