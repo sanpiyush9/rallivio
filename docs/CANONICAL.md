@@ -22,9 +22,9 @@
 | Known issues | `docs/KNOWN_ISSUES.md` | 1.0 | 2026-09-15 |
 | Design system | `docs/DESIGN_SYSTEM.md` | — | not yet written |
 | Discovery page | `docs/specs/discovery-page-v1.md` | — | not yet written |
-| Data model | `docs/specs/data-model-v1.md` | — | not yet written |
-| Signal engine | `docs/specs/signals-v1.md` | — | not yet written |
-| Leaderboard (Phase 0) | `docs/specs/leaderboard-v1.md` | — | not yet written |
+| Data model | `docs/specs/data-model-v1.md` | 1.0 | 2026-09-15 |
+| Signal engine | `docs/specs/signals-v1.md` | 1.0 | 2026-09-15 |
+| Leaderboard (Phase 0) | `docs/specs/leaderboard-v1.md` | 1.0 | 2026-09-15 |
 | Creator onboarding | — | — | not yet written |
 | Brand matching | — | — | not yet written |
 
