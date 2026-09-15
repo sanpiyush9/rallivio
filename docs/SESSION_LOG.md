@@ -31,6 +31,34 @@ line in the entire documentation system.]
 
 ---
 
+## 2026-09-15 — Vercel deployment self-healing
+Branch: feature/docs-enforcement
+Status: In progress
+
+### Done
+- Investigated the failed Vercel deployment instead of asking for a screenshot first.
+- Confirmed the known failure mode: Vercel was expecting `dist` while the Next.js app builds to `.next`.
+- Added `vercel.json` with `framework: nextjs` and `outputDirectory: .next` so the repository carries the correct deployment configuration.
+- Updated KI-001 from Level 1/Open to Level 3/Resolved because the repository now auto-recovers the known output-directory mismatch.
+
+### Not done
+- The new repository configuration has not yet been validated by a fresh Vercel deployment.
+- The Vercel connector in this session cannot access the user's personal Vercel scope, so deployment logs/settings cannot be inspected directly through the connector.
+
+### Next session should
+Check the newest `feature/docs-enforcement` Vercel deployment status; if it is still failing, inspect its build log for the first new error rather than reverting `vercel.json`.
+
+### Gotchas discovered
+- The Vercel connector returned 403 for the guessed team scope and `list_teams` returned no teams, so the project appears to be outside the connector's accessible team scope.
+- Vercel documentation confirms `outputDirectory` can be overridden in repository-level `vercel.json`.
+
+### Documents touched
+- Added `vercel.json`.
+- Updated `docs/KNOWN_ISSUES.md` and this session log.
+- No product specification changed.
+
+---
+
 ## 2026-09-15 — Documentation enforcement system
 Branch: feature/docs-enforcement
 Status: Complete
