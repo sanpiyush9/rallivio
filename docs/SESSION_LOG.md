@@ -40,6 +40,7 @@ Status: In progress
 - Registered the three specs in `docs/CANONICAL.md`.
 - Added the Phase 0 Supabase foundation for channel observations, discovery signals, weekly rankings, click attribution, system health, relaxation logs, and atomic YouTube quota usage.
 - Applied the foundation migration to the connected `rallivio` Supabase project; the discovery tables are currently empty, so no existing creator/video rows were changed.
+- Added a reproducible schema migration for the existing discovery-pool tables so a clean environment can create the same Phase 0 storage shape.
 - Added a server-side YouTube adapter, daily quota guard, scheduled acquisition worker, audience-relative signal computation, and database-backed leaderboard serving.
 - Replaced the static Discover page with a database-backed Phase 0 leaderboard that refuses to fabricate creators when history is insufficient.
 - Added outbound YouTube click attribution and deterministic tests for quota limits, shrinkage, and freshness.
@@ -54,10 +55,10 @@ Status: In progress
 - The branch still needs the first live deployment and end-to-end acquisition check before it can be proposed for staging.
 
 ### Next session should
-Open GitHub Actions run `34977793210` for `feature/phase0-data-foundation`; if `verify` is red, fix the first failing step before changing the data architecture.
+Open the latest GitHub Actions `verify` run for `feature/phase0-data-foundation`; if it is red, fix the first failing step before changing the data architecture.
 
 ### Gotchas discovered
-- The connected Supabase project already contained the discovery foundation tables from earlier migrations but the tables were empty; the new migration therefore adds missing Phase 0 tables and policies without fabricating seed data.
+- The connected Supabase project already contained the discovery foundation tables from earlier migrations but the tables were empty; the new migrations add missing Phase 0 tables and make the discovery schema reproducible without fabricating seed data.
 - The official YouTube API currently documents `search.list` as a separately budgeted method; this project still follows the canonical Phase 0 budget of at most 60 search calls/day and 10,000 total units.
 - Vercel Cron runs on the production deployment, so feature-branch previews are useful for UI verification but do not by themselves prove the scheduled worker has executed.
 - The public Supabase key is safe to expose to the browser, but the service-role key and YouTube key must remain server-side.
@@ -65,7 +66,7 @@ Open GitHub Actions run `34977793210` for `feature/phase0-data-foundation`; if `
 
 ### Documents touched
 - Added `docs/specs/data-model-v1.md`, `docs/specs/signals-v1.md`, and `docs/specs/leaderboard-v1.md` and updated `docs/CANONICAL.md`.
-- Added `supabase/migrations/20260915150000_phase0_data_foundation.sql`, `20260915151000_youtube_quota_usage.sql`, and `20260915152000_lock_down_youtube_quota_rpc.sql`.
+- Added `supabase/migrations/20260915150000_phase0_data_foundation.sql`, `20260915151000_youtube_quota_usage.sql`, `20260915152000_lock_down_youtube_quota_rpc.sql`, and `20260915153000_reconcile_phase0_discovery_tables.sql`.
 - Updated `docs/KNOWN_ISSUES.md` and this session log.
 - No changes were made to the product strategy outside the Phase 0 data implementation.
 
