@@ -11,6 +11,7 @@
 | KI-002 | eslint, nextVitals, not iterable, lint not enforced | 2 | Resolved |
 | KI-003 | Vercel Authentication, Preview SSO, 302, bootstrap blocked | 3 | Resolved for QA |
 | KI-004 | Breaking Out, Just Dropped, signal mismatch, selected signal | 1 | Open |
+| KI-005 | platform icons, Snapchat, Facebook, Reddit, grey placeholder, remote icon load | 3 | Resolved / prevented |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -21,37 +22,10 @@
 |---|---:|
 | 1 — Documented | 1 |
 | 2 — Detected | 1 |
-| 3 — Auto-recovered | 2 |
+| 3 — Auto-recovered | 3 |
 | 4 — Prevented | 0 |
 
 > Update this table whenever an entry changes level.
-
----
-
-## Entry template
-
-```markdown
-## KI-NNN — Short descriptive title
-First seen: YYYY-MM-DD · Status: Open|Resolved · Ladder level: N → target N
-Severity: LOW|MEDIUM|HIGH
-
-### Symptom
-What is observed, quoted exactly. Include the log excerpt.
-
-### Cause
-The confirmed cause. If not confirmed, write
-"NOT YET CONFIRMED — run: <exact diagnostic command>"
-Never write a speculative cause as though it were established.
-
-### Fix
-The steps that resolve it.
-
-### Prevention
-The specific change that would raise the ladder level.
-
-### Related
-Runbook entries and other KI ids.
-```
 
 ---
 
@@ -143,3 +117,27 @@ Add automated coverage asserting that when a signal filter is selected, every re
 `app/api/discovery/route.ts`
 `docs/RALLIVIO_STATE.md`
 `docs/SESSION_LOG.md`
+
+---
+
+## KI-005 — Remote platform icon assets could fail silently
+First seen: 2026-09-16 · Status: Resolved / prevented · Ladder level: 3 → target 4
+Severity: MEDIUM
+
+### Symptom
+The Discover hero intermittently displayed missing/incorrect platform badges, including grey Snapchat, dark Facebook, and dark Reddit presentations. The prior implementation loaded platform logos from a remote Iconify URL and supplied a text fallback when the image failed.
+
+### Cause
+Confirmed: platform icon rendering depended on a remote runtime asset request, so a failed network request could produce an incorrect or fallback badge rather than a build-time failure.
+
+### Fix
+Replaced remote platform icon loading with the `simple-icons` npm package and inline SVG paths. Platform configuration is centralized in `lib/platform-icons.ts` and covers all twelve required platforms. A verification script checks that every configured platform has an icon entry and that the Discover hero contains no remote platform icon loader.
+
+### Prevention
+The typed icon registry uses `satisfies Record<PlatformSlug, SimpleIcon>`, the registry performs a runtime assertion, and `npm run check:platform-icons` is part of `npm run verify`. A missing configured icon or reintroduced remote icon URL fails verification before QA deployment.
+
+### Related
+`lib/platform-icons.ts`
+`scripts/check-platform-icons.mjs`
+`docs/specs/discovery-hero-v2.md`
+`design/discovery-v2.svg`
