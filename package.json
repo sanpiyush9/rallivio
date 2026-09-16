@@ -11,12 +11,14 @@
     "typecheck": "tsc --noEmit",
     "canonical-check": "node scripts/check-canonical.js",
     "check:docs": "node scripts/check-docs.js",
-    "verify": "npm run typecheck && npm run lint && npm run test && npm run build && npm run canonical-check && npm run check:docs"
+    "check:platform-icons": "node scripts/check-platform-icons.mjs",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run build && npm run canonical-check && npm run check:docs && npm run check:platform-icons"
   },
   "dependencies": {
     "next": "15.5.24",
     "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react-dom": "19.1.1",
+    "simple-icons": "16.31.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.1",
