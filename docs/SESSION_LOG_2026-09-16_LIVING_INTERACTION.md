@@ -4,28 +4,32 @@
 Convert the current visually strong Discover surface from a mostly static prototype into a functional living ecosystem without fabricating source activity.
 
 ## Implemented
-- Added a functional catch-all experience at `app/[...slug]/page.tsx` so the primary navigation now resolves to real routes instead of dead buttons.
-- Added root middleware routing so `/` enters the living Discover environment while preserving the public root URL.
-- Connected Discover field nodes, Live Activity, Moving Now cards, and Emerging Creators to the same `/api/discovery` verified dataset.
-- Added client refresh every 60 seconds and a lightweight activity rotation so presentation changes while the underlying facts remain source-backed.
+- Added a shared functional home experience at `app/home/page.tsx` and root middleware routing so the public `/` URL enters it.
+- Navigation paths now resolve through the same living experience instead of dead buttons: Discover, Creators, Brands, Opportunities, Community, About, and platform environments.
+- Connected field nodes, Live Activity, Moving Now cards, and discovery filtering to the same `/api/discovery` verified dataset.
+- Added 60-second source refresh plus a lightweight 7-second presentation rotation so the surface moves while factual data remains source-backed.
 - Added working topic controls and natural-language command handling for topic/platform/creator/brand/opportunity intent.
-- Added functional platform environment routes for YouTube, Instagram, TikTok, X, and LinkedIn. YouTube remains the only source-connected environment; the others do not display fabricated activity.
-- Added working content detail modal with embeddable YouTube playback when the source marks the video embeddable, plus a source-link action.
-- Added working navigation from the brand, creator, opportunity, community, and about areas into the connected ecosystem instead of leaving dead-end controls.
-- Added pointer-driven field movement and responsive layouts; motion is presentation only and does not invent metrics.
+- Added working platform environment paths for YouTube, Instagram, TikTok, X, and LinkedIn. YouTube is source-connected; other environments remain explicit boundaries until adapters exist.
+- Added content detail playback using the verified YouTube embed permission and a direct source-link action.
+- Added pointer-driven field movement and responsive behavior; presentation motion is not treated as source activity.
+
+## Recovery / correction
+- An initial catch-all implementation failed Vercel lint on `prefer-const`. It was removed rather than leaving a broken route in the branch.
+- The replacement uses a dedicated `/home` page plus middleware, keeping the original root page intact while routing the public experience through the functional surface.
 
 ## Truth / data rule
-The same verified discovery records drive the visible content surfaces. UI animation, rotation, and interaction are not treated as source activity. Platform environments without connected source adapters remain explicitly unverified/structural.
+The same verified discovery records drive the visible content surfaces. UI animation, rotation, and interaction are presentation behavior only. Platform environments without connected source adapters do not display fabricated activity.
 
-## QA notes
-- This is still a feature-branch QA build.
-- The existing `/api/discovery` remains the source of truth for current observations.
-- Full `npm run verify` and Vercel Preview verification must be run after this change before merge.
-- Production must not be promoted until the new interaction routes and data placement are verified.
+## QA verification
+- Vercel Preview deployment for commit `c7a871397f40f8fb83f5c401d45066fa37de4865` reached `READY`.
+- Preview root returned HTTP 200 and matched `/home` through middleware.
+- `/creators` and `/platform/youtube` returned HTTP 200 through the same middleware route.
+- `/api/discovery` returned HTTP 200 with persisted verified YouTube discovery records; current response contained 25 observations and a refresh timestamp from the acquisition layer.
+- This remains a feature-branch QA build. Production promotion is intentionally not performed.
 
 ## Next
-1. Verify the preview at desktop and mobile widths.
-2. Fix any interaction/layout defects found during QA.
-3. Move topic/signal classification into backend evidence rather than UI heuristics.
-4. Add platform-specific source adapters one at a time, beginning with the connected YouTube environment.
-5. Keep every new platform environment driven by the shared intelligence contract.
+1. Field-test the preview at desktop and mobile widths and exercise every visible control.
+2. Correct any interaction/layout defects found in user QA.
+3. Move topic/signal classification from UI heuristics into backend evidence.
+4. Build the connected YouTube platform environment as a first-class page, then add source adapters one at a time.
+5. Keep all platform environments driven by the shared RALLIVIO intelligence contract.
