@@ -1,6 +1,6 @@
 # CANONICAL INDEX
 
-**Last updated:** 2026-09-15
+**Last updated:** 2026-09-16
 
 > **Every AI session reads this file FIRST.**
 >
@@ -16,11 +16,12 @@
 |---|---|---|---|
 | Master plan | `docs/RALLIVIO_MASTER_v2.md` | 2.0 | 2026-09-15 |
 | Session entry point | `docs/AI_START_HERE.md` | 1.0 | 2026-09-15 |
-| Living requirements & project state | `docs/RALLIVIO_STATE.md` | 1.0 | 2026-09-15 |
+| Living requirements & project state | `docs/RALLIVIO_STATE.md` | 1.0 | 2026-09-16 |
 | Resilience & learning | `docs/RESILIENCE_SYSTEM.md` | 1.0 | 2026-09-15 |
 | Kickoff instructions | `docs/KICKOFF_INSTRUCTIONS.md` | 1.0 | 2026-09-15 |
-| Session log | `docs/SESSION_LOG.md` | 1.0 | 2026-09-15 |
+| Session log | `docs/SESSION_LOG.md` | 1.0 | 2026-09-16 |
 | Known issues | `docs/KNOWN_ISSUES.md` | 1.0 | 2026-09-15 |
+| Recovery checkpoints | `docs/RECOVERY_CHECKPOINTS.md` | 1.0 | 2026-09-16 |
 | Design system | `docs/DESIGN_SYSTEM.md` | — | not yet written |
 | Discovery page | `docs/specs/discovery-page-v1.md` | — | not yet written |
 | Data model | `docs/specs/data-model-v1.md` | — | not yet written |
@@ -58,6 +59,8 @@
 5. Update **Last updated** at the top of this file
 
 All five steps happen in the same commit. A PR that adds a new spec without updating this index is incomplete and must not merge.
+
+All recovery checkpoints are recorded in `docs/RECOVERY_CHECKPOINTS.md`. Code checkpoints remain Git commits; QA Preview deployments are runnable representations of those commits; production promotion is a separate release event.
 
 ## Naming rules
 
