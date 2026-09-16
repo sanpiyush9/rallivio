@@ -3,55 +3,77 @@
 > Newest entries at the top.
 > Read the most recent 3 before starting work.
 
-## 2026-09-16 — Original RALLIVIO Discovery page restored
+## 2026-09-16 — Living real-data Discover architecture implemented
 Branch: feature/youtube-real-discovery
 Status: In progress
 
 ### Done
-- Owner explicitly rejected the separate Living Field / orbital discovery-world UI and requested the original RALLIVIO Discovery page design shown in the supplied reference screenshot.
-- Removed the Living Field experience from the Home/Discover page implementation.
-- Restored the original page composition: RALLIVIO header/navigation, discovery hero, five signal controls, Topic/Region/Format controls, featured YouTube player, Up Next queue, Why This Is Moving panel, Creator panel, What's Next panel, Phase 1 page previews and Phase 1 goal banner.
-- Kept the page connected to the real RALLIVIO discovery pool instead of static mock data.
-- Kept the existing 60-second client refresh and real YouTube embedded-player path.
-- Added pointer-responsive motion to the real discovery/player surface so the page can respond subtly to mouse/touch movement without fabricating activity.
-- Deployed the restoration to Vercel Preview. Latest deployment is READY at `rallivio-dsidtgv2j-san-eca6.vercel.app` for commit `c0b7868dac20b1954cc50571323135fbd1c1516d`.
-- Verified `/api/discovery` on the latest deployment returns real persisted YouTube records from the RALLIVIO discovery pool, including Apple, Marques Brownlee, Mrwhosetheboss, Tech Burner and other verified records.
+- Owner clarified that the approved Discover screenshot is the RALLIVIO front page and cross-platform discovery entry point; the previous orbital Living Field is not the Home/Discover surface.
+- Owner clarified that the earlier YouTube-style screenshot represents a platform-specific page and must remain conceptually separate from the cross-platform Discover page.
+- Rebuilt `app/page.tsx` around the approved Discover composition: cinematic hero, cross-platform discovery visualization, live verified-source activity, What's Moving Now, Emerging Creators, RALLIVIO Journey, and brand opportunities.
+- Added a living-feeling presentation layer: pointer/touch parallax, animated core/orbits, responsive platform nodes, real-data thumbnail movement and interactive discovery selection.
+- Kept factual content bound to the persisted RALLIVIO discovery pool. The connected YouTube source supplies the real thumbnails, titles, creators, views, publication times and momentum metadata currently available.
+- Platform nodes for Instagram, TikTok, X and LinkedIn are intentionally represented as environments being prepared until verified source adapters exist; no fake cross-platform metrics are shown.
+- Added a clear distinction between simulated presentation motion and factual source state so the site can feel alive without pretending that a source changed every frame.
+- Kept request-time discovery as a read path; the page refreshes the persisted pool every 60 seconds rather than spending YouTube search quota on every visitor.
+- Vercel automatically deployed commit `947d5b1ca831e552fd9e94ba410c7cdab9fdb6d8`; deployment `dpl_9zFBVLYHc1N1Lkbp2MK2G9ZSrTag` is READY and serves HTTP 200.
+- Verified the deployed `/api/discovery` endpoint returns real persisted YouTube records, including current Apple/iPhone coverage and smaller audience-relative records.
+
+### Architecture direction now locked
+- **Discover** = RALLIVIO ecosystem front page. It senses user movement/touch, presents live-feeling discovery, and surfaces what is moving across the connected ecosystem.
+- **Platform environments** = YouTube, Instagram, TikTok, X, LinkedIn and future adapters. Each platform gets its own data rules, visual language and page while sharing the RALLIVIO intelligence layer.
+- **Simulation layer** = animation, spatial movement, transitions, parallax, focus, ambient effects and discovery choreography. It can communicate verified state but cannot fabricate metrics, creators, rankings or activity.
+- **Truth layer** = verified acquisition → normalized discovery pool → signal calculation → serving. Source observations control what is actually shown as trending/moving.
+- **Adaptive environment** = when source signals change, card prominence, topic emphasis, activity ordering, hero content and discovery selections can change with them. This is the mechanism that makes the site feel alive rather than static.
 
 ### Not done
-- The current signal engine still needs correction/validation because the persisted sample is heavily classified as `Just Dropped`; the default visual needs a truthful `Now Moving` candidate set rather than relying on a UI fallback.
-- The current insight panel must use only evidence produced by the signal engine; fabricated-looking comparison values should not be presented as verified metrics.
-- Topic/Region/Format selectors currently provide the visual interaction layer; dynamic acquisition and serving across every cell are not yet production-complete.
+- The current backend acquisition is still YouTube-first and currently concentrated on `INDIA:Technology:all`; cross-platform source adapters are not yet connected.
+- Signal classification still needs correction/validation because the persisted sample is heavily `Just Dropped`; the five Discover concepts need stronger historical evidence before they are treated as production-grade.
+- The current page's platform nodes are navigation/visual environment placeholders until their real source integrations are built.
+- Insight values must continue moving out of UI-side heuristics and into backend evidence produced from stored observations.
 - `docs/CANONICAL.md` registration of the living-environment spec remains pending.
-- Temporary `/api/qa/bootstrap` remains a Preview-only development mechanism and must be removed before production.
-- `npm run verify` should be run after the latest page restoration and the signal-engine correction.
+- Temporary `/api/qa/bootstrap` remains Preview-only development infrastructure and must be removed before production.
+- Full `npm run verify` after this latest change should be run/confirmed by CI before promotion.
 
 ### Next session should
-First validate the restored page visually in the latest Preview, then correct the signal engine and insight evidence so `Now Moving`, `Breaking Out`, `On the Rise`, `Under the Radar` and `Just Dropped` are backed by actual evidence and filter results never contradict the displayed signal.
+- Validate the Discover page visually against the supplied approved screenshot.
+- Fix the backend signal engine so the Discover surface can truthfully distinguish current attention, acceleration, sustained rise, audience-relative emergence and freshness.
+- Then create the platform-environment routing/data contract so YouTube can become the first fully connected platform page while the Discover homepage remains cross-platform.
 
 ### Gotchas discovered
-- The requested experience is a live-feeling discovery page, not a separate decorative ecosystem. Real source data controls factual state; presentation motion may communicate that state but must never invent activity.
-- The latest `/api/discovery` endpoint is healthy and returns real persisted records even though the server-rendered HTML initially contains the client-loading/empty presentation before hydration.
-- Do not create synthetic `+420%`, `3.2x`, or similar insight values unless the backend has actually observed and calculated those values from stored history.
+- The phrase “living ecosystem” means a living **experience driven by changing real signals**, not an orbital animation used as the primary page.
+- Source data may refresh less frequently than the UI. The product should show continuously refreshed verified observations and use presentation motion to make state legible, without claiming impossible second-by-second source truth.
+- Do not copy fabricated screenshot metrics such as `+420%`, `3.2x`, `8.4%`, or large creator/opportunity counts into the real product unless those values are calculated from verified data.
+- Do not use the previous YouTube discovery/player composition as the Discover homepage; it belongs to a platform-specific environment.
 
 ### Documents touched
 - Updated `app/page.tsx`.
-- Updated `app/globals.css`.
 - Updated this session log.
-- Existing living-environment specification remains historical/approved direction but is no longer the Home/Discover visual surface requested by the owner.
+- Existing `app/globals.css` remains in the repository but the latest Discover visual system is scoped directly to the page so this change does not disturb unrelated routes.
+
+---
+
+## 2026-09-16 — Original RALLIVIO Discovery page restored
+Branch: feature/youtube-real-discovery
+Status: Superseded by living real-data Discover architecture
+
+### Done
+- Owner explicitly rejected the separate Living Field / orbital discovery-world UI and requested the original RALLIVIO Discovery page design shown in the supplied reference screenshot.
+- Removed the Living Field experience from the Home/Discover page implementation.
+- Restored the original page composition and kept the page connected to the real RALLIVIO discovery pool.
+
+### Gotchas discovered
+- The requested experience is a live-feeling discovery page, not a separate decorative ecosystem. Real source data controls factual state; presentation motion may communicate that state but must never invent activity.
 
 ---
 
 ## 2026-09-16 — Living Discovery Environment V1 implemented
 Branch: feature/youtube-real-discovery
-Status: Superseded by original Discovery page restoration
+Status: Superseded
 
 ### Done
-- Owner previously approved a transition from a conventional discovery feed toward a living simulated discovery experience.
 - Created `docs/specs/living-discovery-environment-v1.md` defining the experience, truth boundary, interaction rules, platform-environment direction and V1 acceptance criteria.
-- Implemented and deployed the first Living Discovery Environment, then superseded its Home/Discover visual surface after owner review in favor of the original RALLIVIO Discovery design.
-
-### Gotchas discovered
-- A living-feeling experience is still constrained by verified source data. Decorative orbital nodes were not accepted as the primary Home/Discover experience.
+- Implemented and deployed the first Living Discovery Environment, then superseded its Home/Discover visual surface after owner review in favor of the approved RALLIVIO Discover architecture.
 
 ---
 
@@ -60,21 +82,11 @@ Branch: feature/youtube-real-discovery
 Status: In progress
 
 ### Done
-- User disabled Vercel Authentication's **Require Log In** for the RALLIVIO Preview deployment and saved the setting.
-- Re-checked the latest Preview deployment after the change. Deployment is `READY` and is serving the `feature/youtube-real-discovery` branch.
-- Confirmed the temporary Preview-only `/api/qa/bootstrap` endpoint is now reachable and executes successfully.
-- Confirmed the bootstrap returned: `ok: true`, job `youtube-discovery-refresh`, `acquired: 25`, cell `INDIA:Technology:all`.
-- Confirmed the normal `/api/discovery` serving path returns real persisted RALLIVIO discovery-pool records after acquisition.
-- Confirmed real YouTube metadata is flowing through the complete first vertical slice: YouTube API → acquisition → Supabase discovery pool → RALLIVIO signal/score metadata → Discover UI.
-- Confirmed the deployed UI renders real YouTube discovery content and the YouTube embedded player/source link path is working in user field testing.
+- Confirmed the temporary Preview-only `/api/qa/bootstrap` endpoint acquired 25 real YouTube records into `INDIA:Technology:all`.
+- Confirmed the normal `/api/discovery` serving path returns persisted RALLIVIO discovery-pool records.
+- Confirmed real YouTube metadata is flowing through the first vertical slice: YouTube API → acquisition → Supabase discovery pool → RALLIVIO signal/score metadata → UI.
 
 ### Not done
-- The current signal presentation still needs QA: a user test showed a video displayed while the selected feed was **Breaking Out**, while the item's metadata showed **Just Dropped**. This remains an open signal consistency issue.
-- The initial scoring/relevance model is still a thin Phase 0 implementation and is not yet the full production discovery-intelligence mechanism described by the product vision and validation specification.
-- Historical observations are only beginning; acceleration/baseline-relative signals need more repeated snapshots before they can be treated as fully validated.
-- Topic/region/format cell coverage and the complete truthful fallback state machine are not yet production-complete.
-- The temporary `/api/qa/bootstrap` endpoint must be removed or replaced by a safer operational mechanism before production promotion.
-- The bootstrap token is considered exposed because it appeared in development chat/URLs; do not reuse it as a production secret.
-
-### Next session should
-First inspect `app/page.tsx` and `app/api/discovery/route.ts` together and trace how the selected signal is mapped to the returned item's displayed signal. Reproduce the **Breaking Out vs Just Dropped** mismatch, fix it in isolation, run `npm run verify`, redeploy Preview, and re-test the affected signal path before expanding the discovery model.
+- Signal consistency remains an open issue: earlier QA showed a Breaking Out selection while the item's stored metadata was Just Dropped.
+- The scoring/relevance model is still a Phase 0 implementation and needs historical observations and stronger evidence.
+- The temporary bootstrap endpoint and exposed development token must not be reused for production.
