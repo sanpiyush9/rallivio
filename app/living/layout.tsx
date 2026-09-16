@@ -36,19 +36,19 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
           text-align: center !important;
         }
 
-        /* Final coordinates from the position editor. */
-        .field .platform-1  { left: 38.8% !important; top: 13.3% !important; }
-        .field .platform-2  { left: 69.4% !important; top: 18.1% !important; }
-        .field .platform-3  { left: 81.9% !important; top: 31.7% !important; }
-        .field .platform-4  { left: 19.5% !important; top: 31.3% !important; }
-        .field .platform-5  { left: 83.6% !important; top: 64% !important; }
-        .field .platform-6  { left: 16.4% !important; top: 62% !important; }
-        .field .platform-7  { left: 77.2% !important; top: 47% !important; }
-        .field .platform-8  { left: 49.6% !important; top: 86.4% !important; }
-        .field .platform-9  { left: 49.4% !important; top: 23.1% !important; }
-        .field .platform-10 { left: 34.1% !important; top: 70.7% !important; }
-        .field .platform-11 { left: 26.1% !important; top: 43.3% !important; }
-        .field .platform-12 { left: 65.3% !important; top: 71.5% !important; }
+        /* Final coordinates from the position editor, in DOM/platform order. */
+        .field .platform:nth-of-type(1)  { left: 38.8% !important; top: 13.3% !important; }
+        .field .platform:nth-of-type(2)  { left: 69.4% !important; top: 18.1% !important; }
+        .field .platform:nth-of-type(3)  { left: 81.9% !important; top: 31.7% !important; }
+        .field .platform:nth-of-type(4)  { left: 19.5% !important; top: 31.3% !important; }
+        .field .platform:nth-of-type(5)  { left: 65.3% !important; top: 71.5% !important; }
+        .field .platform:nth-of-type(6)  { left: 83.6% !important; top: 64% !important; }
+        .field .platform:nth-of-type(7)  { left: 34.1% !important; top: 70.7% !important; }
+        .field .platform:nth-of-type(8)  { left: 49.6% !important; top: 86.4% !important; }
+        .field .platform:nth-of-type(9)  { left: 16.4% !important; top: 62% !important; }
+        .field .platform:nth-of-type(10) { left: 26.1% !important; top: 43.3% !important; }
+        .field .platform:nth-of-type(11) { left: 77.2% !important; top: 47% !important; }
+        .field .platform:nth-of-type(12) { left: 49.4% !important; top: 23.1% !important; }
 
         .field .platform:hover,
         .field .platform:focus-visible,
