@@ -22,6 +22,7 @@
 | Session log | `docs/SESSION_LOG.md` | 1.0 | 2026-09-16 |
 | Known issues | `docs/KNOWN_ISSUES.md` | 1.0 | 2026-09-15 |
 | Recovery checkpoints | `docs/RECOVERY_CHECKPOINTS.md` | 1.0 | 2026-09-16 |
+| Living platform routing | `docs/specs/living-platform-routing-v1.md` | 1.0 | 2026-09-16 |
 | Design system | `docs/DESIGN_SYSTEM.md` | — | not yet written |
 | Discovery page | `docs/specs/discovery-page-v1.md` | — | not yet written |
 | Data model | `docs/specs/data-model-v1.md` | — | not yet written |
