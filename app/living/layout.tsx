@@ -4,7 +4,7 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <style>{`
-        /* Living field: square coordinate system matching the position editor. */
+        /* QA: one square field, one circular platform path, equal radius. */
         .field {
           position: relative !important;
           width: min(680px, 90vw) !important;
@@ -36,19 +36,19 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
           text-align: center !important;
         }
 
-        /* Final editor coordinates bound by platform identity, not DOM order. */
-        .field .platform:has(.platformMark.youtube)   { left: 38.8% !important; top: 13.3% !important; }
-        .field .platform:has(.platformMark.instagram) { left: 69.4% !important; top: 18.1% !important; }
-        .field .platform:has(.platformMark.tiktok)    { left: 81.9% !important; top: 31.7% !important; }
-        .field .platform:has(.platformMark.x)         { left: 19.5% !important; top: 31.3% !important; }
-        .field .platform:has(.platformMark.linkedin)  { left: 83.6% !important; top: 64% !important; }
-        .field .platform:has(.platformMark.facebook)  { left: 16.4% !important; top: 62% !important; }
-        .field .platform:has(.platformMark.reddit)    { left: 77.2% !important; top: 47% !important; }
-        .field .platform:has(.platformMark.twitch)    { left: 49.6% !important; top: 86.4% !important; }
-        .field .platform:has(.platformMark.discord)   { left: 49.4% !important; top: 23.1% !important; }
-        .field .platform:has(.platformMark.spotify)   { left: 34.1% !important; top: 70.7% !important; }
-        .field .platform:has(.platformMark.pinterest) { left: 26.1% !important; top: 43.3% !important; }
-        .field .platform:has(.platformMark.snapchat)  { left: 65.3% !important; top: 71.5% !important; }
+        /* Canonical 12-point circle: 42% radius, 30 degrees apart. */
+        .field .platform[aria-label="YouTube platform"]   { left: 50% !important; top: 8% !important; }
+        .field .platform[aria-label="TikTok platform"]    { left: 71% !important; top: 13.6% !important; }
+        .field .platform[aria-label="LinkedIn platform"]  { left: 86.4% !important; top: 29% !important; }
+        .field .platform[aria-label="Reddit platform"]    { left: 92% !important; top: 50% !important; }
+        .field .platform[aria-label="Discord platform"]   { left: 86.4% !important; top: 71% !important; }
+        .field .platform[aria-label="Snapchat platform"]  { left: 71% !important; top: 86.4% !important; }
+        .field .platform[aria-label="Pinterest platform"] { left: 50% !important; top: 92% !important; }
+        .field .platform[aria-label="Spotify platform"]   { left: 29% !important; top: 86.4% !important; }
+        .field .platform[aria-label="Twitch platform"]    { left: 13.6% !important; top: 71% !important; }
+        .field .platform[aria-label="Facebook platform"]  { left: 8% !important; top: 50% !important; }
+        .field .platform[aria-label="X platform"]         { left: 13.6% !important; top: 29% !important; }
+        .field .platform[aria-label="Instagram platform"] { left: 29% !important; top: 13.6% !important; }
 
         .field .platform:hover,
         .field .platform:focus-visible,
@@ -68,7 +68,7 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
         .field .platform b { margin-top: 7px !important; }
         .field .platform small { opacity: .9; }
 
-        /* Keep the existing platform icon implementation and colors unchanged. */
+        /* Keep existing platform icon implementation and colors unchanged. */
         .field .platformMark.youtube { color: #ff0033 !important; }
         .field .platformMark.instagram { color: #e1306c !important; }
         .field .platformMark.tiktok { color: #ffffff !important; }
@@ -83,18 +83,9 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
         .field .platformMark.snapchat { color: #fffc00 !important; }
 
         @media (max-width: 800px) {
-          .field {
-            width: min(680px, 92vw) !important;
-          }
-          .field .platform {
-            width: 88px !important;
-            min-width: 88px !important;
-          }
-          .field .platformMark {
-            width: 50px !important;
-            height: 50px !important;
-            border-radius: 15px !important;
-          }
+          .field { width: min(680px, 92vw) !important; }
+          .field .platform { width: 88px !important; min-width: 88px !important; }
+          .field .platformMark { width: 50px !important; height: 50px !important; border-radius: 15px !important; }
         }
       `}</style>
       {children}
