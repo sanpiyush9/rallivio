@@ -18,6 +18,13 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
         .rv .heroCopy{
           flex:0 1 560px!important;
           max-width:560px!important;
+          transform:translateY(-24px)!important;
+        }
+        .rv .heroCopy h1{
+          font-size:clamp(62px,5.5vw,88px)!important;
+          line-height:.92!important;
+          letter-spacing:-4.5px!important;
+          margin:16px 0!important;
         }
         .rv .ecosystem{
           position:relative!important;
