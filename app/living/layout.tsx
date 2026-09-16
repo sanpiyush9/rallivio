@@ -10,7 +10,6 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
           width: min(680px, 90vw) !important;
           aspect-ratio: 1 / 1 !important;
           height: auto !important;
-          max-height: 90vh !important;
           min-height: 0 !important;
           flex: 0 0 auto !important;
           flex-shrink: 0 !important;
@@ -37,19 +36,19 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
           text-align: center !important;
         }
 
-        /* Existing DOM order is preserved; these are the canonical 12 clock positions. */
-        .field .platform.p0  { left: 50% !important; top: 8% !important; }
-        .field .platform.p1  { left: 29% !important; top: 13.6% !important; }
-        .field .platform.p2  { left: 71% !important; top: 13.6% !important; }
-        .field .platform.p3  { left: 13.6% !important; top: 29% !important; }
-        .field .platform.p4  { left: 71% !important; top: 86.4% !important; }
-        .field .platform.p5  { left: 86.4% !important; top: 29% !important; }
-        .field .platform.p6  { left: 29% !important; top: 86.4% !important; }
-        .field .platform.p7  { left: 13.6% !important; top: 71% !important; }
-        .field .platform.p8  { left: 8% !important; top: 50% !important; }
-        .field .platform.p9  { left: 50% !important; top: 92% !important; }
-        .field .platform.p10 { left: 92% !important; top: 50% !important; }
-        .field .platform.p11 { left: 86.4% !important; top: 71% !important; }
+        /* The page renders platforms as buttons in this exact DOM order. */
+        .field .platform:nth-of-type(1)  { left: 50% !important; top: 8% !important; }
+        .field .platform:nth-of-type(2)  { left: 29% !important; top: 13.6% !important; }
+        .field .platform:nth-of-type(3)  { left: 71% !important; top: 13.6% !important; }
+        .field .platform:nth-of-type(4)  { left: 13.6% !important; top: 29% !important; }
+        .field .platform:nth-of-type(5)  { left: 71% !important; top: 86.4% !important; }
+        .field .platform:nth-of-type(6)  { left: 86.4% !important; top: 29% !important; }
+        .field .platform:nth-of-type(7)  { left: 29% !important; top: 86.4% !important; }
+        .field .platform:nth-of-type(8)  { left: 13.6% !important; top: 71% !important; }
+        .field .platform:nth-of-type(9)  { left: 8% !important; top: 50% !important; }
+        .field .platform:nth-of-type(10) { left: 50% !important; top: 92% !important; }
+        .field .platform:nth-of-type(11) { left: 92% !important; top: 50% !important; }
+        .field .platform:nth-of-type(12) { left: 86.4% !important; top: 71% !important; }
 
         .field .platform:hover,
         .field .platform:focus-visible,
@@ -86,7 +85,6 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
         @media (max-width: 800px) {
           .field {
             width: min(680px, 92vw) !important;
-            max-height: none !important;
           }
           .field .platform {
             width: 88px !important;
