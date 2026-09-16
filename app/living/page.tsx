@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type PointerEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Item = {
@@ -86,7 +86,6 @@ export default function LivingDiscover() {
   const [notice, setNotice] = useState("");
   const [modal, setModal] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
-  const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const [activePlatform, setActivePlatform] = useState("YouTube");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [pulse, setPulse] = useState(0);
@@ -131,10 +130,9 @@ export default function LivingDiscover() {
     if (l.includes("opportun")) { go("/opportunities"); return; }
     setFilter("Trending"); setQ(s); pulseField(`Searching the verified discovery pool for “${s}”.`);
   };
-  const move = (e: PointerEvent<HTMLElement>) => { const r = e.currentTarget.getBoundingClientRect(); setPointer({ x: (e.clientX - r.left) / r.width - .5, y: (e.clientY - r.top) / r.height - .5 }); };
   const activateCore = () => { setActivePlatform("YouTube"); setFilter("Trending"); setQ(""); pulseField("RALLIVIO re-centered. The living field is listening."); };
 
-  return <main className="rv" onPointerMove={move} onPointerLeave={() => setPointer({ x: 0, y: 0 })}>
+  return <main className="rv">
     <style>{css}</style>
     <header className="topbar">
       <button className="brand" type="button" onClick={() => go("/")}>RALL<span>IVIO</span><small>CREATORS. BRANDS. A BRIGHTER TOMORROW.</small></button>
@@ -159,7 +157,7 @@ export default function LivingDiscover() {
 
       <div className="ecosystem">
         <div className={`field ${pulse ? "responding" : ""}`} aria-label="RALLIVIO living platform field" style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", flexShrink: 0 }}>
-          <div className="fieldSpace" style={{ transform: `perspective(1200px) rotateY(${pointer.x * -5}deg) rotateX(${pointer.y * 4}deg)` }}>
+          <div className="fieldSpace">
             <div className="fieldGrid"/><div className="nebula n1"/><div className="nebula n2"/>
             <div className="energyRing er1"/><div className="energyRing er2"/><div className="energyRing er3"/>
             <div className="orbit o1"/><div className="orbit o2"/><div className="orbit o3"/>
