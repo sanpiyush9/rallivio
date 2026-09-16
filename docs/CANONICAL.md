@@ -23,6 +23,8 @@
 | Known issues | `docs/KNOWN_ISSUES.md` | 1.0 | 2026-09-15 |
 | Recovery checkpoints | `docs/RECOVERY_CHECKPOINTS.md` | 1.0 | 2026-09-16 |
 | Living platform routing | `docs/specs/living-platform-routing-v1.md` | 1.0 | 2026-09-16 |
+| Living Discover environment | `docs/specs/living-discovery-environment-v1.md` | 1.0 | 2026-09-16 |
+| Discover hero | `docs/specs/discovery-hero-v2.md` | 2.0 | 2026-09-16 |
 | Design system | `docs/DESIGN_SYSTEM.md` | — | not yet written |
 | Discovery page | `docs/specs/discovery-page-v1.md` | — | not yet written |
 | Data model | `docs/specs/data-model-v1.md` | — | not yet written |
@@ -35,7 +37,7 @@
 
 | Screen | Current file | Version | Updated |
 |---|---|---|---|
-| Discovery page | `design/discovery-v1.png` | — | not yet added |
+| Discovery page / hero | `design/discovery-v2.svg` | 2.0 | 2026-09-16 |
 | Homepage | `design/home-v1.png` | — | not yet added |
 | Leaderboard | `design/leaderboard-v1.png` | — | not yet added |
 
@@ -44,6 +46,7 @@
 | Old document | Replaced by | Date |
 |---|---|---|
 | `docs/RALLIVIO_RESTART_ROADMAP.md` | `docs/RALLIVIO_MASTER_v2.md` | 2026-09-15 |
+| `design/discovery-v1.png` | `design/discovery-v2.svg` | 2026-09-16 |
 
 ## How to update this file
 
