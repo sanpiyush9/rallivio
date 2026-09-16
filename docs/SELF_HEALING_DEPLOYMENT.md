@@ -33,44 +33,9 @@ Never mark a change `LIVE`, `READY FOR VISUAL QA`, or `VERIFIED` based only on a
 
 ## Incident: 2026-09-16/17 QA deployment handoff
 
-### Observed condition
+The latest QA commit was `87c8f19aa2c69989ccc0dd4cbe86a9fafba9347e`. GitHub confirmed the QA branch had moved to that SHA, while the latest Vercel deployment was still on `f817025...`. Therefore the latest QA change was not verified live.
 
-The latest QA commit was:
-
-`87c8f19aa2c69989ccc0dd4cbe86a9fafba9347e`
-
-Commit message:
-
-`fix: reduce living discovery orbit scale`
-
-The commit changes `app/living/layout.tsx` and adds the requested 78% visual scale to the Living field. The canonical platform coordinates and icons were not changed by this commit.
-
-GitHub confirms that `feature/living-position-editor` currently points to SHA `87c8f19aa2c69989ccc0dd4cbe86a9fafba9347e`.
-
-The latest Vercel deployment available for that branch was still:
-
-`dpl_8z6erGTZwYPHm6z2s3g8YTMQhEWo`
-
-with deployed Git SHA:
-
-`f8170257128dcdd47024124946b97f9de2b609c4`
-
-Therefore the latest QA change was **not verified live** at that point.
-
-### What this ruled out
-
-The first suspected failure mode was that the GitHub commit existed but the branch reference had not moved. That is **not the case**: the branch HEAD is `87c8f19...`.
-
-### Remaining investigation boundary
-
-The available evidence does not prove whether the missing deployment was caused by:
-
-1. GitHub not delivering a Vercel webhook/event,
-2. Vercel receiving the event but skipping the build,
-3. a Vercel Git integration/configuration issue, or
-4. another deployment handoff condition.
-
-Do not state one of these as the root cause without delivery/configuration evidence.
+The exact original cause was not proven. Possible boundaries were webhook delivery, Vercel build/skip behavior, Git integration/configuration, or another transient deployment handoff condition. Do not state an unverified cause as fact.
 
 ## Recovery procedure
 
@@ -80,114 +45,85 @@ Do not state one of these as the root cause without delivery/configuration evide
 git ls-remote origin feature/living-position-editor
 ```
 
-2. If the SHA is not the intended commit, fix the branch ref/push first.
-
-3. If the SHA is correct but no Vercel deployment exists, inspect the Vercel/Git integration and webhook delivery.
-
-4. Check Vercel Project → Settings → Git, especially:
-   - connected repository
-   - preview deployment configuration
-   - ignored build step
-   - branch configuration
-
+2. If the SHA is wrong, fix the branch ref/push first.
+3. If the SHA is correct but no Vercel deployment exists, inspect Git/Vercel integration and webhook delivery.
+4. Check Vercel Project → Settings → Git, especially connected repository, preview configuration, ignored build step, and branch configuration.
 5. Check GitHub repository → Settings → Webhooks → Vercel Recent Deliveries.
-
-6. If required, trigger a new Preview deployment through an approved Vercel/Git workflow.
-
-7. After deployment, verify:
-   - deployment state is `READY`
-   - deployment branch is the intended QA branch
-   - deployment Git SHA equals branch HEAD
-
+6. If required, trigger a new QA Preview deployment.
+7. Verify deployment state is `READY`, branch is correct, and deployed Git SHA equals branch HEAD.
 8. Only then perform visual QA.
 
-## Important lesson from external debugging review
+## External debugging lesson
 
-A useful debugging order is:
+The useful debugging order is:
 
-**Branch HEAD → webhook delivery → Vercel build/skip configuration.**
+**Branch HEAD → webhook/deployment trigger → Vercel build/skip configuration → SHA verification.**
 
-This isolates the failure boundary quickly and avoids changing application code to compensate for a deployment problem.
-
-An empty commit can also be used as a controlled deployment-trigger test when appropriate:
+A controlled empty commit can be used as a QA-only deployment-trigger test when appropriate:
 
 ```bash
-git commit --allow-empty -m "chore: trigger deploy"
+git commit --allow-empty -m "chore: trigger qa deployment"
 git push origin feature/living-position-editor
 ```
 
-Do this only on the QA branch and only when a new deployment trigger is actually desired.
+## Living UI visual QA lessons
 
-## New lesson: viewport-constrained visual sizing
+The Living hero had a correct 12-point circle but initially exceeded the viewport. The correct fix was to constrain the square field against viewport height and vertically center the hero, rather than changing platform coordinates.
 
-The 78% field transform was a temporary visual-scale workaround. It reduced the rendered orbit but did not solve the underlying layout constraint: the square field was still sized from the full width of its grid column, so the hero could become taller than the available viewport and leave excessive vertical dead space or clip the lower platform label.
+Preserve:
+- canonical twelve coordinates;
+- square `aspectRatio: 1 / 1` container;
+- existing Simple Icons implementation and pinned version;
+- no per-platform offsets or runtime geometry calculations.
 
-For the Living hero, preserve the canonical platform geometry and instead constrain the **square field itself** against viewport height:
-
-```css
-width:min(100%,560px,62vh)
-```
-
-The hero should use a viewport-aware minimum height and centered two-column alignment:
+Current viewport sizing pattern:
 
 ```css
-min-height:calc(100vh - 88px)
-display:flex
+width:min(100%,520px,58vh)
+height:calc(100vh - 88px)
 align-items:center
-justify-content:space-between
+overflow:hidden
 ```
 
-The field and ecosystem wrapper must allow visible overflow so the 92% Pinterest badge and label are not clipped. Do **not** move platform coordinates to compensate for viewport sizing.
+Hero copy may be enlarged/lifted independently without changing orbit geometry.
 
-This is a layout correction, not a geometry correction. The twelve canonical coordinates, square aspect ratio, and platform icon implementation remain unchanged.
+## Brand badge styling lesson
 
-## Current recovery change
+After layout is accepted, platform badges can use recognizable brand identity without altering geometry:
 
-On `feature/living-position-editor`, commit:
+| Platform | Fill | Logo |
+|---|---|---|
+| YouTube | `#FF0000` | white |
+| Instagram | `linear-gradient(45deg,#833AB4,#FD1D1D,#FCB045)` | white |
+| TikTok | `#000000` | white + subtle white ring |
+| X | `#000000` | white + subtle white ring |
+| LinkedIn | `#0A66C2` | white |
+| Facebook | `#1877F2` | white |
+| Reddit | `#FF4500` | white |
+| Discord | `#5865F2` | white |
+| Snapchat | `#FFFC00` | black |
+| Pinterest | `#E60023` | white |
+| Spotify | `#1DB954` | black |
+| Twitch | `#9146FF` | white |
 
-`4de6ad2a93ad56886573d8970fae4b959950f837`
+Badge styling target:
+- approximately `56px × 56px`;
+- `border-radius:50%`;
+- flex-center the existing logo;
+- logo approximately `28px`;
+- soft glow derived from brand hue;
+- TikTok/X may use a thin `rgba(255,255,255,0.2)` ring because their black fills sit on a dark page.
 
-changes the Living layout to:
+**Do not change the existing Simple Icons path data or pinned package/version. Only badge fill/background and logo fill color should change.**
 
-- remove the temporary `.field` scale transform;
-- constrain the field to `min(100%, 560px, 62vh)`;
-- center the hero columns vertically;
-- give the ecosystem and field visible overflow;
-- keep the canonical twelve platform positions unchanged.
+## QA safety rules
+
+- QA branch only: `feature/living-position-editor`.
+- Never modify production/main for visual experiments.
+- Never change canonical platform coordinates to solve sizing problems.
+- Never replace or upgrade pinned Simple Icons unless explicitly requested.
+- When a visual issue appears, first classify it as geometry, container sizing, typography, styling, or deployment state before changing code.
 
 ## Self-healing acceptance criteria
 
-A future self-healing workflow should:
-
-- identify the exact intended Git SHA;
-- identify the exact branch;
-- find the latest Vercel deployment for that branch;
-- require `READY` state;
-- compare the Vercel Git SHA with the intended Git SHA;
-- reject stale deployments;
-- attempt the documented recovery path when the SHA does not match;
-- re-check after recovery;
-- report the exact Git SHA and Vercel deployment ID in the final status.
-
-### Example status
-
-```text
-Branch: feature/living-position-editor
-Expected SHA: 87c8f19...
-Deployed SHA: f817025...
-Vercel state: READY
-
-STATUS: NOT LIVE
-REASON: READY deployment is stale; Git SHA mismatch.
-```
-
-A successful result must look like:
-
-```text
-Branch: feature/living-position-editor
-Expected SHA: <sha>
-Deployed SHA: <same sha>
-Vercel state: READY
-
-STATUS: LIVE / VERIFIED
-```
+A future workflow should report branch, expected SHA, deployed SHA, Vercel state, and deployment ID. A mismatch means **NOT LIVE** and should trigger the recovery path.
