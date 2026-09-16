@@ -3,6 +3,50 @@
 > Newest entries at the top.
 > Read the most recent 3 before starting work.
 
+## 2026-09-16 — Discover hero v2 reference implementation
+Branch: feature/living-core-platform-routing
+Status: In progress
+
+### Canonical basis read before implementation
+- Read `docs/CANONICAL.md`: current index was dated 2026-09-16; Master plan is v2.0; Living Discovery Environment is v1.0; platform routing is v1.0.
+- Read `docs/RALLIVIO_STATE.md`: the Living Discovery Environment must use real verified state as the truth layer and simulation only as presentation.
+- Read `docs/specs/living-discovery-environment-v1.md`: interaction must remain responsive and truthful; platform environments consume normalized verified data.
+- The dedicated Discover hero specification was not previously registered, so this change created `docs/specs/discovery-hero-v2.md` and registered it as CURRENT.
+
+### Owner QA findings addressed
+- Removed the visible `Touch RALLIVIO · the whole ecosystem senses and responds` instructional pill from the hero.
+- Reoriented the hero toward the supplied reference screenshot as the visual authority rather than the prior generic circular platform layout.
+- Added the supplied reference as versioned `design/discovery-v2.svg` and registered it in `docs/CANONICAL.md`.
+
+### Implemented
+- Replaced runtime Iconify/remote platform logos with bundled `simple-icons` SVG paths in `lib/platform-icons.ts`.
+- Added brand-colored circular platform discs for all 12 platforms, including dark logos for Snapchat and Spotify for contrast.
+- Added a typed icon registry plus `scripts/check-platform-icons.mjs`; `npm run verify` now includes the icon assertion.
+- Changed desktop platform placement to 12 exact 30-degree points starting at -90 degrees with YouTube at the top.
+- Uses one computed ellipse (`Rx`/`Ry`) for all desktop platform positions and recomputes radius/badge size on resize.
+- Added a mobile grid fallback below 900px instead of forcing the orbital composition into narrow widths.
+- Replaced the flat center sphere with a luminous globe layer containing latitude/longitude mesh, surface particles, bright rim, internal glow and multiple tilted orbital paths.
+- Kept RALLIVIO center text in a separate static sibling layer so globe breathing does not move the text.
+- Added curved connector paths from the fixed orbit geometry toward the globe, with animated propagation on interaction.
+- Added outward core sensing and inward platform sensing without showing explanatory toast text.
+- Added reduced-motion handling; interaction remains stateful without continuous animation.
+- Added the reference top-right pill and handwritten Explore / Connect / Create / Grow treatment with underline flourish.
+- Expanded the topic-pill area to multiple rows ending in `+ More`.
+
+### Resilience
+- Recorded the previous remote-icon failure as `KI-005`.
+- KI-005 is now Level 3 with a Level 4 target because runtime icon failures are prevented by bundled assets, typed coverage and CI verification.
+
+### Current implementation note
+- The existing `app/discover-live2/page.tsx` could not be safely replaced through the GitHub Contents API because the connector returned a stale blob SHA for that path. To avoid force-updating or risking unrelated history, the reference implementation was isolated in `app/discover-reference/page.tsx` with its own CSS module and root middleware routing was switched to it.
+- The old live surface remains untouched for recovery comparison.
+- Production/main was not changed.
+
+### Next action
+- Run `npm run verify` on the feature branch, inspect Vercel Preview, and capture 1920 / 1280 / 390 screenshots for the acceptance criteria in `docs/specs/discovery-hero-v2.md`.
+
+---
+
 ## 2026-09-16 — Living real-data Discover architecture implemented
 Branch: feature/youtube-real-discovery
 Status: In progress
