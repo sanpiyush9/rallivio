@@ -118,6 +118,43 @@ git push origin feature/living-position-editor
 
 Do this only on the QA branch and only when a new deployment trigger is actually desired.
 
+## New lesson: viewport-constrained visual sizing
+
+The 78% field transform was a temporary visual-scale workaround. It reduced the rendered orbit but did not solve the underlying layout constraint: the square field was still sized from the full width of its grid column, so the hero could become taller than the available viewport and leave excessive vertical dead space or clip the lower platform label.
+
+For the Living hero, preserve the canonical platform geometry and instead constrain the **square field itself** against viewport height:
+
+```css
+width:min(100%,560px,62vh)
+```
+
+The hero should use a viewport-aware minimum height and centered two-column alignment:
+
+```css
+min-height:calc(100vh - 88px)
+display:flex
+align-items:center
+justify-content:space-between
+```
+
+The field and ecosystem wrapper must allow visible overflow so the 92% Pinterest badge and label are not clipped. Do **not** move platform coordinates to compensate for viewport sizing.
+
+This is a layout correction, not a geometry correction. The twelve canonical coordinates, square aspect ratio, and platform icon implementation remain unchanged.
+
+## Current recovery change
+
+On `feature/living-position-editor`, commit:
+
+`4de6ad2a93ad56886573d8970fae4b959950f837`
+
+changes the Living layout to:
+
+- remove the temporary `.field` scale transform;
+- constrain the field to `min(100%, 560px, 62vh)`;
+- center the hero columns vertically;
+- give the ecosystem and field visible overflow;
+- keep the canonical twelve platform positions unchanged.
+
 ## Self-healing acceptance criteria
 
 A future self-healing workflow should:
