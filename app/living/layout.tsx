@@ -16,14 +16,14 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
           overflow:hidden!important;
         }
         .rv .heroCopy{
-          flex:0 1 560px!important;
-          max-width:560px!important;
-          transform:translateY(-24px)!important;
+          flex:0 1 620px!important;
+          max-width:620px!important;
+          transform:translateY(-18px)!important;
         }
         .rv .heroCopy h1{
-          font-size:clamp(62px,5.5vw,88px)!important;
-          line-height:.92!important;
-          letter-spacing:-4.5px!important;
+          font-size:clamp(72px,5.2vw,96px)!important;
+          line-height:.94!important;
+          letter-spacing:-.045em!important;
           margin:16px 0!important;
         }
         .rv .ecosystem{
