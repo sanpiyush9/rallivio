@@ -1,50 +1,272 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import YouTubeDiscoveryPanel from "./YouTubeDiscoveryPanel";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import SiteHeader from "../components/SiteHeader";
 
-type Video={id:string;title:string;publishedAt:string;thumbnail:string;views:number;likes:number;comments:number;engagement:number;velocity:number;url:string;embeddable:boolean};
-type Data={channel:{id:string;title:string;handle:string;description:string;avatar:string;subscribers:number;totalViews:number;videos:number};items:Video[];fetchedAt:string};
-const platforms=["All Platforms","YouTube","Instagram","TikTok","X","LinkedIn"];
-const periods=["7D","30D","90D","1Y"];
-const fmt=(n:number)=>n>=1e9?`${(n/1e9).toFixed(1)}B`:n>=1e6?`${(n/1e6).toFixed(1)}M`:n>=1e3?`${(n/1e3).toFixed(n>=1e5?0:1)}K`:`${n}`;
-const ago=(d:string)=>{const h=Math.max(0,Math.floor((Date.now()-new Date(d).getTime())/36e5));return h<24?`${h}h ago`:h<720?`${Math.floor(h/24)}d ago`:`${Math.floor(h/720)}mo ago`};
+type Video = {
+  id: string;
+  title: string;
+  publishedAt: string;
+  thumbnail: string;
+  views: number;
+  likes: number;
+  comments: number;
+  engagement: number;
+  velocity: number;
+  url: string;
+  embeddable: boolean;
+};
+type Data = {
+  channel: {
+    id: string;
+    title: string;
+    handle: string;
+    description: string;
+    avatar: string;
+    subscribers: number;
+    totalViews: number;
+    videos: number;
+  };
+  items: Video[];
+  fetchedAt: string;
+};
 
-export default function CreatorPage(){
- const router=useRouter();
- const [platform,setPlatform]=useState("All Platforms"),[period,setPeriod]=useState("30D"),[query,setQuery]=useState("Travel with Alex"),[input,setInput]=useState("Travel with Alex"),[data,setData]=useState<Data|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(""),[plus,setPlus]=useState(false),[plans,setPlans]=useState(false),[light,setLight]=useState(false),[followed,setFollowed]=useState(false),[detail,setDetail]=useState<Video|null>(null),[notice,setNotice]=useState("");
- const load=async()=>{setLoading(true);setError("");try{const r=await fetch(`/api/youtube/creator?q=${encodeURIComponent(query)}`,{cache:"no-store"});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.state||"YOUTUBE_UNAVAILABLE");setData(j)}catch(e){setError(e instanceof Error?e.message:"YOUTUBE_UNAVAILABLE")}finally{setLoading(false)}};
- useEffect(()=>{void load()},[query]);
- const notify=(s:string)=>{setNotice(s);window.setTimeout(()=>setNotice(""),2800)};
- const days=period==="7D"?7:period==="90D"?90:period==="1Y"?365:30;
- const list=(data?.items||[]).filter(v=>new Date(v.publishedAt).getTime()>=Date.now()-days*864e5);
- const totalViews=data?.channel.totalViews||0,subs=data?.channel.subscribers||0,avg=list.length?list.reduce((a,v)=>a+v.engagement,0)/list.length:0;
- function choosePlatform(p:string){setPlatform(p);if(p!=="All Platforms"&&p!=="YouTube")notify(`${p} is not connected yet. Connect it to unlock its native data layer.`)}
- return <main className={`creator-page ${light?"light":""}`}>
-  <header className="topbar"><button className="brand" onClick={()=>router.push("/")}>◁ RALLI<span>VIO</span><small>Discover. Organize. Grow.</small></button><nav><button onClick={()=>router.push("/living")}>Discover</button><button className="active">Creators</button><button onClick={()=>notify("Brands & Opportunities workspace is coming next.")}>Brands &amp; Opportunities</button><button onClick={()=>notify("Community workspace is coming next.")}>Community</button><button onClick={()=>notify("About RALLIVIO — the living creator-economy discovery ecosystem.")}>About</button></nav><div className="tools"><form className="search" onSubmit={e=>{e.preventDefault();setQuery(input.trim()||"Travel with Alex")}}><span>⌕</span><input value={input} onChange={e=>setInput(e.target.value)} placeholder="Search creators, topics, or ideas..."/></form><button className="plus" onClick={()=>setPlans(true)}>✦ RALLIVIO+</button><button onClick={()=>setLight(v=>!v)}>◐</button><button className="profile">S&nbsp; Santosh⌄</button></div></header>
-  <div className="page-grid"><aside className="sidebar"><div className="mini"><div className="avatar">{data?.channel.avatar?<img src={data.channel.avatar} alt=""/>:"A"}</div><strong>{data?.channel.title||"YouTube Creator"}</strong><span>{data?.channel.handle||"Live creator lookup"}</span><button onClick={()=>setFollowed(v=>!v)}>{followed?"Following":"Follow"}</button></div>{["Overview","Content","Analytics","Audience","Platform Performance","Historical Data","RALLIVIO Intelligence","Opportunities","Collaboration","Brand Matches","Alerts & Notifications","Settings"].map((x,i)=><button className={`side ${i===0?"selected":""}`} key={x} onClick={()=>{if(!plus&&i>5){setPlans(true);return}document.getElementById(`section-${i}`)?.scrollIntoView({behavior:"smooth"})}}><span>{["⌂","▣","▥","♟","◈","◷","✦","♡","♧","▤","◉","⚙"][i]}</span>{x}{!plus&&i>5&&<small>🔒</small>}</button>)}<div className="side-card"><b>✦ RALLIVIO+</b><p>{plus?"Subscriber preview enabled.":"Free discovery is active."}</p><button onClick={()=>setPlans(true)}>{plus?"Manage Plan":"View Plans"}</button></div></aside>
-   <section className="content">
-    <section id="section-0" className="hero card"><div className="cover"/><div className="identity"><div className="avatar hero-avatar">{data?.channel.avatar?<img src={data.channel.avatar} alt=""/>:"A"}</div><div><h1>{data?.channel.title||"Travel with Alex"} <i>✓</i></h1><p>{data?.channel.handle||"YouTube creator"}</p><p>{data?.channel.description||"Search a real YouTube creator to load live data."}</p><div className="chips"><span>Creator profile</span><span>{platform==="All Platforms"?"All platforms":platform}</span><span>Verified source</span></div></div><button className="edit" onClick={()=>notify("Creator profile editor is ready for account storage.")}>Edit Profile</button><div className="hero-metrics"><b>{fmt(subs)}<small>Subscribers</small></b><b>{fmt(totalViews)}<small>Total Views</small></b><b>{avg.toFixed(1)}%<small>Avg. Eng.</small></b></div></div></section>
-    <section className="platform-bar card"><div className="platform-intro"><b>Platform</b><small>Switch the native data + intelligence layer without leaving this creator.</small></div><div className="platforms">{platforms.map(p=><button key={p} className={platform===p?"active":""} onClick={()=>choosePlatform(p)}>{p}{p==="YouTube"&&data?<small>LIVE</small>:null}</button>)}<button className="connect" onClick={()=>setPlans(true)}>＋ Connect Platform</button></div><div className="periods">{periods.map(p=><button key={p} className={period===p?"active":""} onClick={()=>setPeriod(p)}>{p}</button>)}</div></section>
-    {loading&&<div className="status">● Fetching live YouTube creator data…</div>}{error&&<div className="status error">YouTube: {error}<button onClick={load}>Retry</button></div>}{!loading&&!error&&data&&<div className="status live">● Live creator source · YouTube · fetched {ago(data.fetchedAt)}</div>}
-    <div className="stat-grid"><Metric label="Views" value={fmt(totalViews)} sub="Channel total"/><Metric label="Subscribers" value={fmt(subs)} sub="Current public count"/><Metric label="Engagement" value={`${avg.toFixed(1)}%`} sub={`${list.length} videos in ${period}`}/><Metric label="Videos" value={fmt(data?.channel.videos||0)} sub="Channel total"/><Metric label="Published in view" value={`${list.length}`} sub={period}/></div>
-    {platform==="YouTube"&&<YouTubeDiscoveryPanel/>}
-    {platform!=="YouTube"&&<section className="platform-empty card"><span>PLATFORM LAYER</span><h2>{platform==="All Platforms"?"All-platform creator overview":"Connect this platform to activate its native data"}</h2><p>{platform==="All Platforms"?"You are viewing the creator identity first. Select a connected platform above to open its native content, playback and RALLIVIO intelligence inside this same profile.":`${platform} is not connected for this creator yet. RALLIVIO will show verified native metrics after authorization — never fabricated values.`}</p>{platform!=="All Platforms"&&<button onClick={()=>setPlans(true)}>＋ Connect {platform}</button>}</section>}
-    <div id="section-1" className="content-section"><div className="section-heading"><div><span>CREATOR CONTENT</span><h2>Content performance</h2><p>Native content stays separate from cross-platform discovery context.</p></div><button onClick={()=>notify("Full content library is ready for the next pass.")}>View all →</button></div><div className="content-grid"><section className="card content-list">{list.slice(0,8).map(v=><button key={v.id} onClick={()=>setDetail(v)}><img src={v.thumbnail} alt=""/><span><strong>{v.title}</strong><small>{ago(v.publishedAt)} · {fmt(v.views)} views</small></span><em>{v.engagement.toFixed(1)}%</em></button>)}{!list.length&&!loading&&<div className="empty">No videos in this period.</div>}</section><section className="card performance"><Title t="Growth Overview" right={period}/><div className="bars">{list.slice(0,12).map(v=><span key={v.id} style={{height:`${Math.max(10,Math.min(94,(v.views/Math.max(1,...list.slice(0,12).map(x=>x.views)))*90))}%`}} title={`${v.title}: ${fmt(v.views)} views`}/>)}</div><small className="note">Public YouTube data only. True historical growth comes from stored RALLIVIO snapshots.</small></section></div></div>
-    <div id="section-4" className="grid2"><section className="card"><Title t="Platform Performance" right={period}/>{platforms.slice(1).map(name=><div className="prow" key={name}><strong>{name}</strong><span>{name==="YouTube"?fmt(subs):"—"}</span><span>{name==="YouTube"?fmt(totalViews):"—"}</span><span>{name==="YouTube"?`${avg.toFixed(1)}%`:"—"}</span>{name==="YouTube"?<em>LIVE DATA</em>:<button onClick={()=>setPlans(true)}>Connect</button>}</div>)}</section><section id="section-3" className="card audience"><Title t="Audience Insights" right="Verified data only"/><b>Private audience analytics</b><p>The public YouTube API does not expose every creator demographic. RALLIVIO will display verified audience breakdowns after authorized access.</p><button onClick={()=>notify("YouTube creator authorization is required for private audience analytics.")}>Connect YouTube account</button></section></div>
-    <div id="section-6" className="intelligence-grid"><section className="card intelligence"><Title t="RALLIVIO Intelligence" right={plus?"Subscriber":"🔒 Subscriber"}/>{plus?<><Row t="Freshness" d={list[0]?`Latest upload ${ago(list[0].publishedAt)}.`:"Waiting for data."}/><Row t="Engagement quality" d={`Average visible engagement ${avg.toFixed(1)}%.`}/><Row t="Velocity" d={list[0]?`${fmt(list[0].velocity)} views/hour estimated.`:"No velocity yet."}/></>:<Locked title="Creator intelligence" text="Understand why content moves, where audiences change, and what to explore next." onClick={()=>setPlans(true)}/>}</section><section id="section-7" className="card intelligence"><Title t="Opportunities" right="RALLIVIO+"/>{plus?<><Row t="High-velocity content" d="Explore verified movement patterns."/><Row t="Topic expansion" d="Compare emerging topics after history exists."/><Row t="Collaboration discovery" d="Creator graph matching."/></>:<Locked title="Creator opportunities" text="Unlock collaboration, content and brand opportunity matching." onClick={()=>setPlans(true)}/>}</section></div>
-    <div id="section-5" className="grid2"><section className="card"><Title t="Content History" right={plus?period:"🔒 RALLIVIO+"}/>{plus?list.slice(0,8).map(v=><button className="history" key={v.id} onClick={()=>setDetail(v)}><span>{v.title}</span><b>{fmt(v.views)}</b></button>):<Locked title="Historical performance" text="Track how connected platforms and content change over time." onClick={()=>setPlans(true)}/>}</section><section className="card"><Title t="Recent Activity" right="YouTube"/>{list.slice(0,5).map(v=><div className="activity" key={v.id}>● <span>Published: {v.title}</span><small>{ago(v.publishedAt)}</small></div>)}</section></div>
-    <section className="plan-strip card"><div><b>✦</b><span><strong>{plus?"RALLIVIO+ preview":"Free discovery is active"}</strong><small>{plus?"Deeper intelligence from verified YouTube signals.":"Discover, watch, follow and explore creators free; unlock history and intelligence with RALLIVIO+."}</small></span></div><button onClick={()=>setPlans(true)}>View Plans →</button></section>
-   </section>
-  </div>
-  {detail&&<div className="modal" onClick={()=>setDetail(null)}><div className="video-modal" onClick={e=>e.stopPropagation()}><button className="close" onClick={()=>setDetail(null)}>×</button><div className="video-frame">{detail.embeddable?<iframe src={`https://www.youtube.com/embed/${detail.id}`} title={detail.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>:<div>Embedding unavailable. <a href={detail.url} target="_blank" rel="noreferrer">Watch on YouTube ↗</a></div>}</div><h2>{detail.title}</h2><p>{fmt(detail.views)} views · {fmt(detail.likes)} likes · {fmt(detail.comments)} comments · {detail.engagement.toFixed(1)}% engagement</p><div className="actions"><a href={detail.url} target="_blank" rel="noreferrer">Open on YouTube ↗</a><button onClick={()=>notify("Saved to RALLIVIO.")}>☆ Save</button><button onClick={()=>{setFollowed(true);notify("Following creator")}}>＋ Follow</button></div></div></div>}
-  {plans&&<div className="modal" onClick={()=>setPlans(false)}><div className="plans" onClick={e=>e.stopPropagation()}><button className="close" onClick={()=>setPlans(false)}>×</button><small>RALLIVIO PLANS</small><h2>Free discovery. Deeper intelligence with RALLIVIO+.</h2><p>Everyone can discover, watch, follow and explore creators. Subscription adds history, personalization, analytics and opportunities.</p><div className="plan-cards"><div><h3>Free</h3><strong>$0</strong><ul><li>Discover &amp; watch</li><li>Basic creator profiles</li><li>Follow &amp; save</li><li>Categories &amp; search</li><li>Basic signals</li></ul><button onClick={()=>{setPlus(false);setPlans(false)}}>Use Free</button></div><div className="featured"><h3>RALLIVIO+</h3><strong>Creator Intelligence</strong><ul><li>Cross-platform analytics</li><li>7D / 30D / 90D / 1Y history</li><li>Personalized radar</li><li>RALLIVIO Intelligence</li><li>Brand &amp; collaboration matches</li><li>Alerts &amp; advanced filters</li></ul><button onClick={()=>{setPlus(true);setPlans(false)}}>Continue with RALLIVIO+</button></div></div></div></div>}
-  {notice&&<div className="toast">{notice}</div>}
-  <style jsx global>{`*{box-sizing:border-box}.creator-page{min-height:100vh;background:#050812;color:#f5f6fa;font-family:Inter,ui-sans-serif,system-ui,sans-serif}.creator-page.light{background:#f4f6fb;color:#151923}.topbar{height:68px;border-bottom:1px solid #252a3b;display:flex;align-items:center;gap:26px;padding:0 28px;background:rgba(5,8,18,.97);position:sticky;top:0;z-index:30}.brand{position:relative;border:0;background:none;color:#fff;font-weight:900;font-size:25px;letter-spacing:-1.7px;cursor:pointer;padding-right:105px;white-space:nowrap}.brand span{color:#b56cff}.brand small{display:block;position:absolute;left:39px;bottom:-5px;font-size:7px;color:#7f879a}.topbar nav{display:flex;gap:5px;flex:1}.topbar nav button,.tools button{border:0;background:transparent;color:#aeb5c7;padding:9px 10px;border-radius:9px;cursor:pointer;white-space:nowrap}.topbar nav button:hover,.tools button:hover,.topbar nav .active{background:#181d2d;color:#fff}.tools{display:flex;align-items:center;gap:5px}.search{display:flex;align-items:center;gap:6px;border:1px solid #2c3245;background:#0c1120;border-radius:10px;padding:0 10px;height:38px;width:260px}.search input{border:0;outline:0;background:none;color:#fff;width:100%;font-size:12px}.plus{color:#d7b5ff!important;background:#25163a!important;border:1px solid #6536a1!important}.page-grid{display:grid;grid-template-columns:248px 1fr;max-width:1680px;margin:auto}.sidebar{border-right:1px solid #202536;min-height:calc(100vh - 68px);padding:18px 12px;position:sticky;top:68px;align-self:start}.mini{text-align:center;padding:12px 8px 18px;border-bottom:1px solid #202536;margin-bottom:10px}.avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#7044d7,#1b8f9c);display:grid;place-items:center;font-weight:800;margin:0 auto 9px;overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover}.mini strong,.mini span{display:block}.mini strong{font-size:13px}.mini span{font-size:11px;color:#7f8799;margin:4px 0 10px}.mini button,.side-card button,.edit,.platform-empty button,.locked,.plans button{border:1px solid #454b60;background:#121829;color:#fff;border-radius:8px;padding:7px 12px;cursor:pointer}.side{width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;color:#8992a8;text-align:left;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:12px}.side:hover,.side.selected{background:#141a2b;color:#fff}.side>span{width:18px;text-align:center}.side small{margin-left:auto}.side-card{margin:16px 4px 0;padding:14px;border:1px solid #2d3346;border-radius:12px;background:#0c1120}.side-card b{font-size:12px;color:#d7b5ff}.side-card p{font-size:11px;color:#929aae;line-height:1.5}.content{padding:24px;min-width:0}.card{background:#0a0f1c;border:1px solid #242a3c;border-radius:13px;box-shadow:0 10px 35px #0002}.hero{overflow:hidden;margin-bottom:12px}.cover{height:100px;background:radial-gradient(circle at 75% 40%,#49328a 0,transparent 35%),linear-gradient(110deg,#101b36,#161026 55%,#091a25)}.identity{padding:0 22px 17px;display:grid;grid-template-columns:68px 1fr auto;gap:15px;align-items:center}.hero-avatar{width:68px;height:68px;margin-top:-32px;border:4px solid #0a0f1c}.identity h1{font-size:22px;margin:8px 0 2px}.identity h1 i{font-size:12px;color:#72a8ff;font-style:normal}.identity p{margin:3px 0;color:#858da2;font-size:11px;max-width:700px}.chips{display:flex;gap:6px;margin-top:8px}.chips span{font-size:9px;padding:4px 8px;border-radius:20px;background:#171d2d;color:#aeb7ca}.hero-metrics{grid-column:2/-1;display:flex;gap:30px}.hero-metrics b{font-size:17px}.hero-metrics small{display:block;color:#777f93;font-size:9px;margin-top:2px}.platform-bar{padding:10px 12px;display:grid;grid-template-columns:185px 1fr auto;align-items:center;gap:10px;margin-bottom:12px}.platform-intro b,.platform-intro small{display:block}.platform-intro b{font-size:11px}.platform-intro small{font-size:8px;color:#6f788c;line-height:1.35;margin-top:3px}.platforms{display:flex;gap:4px;flex-wrap:wrap}.platform-bar button{display:flex;align-items:center;gap:5px;border:0;background:transparent;color:#8d96a9;padding:7px 9px;border-radius:7px;cursor:pointer;font-size:10px}.platform-bar button:hover,.platform-bar button.active{background:#181e2f;color:#fff}.platform-bar button small{font-size:6px;color:#69d7a0}.platform-bar .connect{color:#b980ff}.periods{border-left:1px solid #2b3040;padding-left:8px;display:flex}.status{padding:9px 13px;background:#0c1322;border:1px solid #2c3650;border-radius:9px;margin:0 0 12px;font-size:11px;color:#aeb7ca}.status button{float:right;border:0;background:#222b40;color:#fff;border-radius:6px;padding:4px 8px;cursor:pointer}.status.error{border-color:#6d3943;color:#ffb7c0}.status.live{color:#70d6a2}.stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}.metric{padding:12px}.metric small{display:block;color:#7e879a;font-size:9px}.metric strong{display:block;font-size:20px;margin:6px 0}.metric em{font-size:8px;color:#8993a6;font-style:normal}.platform-empty{padding:22px;margin-bottom:12px}.platform-empty>span{font-size:8px;color:#a66cff;letter-spacing:1px}.platform-empty h2{font-size:16px;margin:6px 0}.platform-empty p{font-size:9px;color:#7d879a;max-width:700px;line-height:1.5}.content-section{margin:8px 0 12px}.section-heading{display:flex;justify-content:space-between;align-items:end;gap:15px;margin:0 2px 8px}.section-heading span{font-size:8px;color:#a66cff;letter-spacing:1px}.section-heading h2{font-size:16px;margin:4px 0}.section-heading p{font-size:8px;color:#6f788c;margin:0}.section-heading button{border:0;background:none;color:#c18cff;font-size:9px;cursor:pointer}.content-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:9px}.content-list>button{width:100%;display:grid;grid-template-columns:50px 1fr 50px;gap:9px;align-items:center;text-align:left;border:0;border-bottom:1px solid #1c2232;background:none;color:#fff;padding:8px 12px;cursor:pointer}.content-list>button:hover{background:#0f1524}.content-list img{width:50px;height:33px;border-radius:5px;object-fit:cover}.content-list strong,.content-list small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.content-list strong{font-size:9px}.content-list small{font-size:8px;color:#6f788d;margin-top:3px}.content-list em{font-size:9px;color:#68d39b;font-style:normal}.empty{padding:25px;text-align:center;color:#697287;font-size:9px}.performance{overflow:hidden}.title{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-bottom:1px solid #202638}.title h2{font-size:12px;margin:0}.title span{font-size:8px;color:#80899d}.bars{height:145px;display:flex;align-items:flex-end;gap:7px;padding:17px 14px 10px}.bars span{flex:1;min-width:7px;background:linear-gradient(180deg,#9b63ff,#3b78d8);border-radius:5px 5px 0 0}.note{display:block;padding:7px 13px;color:#697287;font-size:8px}.grid2{display:grid;grid-template-columns:1.15fr 1fr;gap:9px;margin-bottom:10px}.prow{display:grid;grid-template-columns:1fr 55px 55px 48px 70px;align-items:center;gap:7px;padding:9px 12px;border-bottom:1px solid #191f2e;font-size:9px}.prow span{color:#929bae}.prow em{color:#6fd6a0;font-size:8px;font-style:normal}.prow button{border:1px solid #3c4254;background:#141a2b;color:#fff;border-radius:5px;padding:4px;font-size:8px}.audience{padding-bottom:14px}.audience>b,.audience>p,.audience>button{margin-left:14px;margin-right:14px}.audience>b{display:block;padding-top:14px;font-size:11px}.audience p{font-size:9px;color:#788196;line-height:1.5}.audience button{border:1px solid #444b60;background:#121829;color:#fff;border-radius:7px;padding:7px 10px;font-size:9px;cursor:pointer}.intelligence-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}.intelligence{min-height:170px}.locked{width:100%;height:135px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}.locked b{font-size:11px}.locked span{font-size:8px;color:#737d90;max-width:230px;text-align:center;line-height:1.5}.locked em{font-size:8px;color:#d794ff;font-style:normal}.history{width:100%;display:flex;justify-content:space-between;gap:15px;border:0;border-bottom:1px solid #1b2130;background:none;color:inherit;text-align:left;padding:9px 14px;font-size:9px;cursor:pointer}.activity{display:grid;grid-template-columns:10px 1fr auto;gap:7px;padding:10px 12px;border-bottom:1px solid #1b2130;font-size:9px}.activity small{color:#697287}.plan-strip{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}.plan-strip>div{display:flex;gap:12px;align-items:center}.plan-strip>div>b{font-size:24px;color:#ad6bff}.plan-strip strong,.plan-strip small{display:block}.plan-strip small{font-size:9px;color:#7b8498;margin-top:4px}.plan-strip button{border:1px solid #49306d;background:#211433;color:#d4b3ff;border-radius:7px;padding:8px 11px;cursor:pointer;font-size:9px}.modal{position:fixed;inset:0;background:#000c;display:grid;place-items:center;padding:20px;z-index:60}.video-modal,.plans{width:min(760px,95vw);max-height:92vh;overflow:auto;background:#0a0f1c;border:1px solid #343b50;border-radius:15px;padding:24px;position:relative}.close{position:absolute;right:12px;top:10px;border:0;background:none;color:#aab2c2;font-size:25px;cursor:pointer}.video-frame{aspect-ratio:16/9;background:#000;border-radius:9px;overflow:hidden;display:grid;place-items:center;color:#8992a5}.video-frame iframe{width:100%;height:100%;border:0}.video-modal h2{font-size:16px;margin:14px 0 5px}.video-modal p{font-size:10px;color:#8c95a8}.actions{display:flex;gap:8px}.actions a,.actions button{border:1px solid #3d4458;background:#131a2b;color:#d6b8ff;border-radius:7px;padding:8px 10px;text-decoration:none;font-size:9px;cursor:pointer}.plans>small{color:#a36cff;font-size:9px}.plans h2{font-size:22px;margin:8px 0}.plans>p{color:#8992a5;font-size:11px}.plan-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}.plan-cards>div{border:1px solid #292f42;border-radius:12px;padding:16px}.plan-cards .featured{border-color:#65419a}.plan-cards ul{padding-left:18px;color:#8c95a8;font-size:10px;line-height:1.8}.plan-cards button{width:100%}.featured button{background:#4d2b78}.toast{position:fixed;right:20px;bottom:20px;z-index:100;background:#151c2c;border:1px solid #3b4358;color:#fff;border-radius:9px;padding:11px 14px;font-size:10px}.creator-page.light .card,.creator-page.light .sidebar{background:#fff;border-color:#dfe4ef}.creator-page.light .topbar{background:#fff;border-color:#dfe4ef}.creator-page.light .topbar nav button,.creator-page.light .tools button{color:#596277}@media(max-width:1200px){.topbar nav{display:none}.platform-bar{grid-template-columns:1fr}.periods{border-left:0;border-top:1px solid #252b3c;padding:8px 0 0}.content-grid,.grid2{grid-template-columns:1fr}}@media(max-width:820px){.page-grid{grid-template-columns:1fr}.sidebar{display:none}.content{padding:12px}.stat-grid{grid-template-columns:repeat(2,1fr)}.intelligence-grid{grid-template-columns:1fr}.identity{grid-template-columns:58px 1fr}.hero-metrics{grid-column:1/-1}.topbar{padding:0 12px}.brand{font-size:20px;padding-right:70px}.search{width:170px}.profile{display:none}.section-heading{align-items:flex-start}.plan-strip{align-items:flex-start;flex-direction:column}.plan-strip button{width:100%}.plan-cards{grid-template-columns:1fr}}`}</style>
- </main>
+type Trend = Video & {
+  signal?: string;
+  why?: string;
+  momentumScore?: number;
+  viewsPerHour?: number;
+  viewsPerSubscriber?: number;
+  creatorStage?: string;
+};
+
+type TrendResponse = { ok?: boolean; items?: Trend[]; state?: string };
+
+const platforms = ["YouTube", "Instagram", "TikTok", "X", "LinkedIn"];
+const periods = ["7D", "30D", "90D", "1Y"];
+const fmt = (n: number) => n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(n >= 1e5 ? 0 : 1)}K` : `${n}`;
+const ago = (d: string) => { const h = Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / 36e5)); return h < 24 ? `${h}h ago` : h < 720 ? `${Math.floor(h / 24)}d ago` : `${Math.floor(h / 720)}mo ago`; };
+
+export default function CreatorPage() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const urlQuery = params.get("q") || "Travel with Alex";
+  const urlVideo = params.get("video");
+  const [platform, setPlatform] = useState((params.get("platform") || "").toLowerCase() === "youtube" ? "YouTube" : "YouTube");
+  const [period, setPeriod] = useState("30D");
+  const [query, setQuery] = useState(urlQuery);
+  const [input, setInput] = useState(urlQuery);
+  const [data, setData] = useState<Data | null>(null);
+  const [trends, setTrends] = useState<Trend[]>([]);
+  const [selected, setSelected] = useState<Trend | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [trendLoading, setTrendLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [trendError, setTrendError] = useState("");
+  const [followed, setFollowed] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [plus, setPlus] = useState(false);
+  const [showPlans, setShowPlans] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  const notify = (message: string) => { setNotice(message); window.setTimeout(() => setNotice(""), 2600); };
+
+  const loadCreator = async (q = query) => {
+    setLoading(true); setError("");
+    try {
+      const r = await fetch(`/api/youtube/creator?q=${encodeURIComponent(q)}`, { cache: "no-store" });
+      const j = await r.json();
+      if (!r.ok || !j.ok) throw new Error(j.state || "YOUTUBE_UNAVAILABLE");
+      setData(j);
+    } catch (e) { setError(e instanceof Error ? e.message : "YOUTUBE_UNAVAILABLE"); }
+    finally { setLoading(false); }
+  };
+
+  const loadTrends = async (q = "") => {
+    setTrendLoading(true); setTrendError("");
+    try {
+      const r = await fetch(`/api/youtube/trending?region=&q=${encodeURIComponent(q)}`, { cache: "no-store" });
+      const j: TrendResponse = await r.json();
+      if (!r.ok || !j.ok) throw new Error(j.state || "TRENDING_UNAVAILABLE");
+      setTrends(Array.isArray(j.items) ? j.items : []);
+    } catch (e) { setTrendError(e instanceof Error ? e.message : "TRENDING_UNAVAILABLE"); }
+    finally { setTrendLoading(false); }
+  };
+
+  useEffect(() => { void loadCreator(urlQuery); }, [urlQuery]);
+  useEffect(() => { if (platform === "YouTube") void loadTrends(""); }, [platform]);
+
+  const creatorVideos = useMemo(() => {
+    const days = period === "7D" ? 7 : period === "90D" ? 90 : period === "1Y" ? 365 : 30;
+    return (data?.items || []).filter(v => new Date(v.publishedAt).getTime() >= Date.now() - days * 864e5);
+  }, [data, period]);
+
+  useEffect(() => {
+    if (!urlVideo) return;
+    const found = [...trends, ...(data?.items || [])].find(v => v.id === urlVideo);
+    if (found) setSelected(found as Trend);
+  }, [urlVideo, trends, data]);
+
+  const submitSearch = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const q = input.trim() || "Travel with Alex";
+    setQuery(q);
+    router.push(`/creators?platform=youtube&q=${encodeURIComponent(q)}`);
+    void loadCreator(q);
+  };
+
+  const choosePlatform = (name: string) => {
+    if (name === "YouTube") { setPlatform(name); return; }
+    notify(`${name} is coming. YouTube is live now.`);
+  };
+
+  const mainVideo = selected || trends[0] || creatorVideos[0] || null;
+  const avgEngagement = creatorVideos.length ? creatorVideos.reduce((sum, v) => sum + v.engagement, 0) / creatorVideos.length : 0;
+
+  return (
+    <main className="creator-page">
+      <SiteHeader />
+      <div className="creator-shell">
+        <aside className="creator-sidebar">
+          <div className="side-profile">
+            <div className="avatar">{data?.channel.avatar ? <img src={data.channel.avatar} alt="" /> : "YT"}</div>
+            <div><strong>{data?.channel.title || "YouTube Creator"}</strong><small>{data?.channel.handle || "Public creator profile"}</small></div>
+            <button type="button" onClick={() => setFollowed(v => !v)}>{followed ? "Following" : "Follow"}</button>
+          </div>
+          <div className="side-label">Creator</div>
+          {[
+            ["Overview", "overview", false],
+            ["History", "history", true],
+            ["Playlists", "playlists", true],
+            ["Saved", "saved", true],
+            ["Following", "following", true],
+          ].map(([label, id, gated]) => (
+            <button key={String(id)} type="button" className={id === "overview" ? "selected" : ""} onClick={() => gated ? notify("Log in to use your RALLIVIO library.") : document.getElementById("overview")?.scrollIntoView({ behavior: "smooth" })}>
+              <span>{id === "history" ? "◷" : id === "playlists" ? "▤" : id === "saved" ? "☆" : id === "following" ? "♡" : "⌂"}</span>{label}
+              {gated && <small>Login</small>}
+            </button>
+          ))}
+          <div className="side-label premium-label">Creator workspace</div>
+          {["Analytics", "Content Intelligence", "Promotion & Discovery", "Brand Opportunities", "Collaboration", "Alerts"].map(label => (
+            <button key={label} type="button" className="premium-link" onClick={() => setShowPlans(true)}><span>✦</span>{label}<small>RALLIVIO+</small></button>
+          ))}
+        </aside>
+
+        <section className="creator-main" id="overview">
+          <section className="creator-head">
+            <div>
+              <span className="eyebrow">CREATOR</span>
+              <h1>{data?.channel.title || query}</h1>
+              <p>{data?.channel.handle || "YouTube creator profile"}</p>
+            </div>
+            <div className="creator-actions">
+              <button type="button" className={followed ? "active" : ""} onClick={() => setFollowed(v => !v)}>{followed ? "Following" : "Follow"}</button>
+              <button type="button" onClick={() => { setSaved(v => !v); notify(saved ? "Removed from Saved." : "Saved to RALLIVIO."); }}>{saved ? "★ Saved" : "☆ Save"}</button>
+            </div>
+          </section>
+
+          <section className="platform-switcher">
+            <div className="switch-copy"><span>PLATFORM</span><small>One creator. One profile. Native platform layer.</small></div>
+            <div className="switch-tabs">
+              {platforms.map(name => <button key={name} type="button" className={platform === name ? "active" : ""} onClick={() => choosePlatform(name)}>{name}{name !== "YouTube" && <em>Coming</em>}</button>)}
+            </div>
+          </section>
+
+          {platform === "YouTube" ? (
+            <>
+              <section className="youtube-workspace">
+                <div className="video-column">
+                  <div className="search-row">
+                    <form onSubmit={submitSearch} className="youtube-search">
+                      <span>⌕</span><input value={input} onChange={e => setInput(e.target.value)} placeholder="Search YouTube creators or videos" aria-label="Search YouTube" /><button type="submit">Search</button>
+                    </form>
+                    <div className="periods">{periods.map(p => <button key={p} type="button" className={period === p ? "active" : ""} onClick={() => setPeriod(p)}>{p}</button>)}</div>
+                  </div>
+                  <div className="player-card">
+                    {mainVideo ? (
+                      <div className="player-wrap">
+                        {mainVideo.embeddable ? <iframe src={`https://www.youtube.com/embed/${mainVideo.id}?rel=0`} title={mainVideo.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <div className="embed-fallback"><strong>Preview unavailable</strong><a href={mainVideo.url} target="_blank" rel="noreferrer">Watch on YouTube ↗</a></div>}
+                      </div>
+                    ) : <div className="player-empty">{trendLoading ? "Loading live YouTube discovery…" : "Select a video to watch."}</div>}
+                    {mainVideo && <div className="video-info"><span className="signal">{mainVideo.signal || "YouTube"}</span><h2>{mainVideo.title}</h2><p>{fmt(mainVideo.views)} views · {fmt(mainVideo.likes)} likes · {fmt(mainVideo.comments)} comments · {ago(mainVideo.publishedAt)}</p><a href={mainVideo.url} target="_blank" rel="noreferrer">Watch on YouTube ↗</a></div>}
+                  </div>
+                </div>
+
+                <aside className="queue-card">
+                  <div className="queue-head"><div><span className="eyebrow">RALLIVIO DISCOVERY</span><h2>Trending now</h2></div><span className="live-dot">● LIVE</span></div>
+                  {trendError && <div className="inline-error">{trendError}<button type="button" onClick={() => void loadTrends("")}>Retry</button></div>}
+                  <div className="queue">
+                    {(trends.length ? trends : creatorVideos).slice(0, 8).map(video => (
+                      <button type="button" key={video.id} className={`queue-item ${mainVideo?.id === video.id ? "active" : ""}`} onClick={() => setSelected(video as Trend)}>
+                        <img src={video.thumbnail} alt="" /><span><strong>{video.title}</strong><small>{video.signal || "Observed"} · {fmt(video.views)} views</small></span>
+                      </button>
+                    ))}
+                    {!trendLoading && !trends.length && !creatorVideos.length && <div className="empty">No verified videos available.</div>}
+                  </div>
+                </aside>
+              </section>
+
+              <section className="why-grid">
+                <div className="why-card">
+                  <div className="section-title"><div><span className="eyebrow">RALLIVIO INTELLIGENCE</span><h2>Why this is moving</h2></div><b>{mainVideo?.signal || "Observed"}</b></div>
+                  <p>{mainVideo?.why || "RALLIVIO explains movement only when verified source observations support it."}</p>
+                  <div className="evidence-grid">
+                    <Metric label="Momentum" value={mainVideo?.momentumScore != null ? String(Math.round(mainVideo.momentumScore)) : "—"} />
+                    <Metric label="Velocity" value={mainVideo?.viewsPerHour != null ? `${fmt(Math.round(mainVideo.viewsPerHour))}/h` : "—"} />
+                    <Metric label="Engagement" value={mainVideo ? `${mainVideo.engagement.toFixed(1)}%` : "—"} />
+                    <Metric label="Stage" value={mainVideo?.creatorStage || "—"} />
+                  </div>
+                  <small className="method">RALLIVIO-derived values are separate from YouTube's reported numbers. Historical acceleration becomes available after snapshot history is established.</small>
+                </div>
+                <div className="profile-card">
+                  <span className="eyebrow">YOUTUBE PROFILE</span>
+                  <div className="profile-row"><div className="avatar large">{data?.channel.avatar ? <img src={data.channel.avatar} alt="" /> : "YT"}</div><div><h2>{data?.channel.title || query}</h2><p>{data?.channel.handle || ""}</p></div></div>
+                  <div className="profile-stats"><Metric label="Subscribers" value={fmt(data?.channel.subscribers || 0)} /><Metric label="Total views" value={fmt(data?.channel.totalViews || 0)} /><Metric label="Videos" value={fmt(data?.channel.videos || 0)} /></div>
+                  <p className="description">{data?.channel.description || "Public YouTube creator information is shown from the connected source."}</p>
+                </div>
+              </section>
+
+              <section className="content-section">
+                <div className="section-title"><div><span className="eyebrow">CREATOR CONTENT</span><h2>Recent videos</h2></div><span>{creatorVideos.length} in {period}</span></div>
+                <div className="video-grid">
+                  {creatorVideos.slice(0, 6).map(video => <button type="button" key={video.id} onClick={() => setSelected(video)}><img src={video.thumbnail} alt=""/><span><strong>{video.title}</strong><small>{fmt(video.views)} views · {ago(video.publishedAt)}</small></span></button>)}
+                </div>
+              </section>
+
+              <section className="creator-workspace">
+                <div className="workspace-head"><div><span className="eyebrow">FOR CREATORS</span><h2>Turn discovery into creator growth</h2><p>RALLIVIO+ is the deeper layer for creators who want measurable distribution, intelligence and opportunities.</p></div><button type="button" onClick={() => setShowPlans(true)}>Explore RALLIVIO+</button></div>
+                <div className="workspace-grid">
+                  <WorkspaceCard title="Promotion & Discovery" text="See when your content is featured, which RALLIVIO signal surfaced it, and the verified clicks RALLIVIO sent to your channel." />
+                  <WorkspaceCard title="Content Intelligence" text="Compare content momentum, velocity, audience-relative performance and niche patterns from stored observations." />
+                  <WorkspaceCard title="Brand Opportunities" text="Surface brand-fit opportunities using verified creator, audience and category data when the opportunity system is live." />
+                  <WorkspaceCard title="Collaboration" text="Find relevant creators and collaboration opportunities from the RALLIVIO creator graph." />
+                  <WorkspaceCard title="Audience & Analytics" text="Owner-only YouTube Analytics data such as watch time, retention, CTR and audience demographics after OAuth connection." />
+                  <WorkspaceCard title="History & Alerts" text="Keep 7D, 30D, 90D and 1Y intelligence history and receive alerts when meaningful changes are detected." />
+                </div>
+              </section>
+            </>
+          ) : null}
+        </section>
+      </div>
+
+      {showPlans && <div className="modal" onClick={() => setShowPlans(false)}><div className="plan-modal" onClick={e => e.stopPropagation()}><button type="button" className="close" onClick={() => setShowPlans(false)}>×</button><span className="eyebrow">RALLIVIO+</span><h2>Discovery stays open. Intelligence goes deeper.</h2><p>Free users can discover, watch, follow, save and explore creators. RALLIVIO+ adds history, personalization, creator analytics, distribution receipts and opportunity tools.</p><div className="plan-columns"><div><h3>Free</h3><ul><li>Discover &amp; watch</li><li>Basic creator profiles</li><li>Search &amp; categories</li><li>Follow &amp; save</li><li>Basic RALLIVIO signals</li></ul></div><div><h3>RALLIVIO+</h3><ul><li>Creator intelligence</li><li>Historical snapshots</li><li>Promotion &amp; discovery receipts</li><li>Brand opportunities</li><li>Collaboration matching</li><li>Alerts &amp; advanced tools</li></ul></div></div><button type="button" className="primary" onClick={() => { setPlus(true); setShowPlans(false); notify("RALLIVIO+ preview enabled."); }}>Continue with RALLIVIO+</button></div></div>}
+      {notice && <div className="toast">{notice}</div>}
+
+      <style jsx global>{`
+        *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#07091a;color:#f5f6fa;font-family:Inter,ui-sans-serif,system-ui,sans-serif}.creator-page{min-height:100vh;background:radial-gradient(circle at 70% 20%,#7b42ff12,transparent 28%),#07091a;color:#f5f6fa}.creator-shell{display:grid;grid-template-columns:210px minmax(0,1fr);max-width:1500px;margin:0 auto}.creator-sidebar{position:sticky;top:68px;height:calc(100vh - 68px);padding:22px 12px;border-right:1px solid #ffffff12;background:#090b19aa;overflow:auto}.side-profile{padding:10px 8px 18px;border-bottom:1px solid #ffffff10;margin-bottom:14px}.side-profile .avatar{width:46px;height:46px;margin-bottom:9px}.side-profile strong,.side-profile small{display:block}.side-profile strong{font-size:13px}.side-profile small{font-size:10px;color:#88869c;margin-top:3px}.side-profile button{margin-top:10px;width:100%;height:32px;border:1px solid #ffffff1b;background:#ffffff08;border-radius:9px;color:#fff;font-size:11px}.side-label{padding:7px 9px;color:#68667c;font-size:9px;letter-spacing:1.2px;text-transform:uppercase}.creator-sidebar>button{width:100%;display:flex;align-items:center;gap:10px;padding:10px 9px;border:0;background:transparent;color:#aaa8bc;border-radius:9px;text-align:left;font-size:11px}.creator-sidebar>button span{width:18px;color:#8d70c9}.creator-sidebar>button:hover,.creator-sidebar>button.selected{background:#8d4dff18;color:#fff}.creator-sidebar>button small{margin-left:auto;font-size:8px;color:#6d6a7d}.premium-label{margin-top:18px}.premium-link{font-size:10px!important}.premium-link small{color:#9d6dff!important}.creator-main{min-width:0;padding:28px 32px 70px}.creator-head{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:20px}.eyebrow{font-size:9px;letter-spacing:1.4px;color:#9f72ff;font-weight:850}.creator-head h1{font-size:30px;line-height:1.1;letter-spacing:-1px;margin:6px 0 4px}.creator-head p{margin:0;color:#858398;font-size:12px}.creator-actions{display:flex;gap:8px}.creator-actions button,.platform-switcher button,.workspace-head button,.plan-modal .primary{border:1px solid #ffffff18;background:#ffffff08;color:#fff;border-radius:9px;padding:9px 13px;font-size:11px}.creator-actions button.active{background:#8d4dff}.platform-switcher{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:13px 15px;border:1px solid #ffffff12;background:#0c0f20;border-radius:12px;margin-bottom:16px}.switch-copy span,.switch-copy small{display:block}.switch-copy span{font-size:9px;letter-spacing:1.2px;color:#77748b}.switch-copy small{font-size:10px;color:#8d8a9e;margin-top:3px}.switch-tabs{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.switch-tabs button{position:relative;padding:8px 11px}.switch-tabs button.active{background:#8d4dff;border-color:#a76dff}.switch-tabs em{font-style:normal;font-size:7px;color:#77748c;margin-left:5px}.youtube-workspace{display:grid;grid-template-columns:minmax(0,1.55fr) 330px;gap:16px}.video-column{min-width:0}.search-row{display:flex;gap:8px;margin-bottom:10px}.youtube-search{height:40px;display:flex;align-items:center;gap:8px;flex:1;border:1px solid #ffffff12;border-radius:9px;background:#0c0f20;padding-left:12px}.youtube-search span{color:#77748b}.youtube-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#fff;font-size:11px}.youtube-search button{height:32px;margin-right:4px;border:0;border-radius:7px;background:#8d4dff;color:#fff;padding:0 12px;font-size:10px}.periods{display:flex;gap:3px}.periods button{border:1px solid #ffffff10;background:#0c0f20;color:#77748b;border-radius:7px;padding:0 9px;font-size:9px}.periods button.active{color:#fff;background:#24203b;border-color:#8d4dff}.player-card{border:1px solid #ffffff12;border-radius:12px;overflow:hidden;background:#0b0e1d}.player-wrap{aspect-ratio:16/9;background:#02030a}.player-wrap iframe{width:100%;height:100%;border:0}.player-empty,.embed-fallback{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#77748b;font-size:12px}.embed-fallback a,.video-info>a{color:#b783ff;text-decoration:none;font-size:10px}.video-info{padding:14px 16px 16px}.video-info .signal{display:inline-block;padding:4px 7px;border-radius:5px;background:#8d4dff20;color:#b783ff;font-size:8px;text-transform:uppercase;letter-spacing:.7px}.video-info h2{font-size:16px;line-height:1.3;margin:8px 0 5px}.video-info p{margin:0 0 8px;color:#88869a;font-size:10px}.queue-card,.why-card,.profile-card,.content-section,.creator-workspace{border:1px solid #ffffff12;background:#0b0e1d;border-radius:12px}.queue-card{padding:14px;min-width:0}.queue-head,.section-title{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.queue-head h2,.section-title h2{font-size:14px;margin:4px 0 0}.live-dot{font-size:8px;color:#c77cff}.queue{margin-top:12px;display:grid;gap:5px}.queue-item{display:grid;grid-template-columns:78px 1fr;gap:8px;width:100%;padding:6px;border:1px solid transparent;background:transparent;color:#fff;border-radius:8px;text-align:left}.queue-item:hover,.queue-item.active{background:#ffffff08;border-color:#ffffff12}.queue-item img{width:78px;height:44px;object-fit:cover;border-radius:5px}.queue-item strong,.queue-item small{display:block}.queue-item strong{font-size:9px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.queue-item small{font-size:8px;color:#77748b;margin-top:4px}.inline-error{font-size:9px;color:#ff8e9f;padding:8px;background:#ff406014;border-radius:7px;margin-top:10px}.inline-error button{border:0;background:transparent;color:#b783ff;margin-left:5px}.why-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;margin-top:16px}.why-card,.profile-card{padding:17px}.section-title>b{font-size:8px;padding:5px 7px;border-radius:5px;background:#8d4dff18;color:#b783ff}.why-card>p{color:#b4b1c1;font-size:11px;line-height:1.5;margin:13px 0}.evidence-grid,.profile-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.metric{padding:10px;background:#ffffff06;border:1px solid #ffffff0d;border-radius:7px}.metric span,.metric strong{display:block}.metric span{font-size:8px;color:#747185}.metric strong{font-size:12px;margin-top:3px}.method{display:block;color:#666477;font-size:8px;line-height:1.4;margin-top:12px}.profile-row{display:flex;align-items:center;gap:10px;margin:13px 0}.avatar{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#7145ff,#bd6cff);overflow:hidden;font-size:10px;font-weight:900}.avatar img{width:100%;height:100%;object-fit:cover}.avatar.large{width:48px;height:48px}.profile-row h2{font-size:14px;margin:0}.profile-row p{font-size:9px;color:#77748b;margin:3px 0}.profile-stats{grid-template-columns:repeat(3,1fr)}.profile-stats .metric{background:transparent}.description{font-size:9px;line-height:1.5;color:#77748b;margin:12px 0 0}.content-section,.creator-workspace{padding:17px;margin-top:16px}.section-title>span{font-size:9px;color:#77748b}.video-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}.video-grid button{display:block;text-align:left;border:1px solid #ffffff0d;background:#ffffff04;color:#fff;border-radius:8px;overflow:hidden;padding:0}.video-grid button:hover{border-color:#ffffff25}.video-grid img{width:100%;aspect-ratio:16/9;object-fit:cover}.video-grid span{display:block;padding:9px}.video-grid strong,.video-grid small{display:block}.video-grid strong{font-size:10px;line-height:1.35}.video-grid small{font-size:8px;color:#77748b;margin-top:5px}.workspace-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.workspace-head h2{font-size:18px;margin:5px 0}.workspace-head p{font-size:10px;color:#77748b;max-width:680px;line-height:1.5;margin:0}.workspace-head button{background:#8d4dff;border-color:#a66cff}.workspace-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.workspace-card{padding:13px;border:1px solid #ffffff0d;border-radius:8px;background:#ffffff04}.workspace-card h3{font-size:11px;margin:0 0 6px}.workspace-card p{font-size:9px;line-height:1.5;color:#77748b;margin:0}.modal{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#0009;padding:20px}.plan-modal{position:relative;width:min(650px,100%);padding:28px;border:1px solid #ffffff18;border-radius:16px;background:#0d1021;box-shadow:0 30px 100px #0008}.close{position:absolute;right:14px;top:12px;border:0;background:transparent;color:#aaa8bc;font-size:24px}.plan-modal h2{font-size:24px;letter-spacing:-.6px;margin:7px 0}.plan-modal>p{font-size:11px;color:#8d8a9e;line-height:1.6}.plan-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.plan-columns>div{padding:15px;border:1px solid #ffffff12;border-radius:9px;background:#ffffff05}.plan-columns h3{margin:0 0 9px;font-size:13px}.plan-columns ul{margin:0;padding-left:17px;color:#aaa8b8;font-size:10px;line-height:1.9}.plan-modal .primary{background:#8d4dff;border-color:#a66cff}.toast{position:fixed;right:20px;bottom:20px;z-index:300;padding:11px 14px;border:1px solid #ffffff18;border-radius:9px;background:#12152a;color:#dddbea;font-size:10px;box-shadow:0 12px 35px #0006}
+        @media(max-width:1100px){.creator-shell{grid-template-columns:180px}.youtube-workspace{grid-template-columns:minmax(0,1fr) 290px}.creator-main{padding:24px}.site-nav button{font-size:10px}}
+        @media(max-width:850px){.creator-shell{display:block}.creator-sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid #ffffff12;display:flex;gap:5px;overflow:auto;padding:8px}.side-profile,.side-label,.premium-label{display:none}.creator-sidebar>button{width:auto;white-space:nowrap}.creator-sidebar>button small{display:none}.youtube-workspace,.why-grid{grid-template-columns:1fr}.queue-card{order:2}.video-grid{grid-template-columns:repeat(2,1fr)}.workspace-grid{grid-template-columns:repeat(2,1fr)}}
+        @media(max-width:650px){.creator-main{padding:16px 12px 50px}.creator-head,.platform-switcher,.workspace-head{align-items:flex-start;flex-direction:column}.switch-tabs{justify-content:flex-start}.search-row{flex-direction:column}.periods{height:34px}.periods button{padding:0 12px}.video-grid,.workspace-grid{grid-template-columns:1fr}.evidence-grid{grid-template-columns:repeat(2,1fr)}.plan-columns{grid-template-columns:1fr}.creator-head h1{font-size:24px}}
+      `}</style>
+    </main>
+  );
 }
-function Metric({label,value,sub}:{label:string;value:string;sub:string}){return <div className="metric card"><small>{label}</small><strong>{value}</strong><em>{sub}</em></div>}
-function Title({t,right}:{t:string;right:string}){return <div className="title"><h2>{t}</h2><span>{right}</span></div>}
-function Row({t,d}:{t:string;d:string}){return <button className="history"><span><b>{t}</b><small>{d}</small></span>›</button>}
-function Locked({title,text,onClick}:{title:string;text:string;onClick:()=>void}){return <button className="locked" onClick={onClick}><b>🔒 {title}</b><span>{text}</span><em>Unlock with RALLIVIO+ →</em></button>}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return <div className="metric"><span>{label}</span><strong>{value}</strong></div>;
+}
+
+function WorkspaceCard({ title, text }: { title: string; text: string }) {
+  return <article className="workspace-card"><h3>{title}</h3><p>{text}</p></article>;
+}
