@@ -37,6 +37,7 @@ The page now uses live values for:
 
 - Creator search submits a new YouTube creator query.
 - Retry re-fetches YouTube data.
+- Selecting YouTube refreshes the live YouTube source.
 - Platform tabs change context and clearly indicate which platforms are not connected.
 - 7D / 30D / 90D / 1Y controls filter the currently available published-video dataset.
 - Analytics metric tabs change the displayed metric/chart.
@@ -65,31 +66,38 @@ Private YouTube audience demographics remain explicitly unavailable until author
 
 Non-YouTube platform rows are connection states, not fabricated statistics.
 
+## YouTube quota and RALLIVIO-scale architecture
+
+The Vercel Preview environment now has `YOUTUBE_API_KEY` configured specifically for `feature/creator-platform-subscription`. The secret is not stored in GitHub or application source.
+
+This key enables the current Creator QA adapter to access real YouTube public data. It is **not** the final RALLIVIO-scale architecture and must not be treated as permission to bypass YouTube quota limits.
+
+The intended scalable model remains:
+
+`YouTube API → controlled ingestion → verified RALLIVIO data layer → cache/index/history → Discovery + Creator experiences`
+
+User searches should primarily query RALLIVIO's own verified index rather than issue a new YouTube `search.list` request for every user query. Additional YouTube API quota, if required at scale, must follow Google's official quota/compliance process. No multi-key or multi-project quota circumvention is permitted.
+
 ## Files
 
 - `app/creators/page.tsx` — live Creator UI and interactions
 - `app/api/youtube/creator/route.ts` — existing YouTube public-data adapter
 
-## Implementation commit
+## Latest implementation/deployment trigger commit
 
-`16449343c92f35e96c82cef2ec330e22471313ff`
-
-Commit message:
-
-`feat: make Creator page live and interactive`
+The previous Creator implementation was `16449343c92f35e96c82cef2ec330e22471313ff`. A documentation-only checkpoint update is now being used to trigger a fresh Preview deployment after the environment secret was configured.
 
 ## Deployment gate
 
-This checkpoint is **not declared live QA-ready yet** until the Vercel deployment for the exact SHA above is verified as:
+This checkpoint is **not declared live QA-ready yet** until the fresh Vercel deployment for the latest branch SHA is verified as:
 
 1. Created from `feature/creator-platform-subscription`
-2. Exact SHA `16449343c92f35e96c82cef2ec330e22471313ff`
+2. Exact latest branch SHA verified
 3. State `READY`
 4. Public preview URL confirmed
 5. `/creators` opened and tested
-6. YouTube API behavior verified on the deployed environment
-
-At implementation time GitHub reported the Vercel status as `pending` for this new SHA. The Vercel connector was also returning a temporary tool-registry `Resource not found` error, so no public URL is recorded as verified here.
+6. `/api/youtube/creator` returns `ok: true` with real YouTube data
+7. YouTube video/embed behavior verified
 
 ## Separation rule
 
