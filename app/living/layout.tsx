@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
+import SiteHeader from "../components/SiteHeader";
 
 export default function LivingLayout({ children }: { children: ReactNode }) {
   return (
     <>
+      <SiteHeader />
       <style>{`
+        .rv > .topbar{display:none!important}
         .rv .fieldHint{display:none!important}
         .rv .hero{
           display:flex!important;
@@ -67,7 +70,6 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
         .rv .platformMark.spotify{--brand-fill:#1DB954;--brand-logo:#000;--brand-glow:#1DB95466}
         .rv .platformMark.twitch{--brand-fill:#9146FF;--brand-logo:#fff;--brand-glow:#9146FF66}
 
-        /* The existing inline marks contain their own background silhouettes. Make those silhouettes transparent so the new circular badge is the only fill. */
         .rv .platformMark.youtube svg rect,
         .rv .platformMark.linkedin svg rect,
         .rv .platformMark.twitch svg path:first-child,
