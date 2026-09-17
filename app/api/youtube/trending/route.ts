@@ -1,0 +1,169 @@
+import { NextResponse } from "next/server";
+
+type YouTubeVideo = {
+  id: string;
+  snippet?: {
+    channelId?: string;
+    channelTitle?: string;
+    title?: string;
+    description?: string;
+    publishedAt?: string;
+    categoryId?: string;
+    liveBroadcastContent?: "live" | "upcoming" | "none";
+    thumbnails?: { high?: { url?: string }; medium?: { url?: string }; default?: { url?: string } };
+  };
+  statistics?: { viewCount?: string; likeCount?: string; commentCount?: string };
+  status?: { embeddable?: boolean };
+  contentDetails?: { duration?: string };
+};
+
+type Channel = {
+  id: string;
+  snippet?: { title?: string; publishedAt?: string };
+  statistics?: { subscriberCount?: string; viewCount?: string; videoCount?: string };
+};
+
+const key = process.env.YOUTUBE_API_KEY;
+const number = (v?: string) => { const n = Number(v ?? 0); return Number.isFinite(n) ? n : 0; };
+
+async function youtube(path: string) {
+  if (!key) throw new Error("YOUTUBE_API_NOT_CONFIGURED");
+  const separator = path.includes("?") ? "&" : "?";
+  const response = await fetch(`https://www.googleapis.com/youtube/v3/${path}${separator}key=${encodeURIComponent(key)}`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`YOUTUBE_API_${response.status}`);
+  return response.json();
+}
+
+function durationSeconds(value?: string) {
+  if (!value) return 0;
+  const m = value.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return 0;
+  return Number(m[1] || 0) * 3600 + Number(m[2] || 0) * 60 + Number(m[3] || 0);
+}
+
+function formatFor(video: YouTubeVideo) {
+  if (video.snippet?.liveBroadcastContent === "live" || video.snippet?.liveBroadcastContent === "upcoming") return "Live";
+  return durationSeconds(video.contentDetails?.duration) <= 180 ? "Short-form" : "Long-form";
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const q = (searchParams.get("q") || "").trim().slice(0, 80);
+  const region = (searchParams.get("region") || "").toUpperCase();
+  const category = searchParams.get("category") || "0";
+  const format = searchParams.get("format") || "all";
+  const signal = searchParams.get("signal") || "all";
+
+  try {
+    let videos: YouTubeVideo[] = [];
+    if (q) {
+      const params = new URLSearchParams({ part: "snippet", q, type: "video", maxResults: "25", videoEmbeddable: "true", relevanceLanguage: "en" });
+      if (region) params.set("regionCode", region);
+      if (category !== "0") params.set("videoCategoryId", category);
+      if (format === "short") params.set("videoDuration", "short");
+      if (format === "medium") params.set("videoDuration", "medium");
+      if (format === "long") params.set("videoDuration", "long");
+      if (format === "live") { params.set("eventType", "live"); }
+      const search = await youtube(`search?${params.toString()}`) as { items?: { id?: { videoId?: string } }[] };
+      const ids = (search.items || []).map(x => x.id?.videoId).filter((x): x is string => Boolean(x));
+      if (ids.length) {
+        const details = await youtube(`videos?part=snippet,statistics,status,contentDetails&id=${ids.join(",")}`) as { items?: YouTubeVideo[] };
+        videos = details.items || [];
+      }
+    } else {
+      const params = new URLSearchParams({ part: "snippet,statistics,status,contentDetails", chart: "mostPopular", maxResults: "50" });
+      if (region) params.set("regionCode", region);
+      if (category !== "0") params.set("videoCategoryId", category);
+      const details = await youtube(`videos?${params.toString()}`) as { items?: YouTubeVideo[] };
+      videos = details.items || [];
+    }
+
+    const channelIds = [...new Set(videos.map(v => v.snippet?.channelId).filter((x): x is string => Boolean(x)))];
+    const channels = new Map<string, Channel>();
+    for (let i = 0; i < channelIds.length; i += 50) {
+      const ids = channelIds.slice(i, i + 50);
+      if (!ids.length) continue;
+      const data = await youtube(`channels?part=snippet,statistics&id=${ids.join(",")}`) as { items?: Channel[] };
+      (data.items || []).forEach(c => channels.set(c.id, c));
+    }
+
+    const now = Date.now();
+    const base = videos.map(video => {
+      const published = video.snippet?.publishedAt || new Date(now).toISOString();
+      const ageHours = Math.max((now - new Date(published).getTime()) / 3600000, 0.25);
+      const views = number(video.statistics?.viewCount);
+      const likes = number(video.statistics?.likeCount);
+      const comments = number(video.statistics?.commentCount);
+      const engagement = ((likes + comments) / Math.max(views, 1)) * 100;
+      const velocity = views / ageHours;
+      const channel = channels.get(video.snippet?.channelId || "");
+      const subscribers = number(channel?.statistics?.subscriberCount);
+      const audienceRelative = views / Math.max(subscribers, 1);
+      const channelAgeDays = channel?.snippet?.publishedAt ? Math.max((now - new Date(channel.snippet.publishedAt).getTime()) / 86400000, 0) : 99999;
+      const newcomer = channelAgeDays <= 730;
+      return { video, published, ageHours, views, likes, comments, engagement, velocity, subscribers, audienceRelative, newcomer, channelAgeDays };
+    });
+
+    const maxVelocity = Math.max(1, ...base.map(x => x.velocity));
+    const maxRelative = Math.max(0.001, ...base.map(x => x.audienceRelative));
+    const maxEngagement = Math.max(0.01, ...base.map(x => x.engagement));
+    const ranked = base.map(x => {
+      const freshness = Math.max(0, 1 - x.ageHours / (24 * 7));
+      const momentumScore = Math.round(Math.min(100, (0.45 * Math.log1p(x.velocity) / Math.log1p(maxVelocity) + 0.25 * Math.min(x.engagement / maxEngagement, 1) + 0.2 * Math.log1p(x.audienceRelative) / Math.log1p(maxRelative) + 0.1 * freshness) * 100));
+      return { ...x, momentumScore };
+    }).sort((a, b) => b.momentumScore - a.momentumScore);
+
+    const items = ranked.map((x, index) => {
+      const formatName = formatFor(x.video);
+      let label = "Now Moving";
+      if (x.video.snippet?.liveBroadcastContent === "live") label = "Live";
+      else if (x.newcomer && x.momentumScore >= 60) label = "Newcomer Rising";
+      else if (x.momentumScore >= 80) label = "Breaking Out";
+      else if (x.momentumScore >= 62) label = "On the Rise";
+      else if (x.engagement >= Math.max(3, maxEngagement * 0.65) && x.views < Math.max(100000, maxVelocity * 12)) label = "Under the Radar";
+      const reasons: string[] = [];
+      if (x.velocity >= maxVelocity * 0.65) reasons.push(`high observed velocity (${Math.round(x.velocity).toLocaleString()}/h)`);
+      if (x.engagement >= Math.max(1, maxEngagement * 0.6)) reasons.push(`strong engagement (${x.engagement.toFixed(1)}%)`);
+      if (x.audienceRelative >= maxRelative * 0.5) reasons.push("outperforming the visible channel audience baseline");
+      if (x.ageHours <= 24) reasons.push("fresh within 24h");
+      if (x.newcomer) reasons.push("channel is within the newcomer window");
+      if (!reasons.length) reasons.push("appears in the selected YouTube popularity/discovery set");
+      return {
+        id: x.video.id,
+        title: x.video.snippet?.title || "Untitled video",
+        channelId: x.video.snippet?.channelId || "",
+        channelTitle: x.video.snippet?.channelTitle || "Unknown creator",
+        channelSubscribers: x.subscribers,
+        channelAgeDays: Math.round(x.channelAgeDays),
+        publishedAt: x.published,
+        thumbnail: x.video.snippet?.thumbnails?.high?.url || x.video.snippet?.thumbnails?.medium?.url || x.video.snippet?.thumbnails?.default?.url || "",
+        description: x.video.snippet?.description || "",
+        categoryId: x.video.snippet?.categoryId || category,
+        format: formatName,
+        live: x.video.snippet?.liveBroadcastContent === "live",
+        views: x.views,
+        likes: x.likes,
+        comments: x.comments,
+        engagement: Number(x.engagement.toFixed(2)),
+        velocity: Math.round(x.velocity),
+        momentumScore: x.momentumScore,
+        signal: label,
+        why: reasons.slice(0, 3),
+        embeddable: x.video.status?.embeddable !== false,
+        url: `https://www.youtube.com/watch?v=${x.video.id}`,
+        rank: index + 1,
+      };
+    }).filter(item => {
+      if (format === "live") return item.live;
+      if (format === "short") return item.format === "Short-form";
+      if (format === "long") return item.format === "Long-form";
+      if (format === "medium") return true;
+      return true;
+    }).filter(item => signal === "all" || item.signal === signal);
+
+    return NextResponse.json({ ok: true, source: "YouTube", query: q || null, region: region || "WORLDWIDE", category, format, signal, fetchedAt: new Date().toISOString(), items }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    console.error("youtube trend radar adapter failed", error);
+    return NextResponse.json({ ok: false, source: "YouTube", state: error instanceof Error ? error.message : "YOUTUBE_UNAVAILABLE" }, { status: 503 });
+  }
+}
