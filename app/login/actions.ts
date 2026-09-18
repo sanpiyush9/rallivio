@@ -27,8 +27,10 @@ export async function oauthLogin(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      // Keep the Supabase redirect target exact. The callback itself defaults to /living,
-      // so there is no need to put a dynamic ?next= query parameter on redirectTo.
+      queryParams: {
+        prompt: "select_account",
+      },
+      // Keep the Supabase redirect target exact. The callback itself defaults to /living.
       redirectTo: origin + "/auth/callback",
     },
   });
