@@ -194,7 +194,6 @@ export default function DiscoverGlobe() {
           }
           frame = window.requestAnimationFrame(renderFrame);
         };
-        renderFrame.last = 0;
         renderer.render(scene, camera);
         ready();
 
