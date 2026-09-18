@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -71,7 +71,18 @@ const signalKey = (s?: string) => (s || "").toLowerCase().replace(/[_-]/g, " ").
 const signalMatches = (item: Item, signal: string) => signalKey(item.metadata?.signal) === signalKey(signal);
 const fmt = (n: number) => n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString();
 const age = (s: string) => { const h = Math.max(0, (Date.now() - new Date(s).getTime()) / 36e5); return h < 1 ? "just now" : h < 24 ? `${Math.floor(h)}h ago` : `${Math.floor(h / 24)}d ago`; };
-const categoryFor = (x: Item) => { const text = `${x.topic} ${x.title} ${x.description}`.toLowerCase(); return categories.find(c => c.name !== "Trending" && c.keywords.some(k => text.includes(k)))?.name || "Other"; };
+const youtubeCategoryMap: Record<string, string> = {
+  "1": "Entertainment", "2": "Automotive", "10": "Music", "15": "Pets", "17": "Sports",
+  "18": "Entertainment", "19": "Travel", "20": "Gaming", "21": "Lifestyle", "22": "Lifestyle",
+  "23": "Comedy", "24": "Entertainment", "25": "News", "26": "DIY & Home", "27": "Education",
+  "28": "AI & Tech", "29": "Business",
+};
+const categoryFor = (x: Item) => {
+  const mapped = youtubeCategoryMap[x.topic];
+  if (mapped) return mapped;
+  const text = `${x.topic} ${x.title} ${x.description}`.toLowerCase().replace(/[^a-z0-9&+]+/g, " ");
+  return categories.find(c => c.name !== "Trending" && c.keywords.some(k => text.includes(k)))?.name || "Other";
+};
 
 function PlatformIcon({ kind }: { kind: string }) {
   const common = { width: 30, height: 30, viewBox: "0 0 32 32", fill: "none", "aria-hidden": true as const };
@@ -110,6 +121,9 @@ export default function LivingDiscover() {
   const [radarOffset, setRadarOffset] = useState(0);
   const [topicOffset, setTopicOffset] = useState(0);
   const [spotlightOffset, setSpotlightOffset] = useState(0);
+  const [selectedPulse, setSelectedPulse] = useState<Item | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const pulseViewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("rallivio-theme");
@@ -143,6 +157,7 @@ export default function LivingDiscover() {
           velocity: Number(x.velocity || 0), live: Boolean(x.live),
           metadata: { subscriber_count: Number(x.channelSubscribers || 0), signal: x.signal, momentum_score: Number(x.momentumScore || 0) },
         })) : []);
+        setLastUpdatedAt(Date.now());
         setNotice("");
       } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
       finally { setLoading(false); }
@@ -209,8 +224,22 @@ export default function LivingDiscover() {
 
   const pulseCards = useMemo(() => {
     if (!ranked.length) return [];
-    return Array.from({ length: Math.min(6, ranked.length) }, (_, i) => ranked[(pulseOffset + i) % ranked.length]);
+    const count = Math.min(120, Math.max(24, ranked.length * 3));
+    return Array.from({ length: count }, (_, i) => ranked[(pulseOffset + i) % ranked.length]);
   }, [ranked, pulseOffset]);
+
+  const scrollPulse = (direction: -1 | 1) => {
+    const el = pulseViewportRef.current;
+    if (!el) return;
+    const amount = Math.max(260, Math.round(el.clientWidth * 0.62));
+    el.scrollBy({ left: direction * amount, behavior: "smooth" });
+    setPulseOffset(n => (n + direction + Math.max(ranked.length, 1)) % Math.max(ranked.length, 1));
+  };
+
+  const selectPulse = (item: Item) => {
+    setSelectedPulse(item);
+    window.requestAnimationFrame(() => document.getElementById("pulse-selected")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+  };
 
   const go = (p: string) => { router.push(p); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const pulseField = (message: string) => { setPulse(n => n + 1); setNotice(message); };
@@ -310,7 +339,26 @@ export default function LivingDiscover() {
             </button>)}
             <button className="core" type="button" aria-label="Activate RALLIVIO living discovery core" onClick={activateCore} onPointerDown={() => setPulse(n => n + 1)}>
               <span className="coreHalo h1"/><span className="coreHalo h2"/><span className="coreHalo h3"/><span className="coreLight"/>
-              <span className="earthVisual" aria-hidden="true"><span className="earthAtmosphere"/><span className="earthGrid"/><span className="earthLand land1"/><span className="earthLand land2"/><span className="earthLand land3"/><span className="earthLand land4"/><span className="earthShine"/></span>
+              <span className="earthVisual" aria-hidden="true">
+                <span className="earthAtmosphere"/>
+                <svg className="earthGlobe" viewBox="0 0 240 240">
+                  <defs><radialGradient id="earthOcean" cx="34%" cy="28%" r="72%"><stop offset="0%" stopColor="#4fcfff"/><stop offset="28%" stopColor="#1765c5"/><stop offset="68%" stopColor="#0b2d72"/><stop offset="100%" stopColor="#030817"/></radialGradient><clipPath id="earthClip"><circle cx="120" cy="120" r="112"/></clipPath></defs>
+                  <circle cx="120" cy="120" r="112" fill="url(#earthOcean)"/>
+                  <g clipPath="url(#earthClip)" className="earthLongitude">
+                    <ellipse cx="120" cy="120" rx="82" ry="112"/><ellipse cx="120" cy="120" rx="46" ry="112"/><ellipse cx="120" cy="120" rx="112" ry="72"/><ellipse cx="120" cy="120" rx="112" ry="39"/>
+                  </g>
+                  <g clipPath="url(#earthClip)" className="earthContinents">
+                    <path d="M33 72l18-16 22 2 13 13-7 14-15 2-8 14-17-5-9-14Zm36 35 13 7 4 18-7 17-11-4-5-16Z"/>
+                    <path d="M99 71l17-12 20 4 12 12-5 13-16 4-9-7-15 3-8-8Zm34 31 21-3 16 10 10 14-9 8-17-3-8 8-10-12Z"/>
+                    <path d="M117 113l14 8 3 19-9 22-11 11-10-14 5-17-5-15Z"/>
+                    <path d="M174 155l16-4 17 8 5 13-14 8-18-3-10-9Z"/>
+                    <path d="M61 41l11-9 13 4 4 10-9 7-12-3Z"/>
+                  </g>
+                  <g className="earthLights"><circle cx="71" cy="88" r="2"/><circle cx="103" cy="103" r="2"/><circle cx="144" cy="82" r="2"/><circle cx="169" cy="132" r="2"/><circle cx="121" cy="145" r="2"/></g>
+                  <circle cx="120" cy="120" r="112" className="earthEdge"/>
+                  <ellipse cx="92" cy="71" rx="70" ry="34" className="earthHighlight"/>
+                </svg>
+              </span>
               <strong>RALL<span>IVIO</span></strong><small>LIVING DISCOVERY SYSTEM</small><i><b>●</b> {loading ? "syncing" : `${ranked.length} verified signals`} · {activePlatform} focus</i>
             </button>
           </div>
@@ -325,47 +373,73 @@ export default function LivingDiscover() {
         <strong><i/> Live</strong>
       </div>
       <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(risingCreators)}</b><small>Rising Creators</small></div>
-      <div className="pulseMetric"><span>♨</span><b>{loading ? "—" : fmt(ranked.length)}</b><small>Trending Videos</small></div>
-      <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(categoryPulse.length)}</b><small>Breakout Topics</small></div>
-      <div className="pulseMetric"><span>♧</span><b>{loading ? "—" : fmt(spotlightCreators.length)}</b><small>Creator Spotlight</small></div>
+      <div className="pulseMetric"><span>♨</span><b>{loading ? "—" : fmt(ranked.length)}</b><small>Verified Videos</small></div>
+      <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(categoryPulse.length)}</b><small>Active Topics</small></div>
+      <div className="pulseMetric"><span>♧</span><b>{loading ? "—" : fmt(creatorPool.length)}</b><small>Tracked Creators</small></div>
       <div className="pulseWorld">
-        <div className="worldMap" aria-hidden="true"><svg viewBox="0 0 180 64"><path d="M8 19l11-5 8 2 5 7-5 5-8-1-5 5-7-3Zm25 9 10-3 7 5-2 7-8 3-7-5Zm31-17 13-5 14 4 4 7-7 4-9-2-8 4-8-4Zm25 16 12-5 12 2 4 6-8 4-5 8-9-3-4-7Zm31-10 11-4 11 5 8 7-3 6-10-1-7-5-9 2-5-5Zm-8 24 10-3 8 4-2 7-9 2-8-5Z" fill="currentColor"/><path className="mapRoad r1" d="M18 25C49 9 77 48 110 24S154 14 173 39"/><path className="mapRoad r2" d="M12 43C42 28 61 21 92 39s52 8 76-5"/></svg><i/><i/><i/><i/><i/></div>
-        <div><b>Global Activity</b><small>Real-time signals<br/>from around the world</small></div>
+        <div className="worldMap" aria-hidden="true">
+          <svg viewBox="0 0 180 64">
+            <path className="continent na" d="M9 13l15-4 12 6 8 10-5 7-8-2-5 8-8-3-3-9-8-5Z" fill="currentColor"/>
+            <path className="continent sa" d="M48 35l8 3 5 9-4 10-6 5-3-9-5-8 3-6Z" fill="currentColor"/>
+            <path className="continent eu" d="M79 16l10-4 10 3 6 6-5 5-10-2-7 4-7-5Z" fill="currentColor"/>
+            <path className="continent af" d="M92 27l12 1 5 9-3 13-8 7-8-9-2-11Z" fill="currentColor"/>
+            <path className="continent asia" d="M108 17l15-5 17 5 10 8-4 8-13-2-7 5-10-5-10 1-4-7Z" fill="currentColor"/>
+            <path className="continent au" d="M143 47l12-3 10 5-4 7-13 1-7-5Z" fill="currentColor"/>
+            <path className="mapRoad r1" d="M19 24C48 9 65 40 96 29S132 12 169 43"/>
+            <path className="mapRoad r2" d="M34 49C64 30 86 22 111 40s38 4 55-3"/>
+          </svg>
+          <i/><i/><i/><i/><i/><i/>
+        </div>
+        <div><b>Global Activity</b><small>Verified source coverage · {`{new Set(items.map(x => x.region).filter(Boolean)).size ? Array.from(new Set(items.map(x => x.region).filter(Boolean))).join(", ") : "—"}`}<br/>{loading ? "Refreshing source observations…" : `{fmt(ranked.length)} videos · {fmt(creatorPool.length)} creators`}{lastUpdatedAt ? ` · {age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
       </div>
     </section>
 
     <section className="pulseSection">
       <div className="pulseSectionHead">
         <div className="pulseTitle"><span className="pulseWave">⌁</span><div><h2>RALLIVIO PULSE</h2><p>Real signals. Real movement. Rotating continuously from the verified discovery pool.</p></div></div>
-        <div className="pulseHeadActions"><span className="pulseLive"><i/> Updating</span><button type="button" onClick={() => setNotice("RALLIVIO Pulse is rotating through the live verified discovery pool.")}>View all signals&nbsp; →</button></div>
+        <div className="pulseHeadActions"><span className="pulseLive"><i/> {loading ? "Syncing" : "Updating"}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</span><button className="viewSignalsButton" type="button" onClick={() => document.getElementById("pulse-stream")?.scrollIntoView({ behavior: "smooth", block: "center" })}>View all signals&nbsp; →</button></div>
       </div>
       <div className="pulseTabs">
         {signalGroups.map((g, i) => (
           <button key={g.name} type="button" className={g.items.length ? (i === 0 ? "active" : "") : "empty"} onClick={() => {
-            if (g.items[0]) setModal(g.items[(pulseOffset + i) % g.items.length]);
+            if (g.items[0]) selectPulse(g.items[(pulseOffset + i) % g.items.length]);
             else setNotice("No verified " + g.name + " observations are available right now.");
           }}>
             <span className="pulseTabIcon">{["🔥","ϟ","↗","◉","★","◉"][i]}</span><b>{g.name}</b><small>{g.items.length}</small>
           </button>
         ))}
       </div>
-      <div className="pulseCarousel">
-        <button className="pulseArrow left" type="button" aria-label="Previous signals" onClick={() => setPulseOffset(n => Math.max(0, n - 1))}>←</button>
-        <div className="pulseCards">
-          {pulseCards.map((x) => (
-            <article className="pulseCard" key={x.id} onClick={() => setModal(x)}>
-              <div className="pulseThumb"><img src={x.thumbnail} alt="" /><span>{x.live ? "LIVE" : (x.metadata?.signal || "Observed")}</span><time>{age(x.published_at)}</time></div>
-              <h3>{x.title}</h3>
-              <p className="pulseCreator">◉ {x.channel_title}</p>
-              <small>{fmt(x.views)} views · {x.engagement.toFixed(1)}% engagement</small>
-              <div className="pulseCardMeta"><span>♡ {fmt(x.likes)}</span><span>◌ {fmt(x.comments)}</span><strong>↗ {x.metadata?.momentum_score != null ? Math.round(x.metadata.momentum_score) + " momentum" : "Verified"}</strong></div>
-            </article>
-          ))}
-          {!loading && !pulseCards.length && <div className="pulseEmpty">No verified observations are available yet.</div>}
+      <div className="pulseCarousel" id="pulse-stream">
+        <button className="pulseArrow left" type="button" aria-label="Scroll signals left" onClick={() => scrollPulse(-1)}>←</button>
+        <div className="pulseViewport" ref={pulseViewportRef}>
+          <div className="pulseCards">
+            {pulseCards.map((x, i) => (
+              <article className="pulseCard" key={x.id + "-" + i} onClick={() => selectPulse(x)} tabIndex={0} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") selectPulse(x); }}>
+                <div className="pulseThumb"><img src={x.thumbnail} alt="" /><span>{x.live ? "LIVE" : (x.metadata?.signal || "Observed")}</span><time>{age(x.published_at)}</time></div>
+                <h3 title={x.title}>{x.title}</h3>
+                <p className="pulseCreator">◉ {x.channel_title}</p>
+                <small>{fmt(x.views)} views · {x.engagement.toFixed(1)}% engagement</small>
+                <div className="pulseCardMeta"><span>♡ {fmt(x.likes)}</span><span>◌ {fmt(x.comments)}</span><strong>↗ {x.metadata?.momentum_score != null ? Math.round(x.metadata.momentum_score) + " momentum" : "Verified"}</strong></div>
+              </article>
+            ))}
+            {!loading && !pulseCards.length && <div className="pulseEmpty">No verified observations are available yet.</div>}
+          </div>
         </div>
-        <button className="pulseArrow right" type="button" aria-label="Next signals" onClick={() => setPulseOffset(n => n + 1)}>→</button>
+        <button className="pulseArrow right" type="button" aria-label="Scroll signals right" onClick={() => scrollPulse(1)}>→</button>
       </div>
-      <div className="pulseTicker"><i/> Field refreshes automatically · New attention can move into view every cycle</div>
+      {selectedPulse && <section className="pulseSelected" id="pulse-selected" aria-label="Selected signal">
+        <div className="pulseSelectedPlayer">
+          {selectedPulse.embeddable ? <iframe src={`https://www.youtube.com/embed/{selectedPulse.id}?autoplay=1&rel=0`} title={selectedPulse.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen/> : <img src={selectedPulse.thumbnail} alt=""/>}
+        </div>
+        <div className="pulseSelectedInfo">
+          <span className="eyebrow">{selectedPulse.metadata?.signal || "Observed"} · VERIFIED OBSERVATION</span>
+          <h3>{selectedPulse.title}</h3>
+          <p>{selectedPulse.channel_title} · {fmt(selectedPulse.views)} views · {age(selectedPulse.published_at)}</p>
+          <div><span>{fmt(selectedPulse.likes)} likes</span><span>{fmt(selectedPulse.comments)} comments</span><span>{selectedPulse.engagement.toFixed(1)}% engagement</span><strong>{selectedPulse.metadata?.momentum_score != null ? `RALLIVIO Momentum Score {Math.round(selectedPulse.metadata.momentum_score)}` : "RALLIVIO signal verified"}</strong></div>
+          <button className="sourceButton" type="button" onClick={() => window.open(selectedPulse.url, "_blank", "noopener,noreferrer")}>Watch on YouTube ↗</button>
+        </div>
+      </section>}
+      <div className="pulseTicker"><i/> Continuous verified pool · refreshes from source observations · right arrow keeps the stream moving</div>
     </section>
 
     <section className="radarSection">
@@ -383,7 +457,13 @@ export default function LivingDiscover() {
         <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>Live movement across the discovery field</p></div><span className="scanState"><i/> ROTATING</span></div>
         <div className="topicList">
           {topicRows.map((c, i) => (
-            <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); }}><span className="topicRank">{i + 1}</span><b>{c.name}</b><i className={"spark spark-" + (i + 1)}><em/><em/><em/><em/><em/></i><strong>{c.momentum ? c.momentum + " momentum" : "—"}</strong></button>
+            <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); }}>
+              <span className="topicRank">{i + 1}</span><b>{c.name}</b>
+              <i className={"spark spark-" + (i + 1)} aria-label={`${c.name} momentum ${c.momentum || 0}`}>
+                {Array.from({ length: 7 }, (_, j) => <em key={j} style={{ height: `${4 + ((c.momentum || 0) + j * 7 + topicOffset * 3) % 14}px` }}/>)}
+              </i>
+              <strong>{c.momentum ? c.momentum + " momentum" : "—"}</strong>
+            </button>
           ))}
         </div>
       </div>
@@ -515,4 +595,59 @@ footer{padding:55px 5vw 65px}
 @media(max-width:1250px){.pulseCarousel{grid-template-columns:30px minmax(0,1fr) 30px}.pulseCards{grid-template-columns:repeat(3,1fr)}.worldMap{width:120px}.pulseHeadActions{gap:8px}}
 @media(max-width:800px){.pulseHeadActions .pulseLive{display:none}.pulseCarousel{grid-template-columns:26px minmax(0,1fr) 26px}.pulseArrow{width:27px;height:27px}.pulseCards{grid-template-columns:repeat(2,1fr)}.worldMap{width:120px}.earthVisual{width:74%;height:74%}}
 @media(max-width:520px){.pulseCarousel{grid-template-columns:24px minmax(0,1fr) 24px}.pulseCards{grid-template-columns:1fr}.pulseArrow{width:24px;height:24px;font-size:13px}.pulseTicker{font-size:6px}.worldMap{width:110px}.pulseHeadActions button{display:none}}
+/* 2026-09-18 Living Field precision pass */
+.fieldBadge{top:1%!important;z-index:80!important}
+.core{overflow:hidden!important}
+.earthVisual{z-index:1!important;width:86%!important;height:86%!important;border-radius:50%;overflow:hidden!important;background:transparent!important;box-shadow:none!important}
+.earthGlobe{position:absolute;inset:0;width:100%;height:100%;display:block;filter:drop-shadow(0 0 18px #4fcfff55)}
+.earthGlobe .earthLongitude ellipse{fill:none;stroke:#8de4ff22;stroke-width:1.2;animation:earthGridShift 7s ease-in-out infinite}
+.earthGlobe .earthContinents path{fill:#2fd59a;opacity:.78;filter:drop-shadow(0 0 5px #45f0b088)}
+.earthGlobe .earthLights circle{fill:#8be7ff;filter:drop-shadow(0 0 5px #69dfff);animation:earthLightBlink 1.8s ease-in-out infinite}
+.earthGlobe .earthLights circle:nth-child(2){animation-delay:.25s}.earthGlobe .earthLights circle:nth-child(3){animation-delay:.55s}.earthGlobe .earthLights circle:nth-child(4){animation-delay:.8s}.earthGlobe .earthLights circle:nth-child(5){animation-delay:1.1s}
+.earthEdge{fill:none;stroke:#8ae7ff88;stroke-width:2}.earthHighlight{fill:#fff;opacity:.07;transform-origin:92px 71px;animation:earthHighlight 5s ease-in-out infinite}
+.earthAtmosphere{inset:-2%!important;border-color:#6ee6ff77!important;box-shadow:0 0 25px #5bc9ff66,0 0 55px #6a5cff33!important;z-index:2}
+.core>strong,.core>small,.core>i{z-index:10!important}
+@keyframes earthGridShift{50%{transform:translateX(6px);opacity:.7}100%{transform:translateX(0)}}
+@keyframes earthLightBlink{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1.6)}}
+@keyframes earthHighlight{50%{transform:translate(7px,2px);opacity:.12}}
+.pulseHeadActions>button.viewSignalsButton{display:inline-flex!important;align-items:center;justify-content:center;border:1px solid #4d8fff88!important;border-radius:10px!important;background:linear-gradient(135deg,#163b78,#11264d)!important;color:#dbeaff!important;padding:10px 14px!important;font-size:9px!important;font-weight:850!important;white-space:nowrap!important;box-shadow:0 0 18px #2d83ff22!important}
+.pulseHeadActions>button.viewSignalsButton:hover{border-color:#75b8ff!important;box-shadow:0 0 25px #2d83ff55!important;transform:translateY(-1px)}
+.pulseCarousel{grid-template-columns:36px minmax(0,1fr) 36px!important}
+.pulseViewport{min-width:0;overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scrollbar-width:none;padding:1px 0 7px}
+.pulseViewport::-webkit-scrollbar{display:none}
+.pulseViewport .pulseCards{display:flex!important;gap:10px!important;margin-top:0!important;width:max-content;min-width:100%}
+.pulseViewport .pulseCard{flex:0 0 244px!important;width:244px!important}
+.pulseCard h3{font-size:10.5px!important;line-height:1.35!important;min-height:29px!important}
+.pulseCard:focus-visible{outline:2px solid #5aaaff;border-color:#5aaaff}
+.pulseSelected{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:16px;margin-top:14px;padding:14px;border:1px solid #4b7fc966;border-radius:16px;background:linear-gradient(145deg,#0a1630,#071020);box-shadow:0 20px 50px #0005}
+.pulseSelectedPlayer{min-height:270px;border-radius:11px;overflow:hidden;background:#030711}
+.pulseSelectedPlayer iframe,.pulseSelectedPlayer img{display:block;width:100%;height:100%;min-height:270px;border:0;object-fit:cover}
+.pulseSelectedInfo{display:flex;flex-direction:column;justify-content:center;gap:9px;min-width:0}
+.pulseSelectedInfo .eyebrow{color:#68c6ff;font-size:8px;letter-spacing:.8px;font-weight:850}
+.pulseSelectedInfo h3{margin:0;color:#f6f4ff;font-size:18px;line-height:1.35}
+.pulseSelectedInfo p{margin:0;color:#858da5;font-size:9px}
+.pulseSelectedInfo>div{display:flex;flex-wrap:wrap;gap:8px}.pulseSelectedInfo>div span,.pulseSelectedInfo>div strong{padding:6px 8px;border-radius:8px;background:#ffffff08;border:1px solid #ffffff10;color:#aeb5c7;font-size:8px}.pulseSelectedInfo>div strong{color:#5ce6ad}
+.sourceButton{align-self:flex-start;border:1px solid #5ea8ff77;border-radius:10px;background:#102e5c;color:#d9ebff;padding:9px 12px;font-size:9px;font-weight:850;cursor:pointer}
+.pulseTicker{font-size:8px!important}
+.worldMap{width:180px!important;height:58px!important}
+.worldMap svg{opacity:.72!important}
+.worldMap .continent{fill:#2675c5!important;filter:drop-shadow(0 0 4px #2d9aff66)}
+.worldMap .mapRoad{stroke:#6fd6ff!important;stroke-width:1.25!important;stroke-dasharray:3 5!important}
+.worldMap i{width:5px!important;height:5px!important}
+.worldMap i:nth-of-type(6){left:58%!important;top:58%!important;animation-delay:1.25s!important}
+.pulseWorld small{line-height:1.5!important}
+.radarVisual{height:150px!important;display:grid!important;place-items:center!important}
+.liveRadar .radarRings{left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:130px!important;height:130px!important}
+.liveRadar .radarSweep{left:50%!important;top:50%!important;width:65px!important;height:65px!important;transform-origin:0 0!important;border-left:2px solid #5fc9ff99!important;border-top:2px solid #5fc9ff55!important;border-radius:100% 0 0 0!important}
+.liveRadar .radarGlow.one{left:calc(50% + 27px)!important;top:calc(50% - 40px)!important}.liveRadar .radarGlow.two{left:calc(50% - 45px)!important;top:calc(50% + 2px)!important}.liveRadar .radarGlow.three{left:calc(50% - 8px)!important;top:calc(50% + 38px)!important}
+.spark{height:24px!important;gap:3px!important;align-items:flex-end!important}
+.spark em{width:7px!important;min-height:4px!important;border:0!important;border-radius:2px 2px 0 0!important;background:linear-gradient(180deg,#c55cff,#5d9dff)!important;transform:none!important;animation:sparkDance 1.7s ease-in-out infinite alternate!important}
+.spark em:nth-child(2){animation-delay:.12s!important}.spark em:nth-child(3){animation-delay:.24s!important}.spark em:nth-child(4){animation-delay:.36s!important}.spark em:nth-child(5){animation-delay:.48s!important}.spark em:nth-child(6){animation-delay:.6s!important}.spark em:nth-child(7){animation-delay:.72s!important}
+@keyframes sparkDance{to{transform:scaleY(.55);opacity:.65}}
+.spotlightList{max-height:310px;overflow:auto;scrollbar-width:thin;padding-right:3px}
+.spotlightList button{min-height:54px!important}
+.spotlightList button:hover{background:#ffffff05;border-radius:10px}
+@media(max-width:800px){.pulseSelected{grid-template-columns:1fr}.pulseSelectedInfo h3{font-size:15px}.pulseSelectedPlayer,.pulseSelectedPlayer iframe,.pulseSelectedPlayer img{min-height:220px}.pulseHeadActions>button.viewSignalsButton{padding:8px 10px}.worldMap{width:145px!important}.radarVisual{height:145px!important}}
+@media(max-width:520px){.pulseHeadActions>button.viewSignalsButton{font-size:8px;padding:7px 9px}.pulseCarousel{grid-template-columns:28px minmax(0,1fr) 28px!important}.pulseViewport .pulseCard{flex-basis:220px!important;width:220px!important}.worldMap{width:125px!important}.pulseSelectedInfo h3{font-size:14px}}
+
 `;
