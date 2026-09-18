@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState, type PointerEvent } from "react";
-import { siDiscord, siFacebook, siInstagram, siLinkedin, siPinterest, siReddit, siSnapchat, siThreads, siTiktok, siTwitch, siX, siYoutube, type SimpleIcon } from "simple-icons";
+import { siDiscord, siFacebook, siInstagram, siLinkedin, siPinterest, siReddit, siSnapchat, siSpotify, siTiktok, siTwitch, siX, siYoutube, type SimpleIcon } from "simple-icons";
 
 const DiscoverGlobe = dynamic(() => import("../components/DiscoverGlobe"), { ssr: false });
 
@@ -39,7 +39,7 @@ const platformNodes: Array<{ name: string; icon: SimpleIcon; className: string; 
   { name: "Reddit", icon: siReddit, className: "reddit", state: "Coming next", position: "p8" },
   { name: "Pinterest", icon: siPinterest, className: "pinterest", state: "Coming next", position: "p9" },
   { name: "Discord", icon: siDiscord, className: "discord", state: "Coming next", position: "p10" },
-  { name: "Threads", icon: siThreads, className: "threads", state: "Coming next", position: "p11" },
+  { name: "Spotify", icon: siSpotify, className: "spotify", state: "Coming next", position: "p11" },
   { name: "Snapchat", icon: siSnapchat, className: "snapchat", state: "Coming next", position: "p12" },
 ];
 
@@ -220,7 +220,7 @@ export default function Home() {
         .discoverGlobeCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .25s ease;}
         .globeStage.globeReady .globeFallback{opacity:0;}.globeStage.globeReady .discoverGlobeCanvas{opacity:1;}
         .platformNode{z-index:12;min-width:86px;position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;color:#fff;transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s;}.platformNode:hover{transform:translateY(-5px) scale(1.08);filter:brightness(1.08);}.platformIcon{position:relative;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,color-mix(in srgb,var(--brand) 72%,white),var(--brand) 46%,#05060d 100%);border:1px solid rgba(255,255,255,.28);box-shadow:inset 10px 8px 18px rgba(255,255,255,.20),inset -13px -15px 23px rgba(0,0,0,.60),0 14px 30px rgba(0,0,0,.44),0 0 20px color-mix(in srgb,var(--brand) 35%,transparent);transform:translateZ(0);overflow:hidden;}.platformGlyph{position:relative;z-index:3;width:25px;height:25px;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55));fill:#fff;}.platformIcon::before{content:"";position:absolute;left:16%;top:13%;width:25%;height:25%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,255,255,.24) 42%,transparent 70%);filter:blur(.3px);z-index:4;transition:transform .35s ease;}.platformIcon::after{content:"";position:absolute;inset:4px;border-radius:50%;border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 0 14px rgba(255,255,255,.08),inset -5px -7px 10px rgba(0,0,0,.24);z-index:5;pointer-events:none;}.platformNode:hover .platformIcon::before{transform:translate(5px,3px) scale(1.08);}.iconSheen{position:absolute;inset:-25%;background:linear-gradient(125deg,transparent 35%,rgba(255,255,255,.32) 46%,transparent 55%);transform:translateX(-75%) rotate(15deg);animation:iconSheen 4.6s ease-in-out infinite;z-index:6;}.platformNode strong{font-size:9px;text-shadow:0 2px 8px #000;white-space:nowrap}.platformNode small{font-size:7px;color:#9ba7c4;white-space:nowrap}
-        .youtube{--brand:#ff0000}.instagram{--brand:#e4405f}.tiktok{--brand:#111111}.x{--brand:#000000}.linkedin{--brand:#0a66c2}.facebook{--brand:#1877f2}.twitch{--brand:#9146ff}.reddit{--brand:#ff4500}.pinterest{--brand:#bd081c}.discord{--brand:#5865f2}.threads{--brand:#000000}.snapchat{--brand:#fffc00}.snapchat .platformGlyph{fill:#000}
+        .youtube{--brand:#ff0000}.instagram{--brand:#e4405f}.tiktok{--brand:#111111}.x{--brand:#000000}.linkedin{--brand:#0a66c2}.facebook{--brand:#1877f2}.twitch{--brand:#9146ff}.reddit{--brand:#ff4500}.pinterest{--brand:#bd081c}.discord{--brand:#5865f2}.spotify{--brand:#1ed760}.snapchat{--brand:#fffc00}.snapchat .platformGlyph{fill:#000}
         .p1{top:1%;left:43%}.p2{top:18%;right:6%}.p3{bottom:11%;right:12%}.p4{top:42%;left:6%}.p5{bottom:1%;left:42%}
         .p6{top:9%;left:17%}.p7{top:4%;right:25%}.p8{top:51%;right:0%}.p9{bottom:9%;right:27%}.p10{bottom:2%;left:24%}.p11{top:31%;right:1%}.p12{top:31%;left:22%}
         @keyframes iconSheen{0%,45%{transform:translateX(-75%) rotate(15deg)}65%,100%{transform:translateX(75%) rotate(15deg)}}
