@@ -395,3 +395,88 @@ This document is a continuity record, not a substitute for code. Every material 
 - No old preview URL may be used as current deployment proof.
 
 **Resolution status:** `OPEN — diagnosis/runbook updated; live Vercel deployment still requires verification.`
+
+
+## 19. New-chat handoff snapshot — 2026-09-19
+
+### Repository state verified
+- Repository: `sanpiyush9/rallivio`
+- Active work branch: `feature/creator-platform-subscription`
+- Current HEAD: `2a5835b3370b430086a35301141ed66d23a60d5f` — documentation-only alignment commit after the current Discover implementation work.
+- GitHub Actions for the current HEAD passed `npm run verify` successfully.
+- `npm run verify` currently covers typecheck, lint, tests, production build, canonical-check and docs-check.
+- Production/main remains untouched.
+
+### Current branch map
+Feature branches:
+- `feature/creator-platform-subscription` — active Creator + current served Discover/Living implementation branch.
+- `feature/living-position-editor` — Discover/Living workstream.
+- `feature/living-core-platform-routing`
+- `feature/living-ecosystem-v3`
+- `feature/discover-front-simplification-01`
+- `feature/discover-upper-approved-01`
+- `feature/docs-enforcement`
+- `feature/phase0-data-foundation`
+- `feature/verify-pipeline`
+- `feature/youtube-real-discovery`
+- `feature/youtube-real-discovery-qa`
+- `feature/youtube-real-discovery-qa2`
+- `feature/youtube-real-discovery-qa3`
+- `feature/youtube-real-discovery-qa4`
+- `feature/youtube-qa-bootstrap`
+
+Protected/base:
+- `main`
+- `staging`
+
+Checkpoint/recovery:
+- `checkpoint/living-front-v2` through `checkpoint/living-front-v11`
+- `archive/checkpoint-living-front-v10-original`
+- v10 original immutable recovery SHA: `785b8c305708bf9d495601cf74b81728941c82f5`
+- v10 branch was accidentally moved once and must never be moved again.
+- v11 is now the latest checkpoint and is immutable. Never overwrite/move it.
+- Next new checkpoint, if requested, must be v12 after re-enumerating checkpoint branches.
+
+### Current Discover/Living implementation
+The actual user-visible root route is rewritten by middleware to `/living`. Therefore the current Discover implementation to inspect is `app/living/page.tsx`, not only `app/page.tsx`.
+
+The five-item precision pass is implemented in the active branch:
+1. Header: Opportunities label, 72px desktop header, nowrap nav, 32px nav gap, 15px/500 nav typography, separate LIVE/Nebula/Login cluster with 12px internal gap and search separation.
+2. Globe: `components/DiscoverGlobe.tsx` is mounted in the served `/living` page; Three.js SphereGeometry 64x64, day/night textures, Fresnel atmosphere, axial tilt and approximately one revolution per 60 seconds. Initialization and frame logging are present. The requested local `/public/textures` copies are still not implemented; current assets are upstream raw URLs.
+3. Living Field pill: removed from `app/living/page.tsx` markup.
+4. Platform badges: spherical lighting treatment, upper-left specular highlight, lower-right inner shadow, drop shadow, hover scale and field/core response are implemented. Canonical 12 coordinates remain unchanged.
+5. Dynamic hero: derived from the persisted discovery response, strongest signal per topic/region, freshness-gated to two hours, max eight candidates, 5.5s cycle, hover pause, honest empty state `Listening for signals…`, and database refresh timestamp.
+
+### Data truth status
+Supabase project `rallivio` / ID `dzcnmatbszerparrcgem` is ACTIVE_HEALTHY.
+Current `public.youtube_discovery_pool` audit:
+- 25 rows
+- 25 rows have a non-null stored signal
+- 0 rows have a non-null signal with `stats_refreshed_at` inside the last two hours
+- latest `stats_refreshed_at`: `2026-09-15 18:37:10.647+00`
+- 0 rows match the named seeded-card titles/channels ROSÉ, Sur Music or Triple M Movies
+
+Therefore the hero must currently fall back honestly to `Listening for signals…` until fresh verified observations exist. Do not create a hardcoded trend list or fake freshness.
+
+### Current deployment state
+Vercel project: `prj_FKsi7Jy0AtS7GAuAYEk3UbuIJBFU`.
+Current feature HEAD has a green GitHub verification run, but the latest Vercel deployments observed are still queued on earlier descendant SHAs; there is not yet exact-SHA + READY proof for `2a5835b...`.
+Do not call the current work live until Vercel reports the exact intended SHA as READY and the actual deployed `/` → `/living` page has been field-tested.
+
+### Current unresolved work
+- Localize the three Earth textures into `public/textures/` when binary repository-file tooling is available.
+- Verify the live 3D globe actually initializes and frame logs appear in the browser; the current component has explicit `[globe] init` / `[globe] frame` / error logging for this.
+- Inspect the served DOM for any overlay above the globe and remove only the confirmed obstructing layer.
+- Finish Vercel exact-SHA deployment verification.
+- Complete the data-pipeline migration away from transitional request-time `/api/youtube/trending`; user-facing reads should be Supabase-only.
+- Finish periodic snapshots/acquisition and signal consistency; KI-004 remains open.
+- Remove/replace temporary QA bootstrap before production.
+- Continue Creator/auth/subscription work without disturbing the approved Living Field visual baseline.
+
+### Critical project rules for the next chat
+- Read `docs/CANONICAL.md`, then `docs/AI_START_HERE.md`, `docs/RALLIVIO_STATE.md`, relevant current specs, last three `SESSION_LOG.md` entries, and `KNOWN_ISSUES.md`.
+- Inspect the actual branch and commit before editing.
+- Never touch `main` or `staging`.
+- Never move/overwrite/reuse an existing checkpoint.
+- A deployment is complete only after exact branch/SHA + Vercel READY + actual URL testing.
+- If a required integration capability is unavailable, identify the exact missing capability immediately. Use approved evidence fallbacks such as GitHub Actions only when they answer the same question; otherwise request reconnection instead of guessing.
