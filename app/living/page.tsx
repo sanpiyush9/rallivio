@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 type Item = {
   id: string; title: string; channel_title: string; published_at: string; thumbnail: string;
@@ -89,6 +90,16 @@ export default function LivingDiscover() {
   const [activePlatform, setActivePlatform] = useState("YouTube");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [pulse, setPulse] = useState(0);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    void supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserEmail(session?.user?.email ?? null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -140,7 +151,13 @@ export default function LivingDiscover() {
       <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span>⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search anything: creators, brands, videos, trends…"/><button type="submit">↗</button></form>
       <button className="round" type="button" onClick={() => setNotice("Signals are sourced from the verified discovery pool.")}>◌</button>
       <button className="round" type="button" onClick={() => document.documentElement.classList.toggle("light")}>☼</button>
-      <button className="loginButton" type="button" onClick={() => router.push("/login")}>Login</button>
+      {userEmail ? (
+        <button className="loginButton" type="button" onClick={() => router.push("/account")}>
+          {userEmail.split("@")[0]}
+        </button>
+      ) : (
+        <button className="loginButton" type="button" onClick={() => router.push("/login")}>Login</button>
+      )}
     </header>
 
     <section className="hero">
