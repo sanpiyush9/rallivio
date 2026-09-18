@@ -57,13 +57,18 @@ export default function CreatorPage() {
       const r = await fetch(`/api/youtube/catalog?${params.toString()}`, { cache: "force-cache" });
       const j: TrendResponse = await r.json();
       if (!r.ok || !j.ok) throw new Error(j.state || "CATALOG_UNAVAILABLE");
-      setTrends(Array.isArray(j.items) ? j.items.map((v: any) => ({
+      const catalogItems = Array.isArray(j.items) ? j.items as unknown as Array<{
+        id: string; title: string; publishedAt: string; thumbnail: string;
+        views: number; likes: number; comments: number; url: string;
+        embeddable: boolean; signal?: string; momentumScore?: number;
+      }> : [];
+      setTrends(catalogItems.map(v => ({
         id: v.id, title: v.title, publishedAt: v.publishedAt, thumbnail: v.thumbnail,
         views: v.views || 0, likes: v.likes || 0, comments: v.comments || 0,
         engagement: v.views ? ((v.likes + v.comments) / Math.max(v.views, 1)) * 100 : 0,
         velocity: 0, url: v.url, embeddable: v.embeddable !== false,
         signal: v.signal, momentumScore: v.momentumScore,
-      })) : []);
+      })));
     } catch (e) { setTrendError(e instanceof Error ? e.message : "CATALOG_UNAVAILABLE"); }
     finally { setTrendLoading(false); }
   };
@@ -94,7 +99,7 @@ export default function CreatorPage() {
   }, [selected?.id, trends, data]);
 
   const mainVideo = selected || trends[0] || creatorVideos[0] || null;
-  const avgEngagement = creatorVideos.length ? creatorVideos.reduce((sum, v) => sum + v.engagement, 0) / creatorVideos.length : 0;
+  const embedOrigin = typeof window === "undefined" ? "" : window.location.origin;
 
   const submitSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -139,7 +144,7 @@ export default function CreatorPage() {
             <div className="video-column">
               <div className="search-row"><form className="youtube-search" onSubmit={submitSearch}><span>⌕</span><input value={input} onChange={e => setInput(e.target.value)} placeholder="Search YouTube creators or videos" aria-label="Search YouTube"/><button type="submit">Search</button></form><div className="periods">{periods.map(p => <button type="button" key={p} className={period === p ? "active" : ""} onClick={() => setPeriod(p)}>{p}</button>)}</div></div>
               <div className="player-card">
-                {mainVideo ? <><div className="player-wrap">{mainVideo.embeddable ? <iframe src={`https://www.youtube.com/embed/${mainVideo.id}?rel=0&origin=${encodeURIComponent(window.location.origin)}`} title={mainVideo.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen/> : <div className="embed-fallback">Preview unavailable<a href={mainVideo.url} target="_blank" rel="noreferrer">Watch on YouTube ↗</a></div>}</div><div className="video-info"><span className="signal">{mainVideo.signal || "YouTube"}</span><h2>{mainVideo.title}</h2><p>{fmt(mainVideo.views)} views · {fmt(mainVideo.likes)} likes · {fmt(mainVideo.comments)} comments · {ago(mainVideo.publishedAt)}</p><div className="video-links"><a href={mainVideo.url} target="_blank" rel="noreferrer">Watch on YouTube ↗</a><button type="button" onClick={() => { setSaved(true); notify("Saved to RALLIVIO."); }}>{saved ? "★ Saved" : "☆ Save"}</button></div></div></> : <div className="player-empty">{loading || trendLoading ? "Loading live YouTube…" : "Search for a creator or select a video."}</div>}
+                {mainVideo ? <><div className="player-wrap">{mainVideo.embeddable ? <iframe src={`https://www.youtube.com/embed/${mainVideo.id}?rel=0${embedOrigin ? `&origin=${encodeURIComponent(embedOrigin)}` : ""}`} title={mainVideo.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen/> : <div className="embed-fallback">Preview unavailable<a href={mainVideo.url} target="_blank" rel="noreferrer">Watch on YouTube ↗</a></div>}</div><div className="video-info"><span className="signal">{mainVideo.signal || "YouTube"}</span><h2>{mainVideo.title}</h2><p>{fmt(mainVideo.views)} views · {fmt(mainVideo.likes)} likes · {fmt(mainVideo.comments)} comments · {ago(mainVideo.publishedAt)}</p><div className="video-links"><a href={mainVideo.url} target="_blank" rel="noreferrer">Watch on YouTube ↗</a><button type="button" onClick={() => { setSaved(true); notify("Saved to RALLIVIO."); }}>{saved ? "★ Saved" : "☆ Save"}</button></div></div></> : <div className="player-empty">{loading || trendLoading ? "Loading live YouTube…" : "Search for a creator or select a video."}</div>}
               </div>
             </div>
             <aside className="queue-card"><div className="queue-head"><div><span className="eyebrow">RALLIVIO DISCOVERY</span><h2>Trending</h2></div><span className="live-dot">● LIVE</span></div>{trendError && <div className="inline-error">{trendError}<button type="button" onClick={() => void loadTrends()}>Retry</button></div>}<div className="queue">{(trends.length ? trends : creatorVideos).slice(0, 8).map(video => <button type="button" key={video.id} className={`queue-item ${mainVideo?.id === video.id ? "active" : ""}`} onClick={() => setSelected(video)}><img src={video.thumbnail} alt=""/><span><strong>{video.title}</strong><small>{video.signal || "Observed"} · {fmt(video.views)} views</small></span></button>)}{!trendLoading && !trends.length && !creatorVideos.length && <div className="empty">No verified videos available.</div>}</div></aside>
