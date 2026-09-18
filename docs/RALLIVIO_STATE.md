@@ -373,3 +373,18 @@ Truth boundary → The continuous Pulse stream may repeat the currently verified
 
 Date: 2026-09-18
 
+
+## 17. Discover live hero/header + 3D ecosystem pass — 2026-09-19
+
+**Current requirement →** Discover must feel like a live broadcast of the creator economy: the header must be clean, the hero must react to verified movement, the central Earth must visibly rotate with depth, and social nodes must read as dimensional objects.
+
+**New implementation →** The Discover surface now has a refined header, verified-pool-driven hero headline rotation, live source ticker, layered animated Earth/orbit treatment, reflective spherical platform nodes, and an additional orbital path.
+
+**Truth boundary →** Hero copy rotates only through currently ranked verified discovery observations. Visual Earth/orbit motion is presentation only and must not be represented as precise geographic intelligence.
+
+**Implementation status →** **IMPLEMENTING / Vercel deployment pending READY state.**
+
+**Branch safety →** checkpoint/living-front-v11 was created before this pass and has not been modified.
+
+**Date:** 2026-09-19
+
