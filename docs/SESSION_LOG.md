@@ -24,6 +24,7 @@ Status: In progress
 - Source coverage is displayed from the records actually loaded by the current implementation. The existing direct /api/youtube/trending request path remains transitional architecture debt and was not expanded.
 
 ### Verification status
+- Follow-up precision commit: 676bf3ae2e4f6417628784e3b6da2942941f4876 expands the Radar universe across the full 21-category taxonomy and exposes up to 8 verified Spotlight creators.
 - GitHub feature commits: 16c9256b238af692b53218dca5a4d6eb7cda201c, 77475e6206380cb546d1eb7c9e00b472b37d0281, d70a60d118c278efcb46fddab48e1d2fbea5553a.
 - GitHub Actions workflow for the latest commit had not yet produced a run at the time of this entry.
 - Live deployment has not yet been re-verified against the latest commit.
