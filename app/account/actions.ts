@@ -30,3 +30,22 @@ export async function logout() {
   await supabase.auth.signOut();
   redirect("/login");
 }
+
+export async function deleteAccount(formData: FormData) {
+  const confirmation = String(formData.get("delete_confirmation") ?? "").trim();
+  if (confirmation !== "DELETE") {
+    redirect("/account?error=" + encodeURIComponent("Type DELETE to confirm account deletion."));
+  }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login?next=/account");
+
+  const { error } = await supabase.rpc("delete_current_user");
+  if (error) {
+    redirect("/account?error=" + encodeURIComponent("We couldn't delete your account. Please try again."));
+  }
+
+  await supabase.auth.signOut();
+  redirect("/login?message=" + encodeURIComponent("Your RALLIVIO account has been deleted."));
+}
