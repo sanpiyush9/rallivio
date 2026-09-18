@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -15,9 +16,12 @@ type Item = {
   description: string; views: number; likes: number; comments: number; engagement: number; velocity: number;
   live: boolean; url: string; embeddable: boolean; topic: string; region?: string;
   metadata?: { subscriber_count?: number | null; signal?: string; momentum_score?: number };
+  stats_refreshed_at?: string;
 };
 type Category = { name: string; icon: string; keywords: string[] };
 type Platform = { id: string; name: string; kind: string; connected: boolean; x: number; y: number };
+
+const DiscoverGlobe = dynamic(() => import("../../components/DiscoverGlobe"), { ssr: false });
 
 const platforms: Platform[] = [
   { id: "youtube", name: "YouTube", kind: "youtube", x: 50.0, y: 13.0, connected: true },
@@ -66,7 +70,7 @@ const themeDefinitions = [
   { id: "neon", name: "Neon Reactor", short: "Neon", desc: "magenta / ember", mode: "reactor", accent: "magenta" },
   { id: "lunar", name: "Lunar Glass", short: "Lunar", desc: "ice / silver", mode: "calm", accent: "ice" },
 ] as const;
-const nav = [["Discover", "/"], ["Creators", "/creators"], ["Brands & Opportunities", "/brands"], ["Community", "/community"], ["About", "/about"]] as const;
+const nav = [["Discover", "/"], ["Creators", "/creators"], ["Opportunities", "/opportunities"], ["Community", "/community"], ["About", "/about"]] as const;
 const signalKey = (s?: string) => (s || "").toLowerCase().replace(/[_-]/g, " ").trim();
 const signalMatches = (item: Item, signal: string) => signalKey(item.metadata?.signal) === signalKey(signal);
 const fmt = (n: number) => n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString();
@@ -123,6 +127,8 @@ export default function LivingDiscover() {
   const [spotlightOffset, setSpotlightOffset] = useState(0);
   const [selectedPulse, setSelectedPulse] = useState<Item | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [heroPaused, setHeroPaused] = useState(false);
   const pulseViewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -146,7 +152,7 @@ export default function LivingDiscover() {
   useEffect(() => {
     const load = async () => {
       try {
-        const r = await fetch("/api/youtube/trending?region=IN&category=0&format=all&signal=all", { cache: "no-store" });
+        const r = await fetch("/api/discovery", { cache: "no-store" });
         const b = await r.json();
         if (!r.ok || !b.ok) throw new Error(b.state || "YOUTUBE_UNAVAILABLE");
         setItems(Array.isArray(b.items) ? b.items.map((x: YouTubeDiscoveryItem) => ({
@@ -156,8 +162,9 @@ export default function LivingDiscover() {
           likes: Number(x.likes || 0), comments: Number(x.comments || 0), engagement: Number(x.engagement || 0),
           velocity: Number(x.velocity || 0), live: Boolean(x.live),
           metadata: { subscriber_count: Number(x.channelSubscribers || 0), signal: x.signal, momentum_score: Number(x.momentumScore || 0) },
+          stats_refreshed_at: b.refreshedAt || undefined,
         })) : []);
-        setLastUpdatedAt(Date.now());
+        setLastUpdatedAt(b.refreshedAt ? Date.parse(b.refreshedAt) : Date.now());
         setNotice("");
       } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
       finally { setLoading(false); }
@@ -190,6 +197,33 @@ export default function LivingDiscover() {
   }, [items.length]);
 
   const ranked = useMemo(() => [...items].sort((a, b) => (b.metadata?.momentum_score || 0) - (a.metadata?.momentum_score || 0)), [items]);
+  const heroCandidates = useMemo(() => {
+    const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+    const candidates = ranked.filter(x => x.metadata?.signal && x.stats_refreshed_at && Date.parse(x.stats_refreshed_at) >= cutoff);
+    const strongest = new Map<string, Item>();
+    for (const item of candidates) {
+      const key = (item.topic || "Unknown") + "::" + (item.region || "WORLDWIDE");
+      const current = strongest.get(key);
+      if (!current || (item.metadata?.momentum_score || 0) > (current.metadata?.momentum_score || 0)) strongest.set(key, item);
+    }
+    return [...strongest.values()].sort((a, b) => (b.metadata?.momentum_score || 0) - (a.metadata?.momentum_score || 0)).slice(0, 8);
+  }, [ranked]);
+
+  const heroSignal = heroCandidates.length ? heroCandidates[heroIndex % heroCandidates.length] : null;
+  const heroHeadline = useMemo(() => {
+    if (!heroSignal) return "Listening for signals…";
+    const topic = heroSignal.topic || "Creator activity";
+    const region = heroSignal.region && heroSignal.region !== "WORLDWIDE" ? heroSignal.region : "worldwide";
+    const signal = signalKey(heroSignal.metadata?.signal);
+    const verb = signal.includes("break") ? "breaking out" : signal.includes("rise") || signal.includes("rising") ? "rising" : signal.includes("drop") ? "just dropping" : signal.includes("under") ? "surfacing under the radar" : signal.includes("live") ? "live" : "moving";
+    return topic + " is " + verb + " in " + region + ".";
+  }, [heroSignal]);
+
+  useEffect(() => {
+    if (heroPaused || heroCandidates.length < 2) return;
+    const id = window.setInterval(() => setHeroIndex(index => index + 1), 5500);
+    return () => window.clearInterval(id);
+  }, [heroPaused, heroCandidates.length]);
   const shown = useMemo(() => {
     const base = filter === "Trending" ? ranked : ranked.filter(x => categoryFor(x) === filter);
     const s = q.trim().toLowerCase();
@@ -263,7 +297,7 @@ export default function LivingDiscover() {
     const p = platforms.find(x => l.includes(x.name.toLowerCase()));
     if (p) { activatePlatform(p); return; }
     if (l.includes("creator") || l.includes("profile")) { go("/creators"); return; }
-    if (l.includes("brand")) { go("/brands"); return; }
+    if (l.includes("brand")) { go("/opportunities"); return; }
     if (l.includes("opportun")) { go("/opportunities"); return; }
     setFilter("Trending"); setQ(s); pulseField(`Searching the verified discovery pool for “${s}”.`);
   };
@@ -276,7 +310,8 @@ export default function LivingDiscover() {
       <button className="brand" type="button" onClick={() => go("/")}>RALL<span>IVIO</span><small>CREATORS. BRANDS. A BRIGHTER TOMORROW.</small></button>
       <nav>{nav.map(([n, p]) => <button key={p} className={p === "/" ? "active" : ""} type="button" onClick={() => go(p)}>{n}</button>)}</nav>
       <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span>⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search anything: creators, brands, videos, trends…"/><button type="submit">↗</button></form>
-      <button className="round signalButton" type="button" onClick={() => setNotice("Signals are sourced from the verified discovery pool.")}><i/>Live</button>
+      <div className="topActions">
+        <button className="round signalButton" type="button" onClick={() => setNotice("Signals are sourced from the verified discovery pool.")}><i/>LIVE</button>
       <div className="themePickerWrap">
         <button className="round themeButton" type="button" aria-label="Choose field theme" aria-expanded={showThemes} onClick={() => setShowThemes(v => !v)}>
           <span className={"themeButtonGlyph " + theme}>✦</span><span>{themeDefinitions.find(x => x.id === theme)?.short || "Theme"}</span><i className={"themeButtonDot " + theme}/>
@@ -310,12 +345,14 @@ export default function LivingDiscover() {
       ) : (
         <button className="loginButton" type="button" onClick={() => router.push("/login")}>Login</button>
       )}
+      </div>
     </header>
 
     <section className="hero">
       <div className="heroCopy">
-        <span className="pill"><i/> LIVE / THE CREATOR ECONOMY IS MOVING RIGHT NOW</span>
-        <h1>See what’s<br/><em>moving.</em><br/>Shape what’s next.</h1>
+        <div className="heroHeadlineWrap" onMouseEnter={() => setHeroPaused(true)} onMouseLeave={() => setHeroPaused(false)}>
+          <h1 className="heroDynamicTitle"><span>See what&apos;s moving.</span><br/><strong key={heroSignal?.id ?? "waiting"}>{heroHeadline}</strong></h1>
+        </div>
         <p>RALLIVIO turns the creator internet into a living field — people, culture, signals and opportunities moving together in one place.</p>
         <form className="heroSearch" onSubmit={e => { e.preventDefault(); command(q); }}><span className="searchMark">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="What do you want to discover?" aria-label="Universal discovery search"/><button type="submit" aria-label="Search">→</button></form>
         <div className="categoryRail" aria-label="Discovery categories">
@@ -340,7 +377,6 @@ export default function LivingDiscover() {
       <div className="ecosystem">
         <div className={`field ${pulse ? "responding" : ""}`} aria-label="RALLIVIO living platform field" style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", flexShrink: 0 }}>
           <div className="fieldSpace">
-            <div className="fieldBadge"><i/> LIVING FIELD</div>
             <div className="fieldGrid"/><div className="nebula n1"/><div className="nebula n2"/>
             <div className="energyRing er1"/><div className="energyRing er2"/><div className="energyRing er3"/>
             <div className="orbit o1"/><div className="orbit o2"/><div className="orbit o3"/>
@@ -351,26 +387,8 @@ export default function LivingDiscover() {
             </button>)}
             <button className="core" type="button" aria-label="Activate RALLIVIO living discovery core" onClick={activateCore} onPointerDown={() => setPulse(n => n + 1)}>
               <span className="coreHalo h1"/><span className="coreHalo h2"/><span className="coreHalo h3"/><span className="coreLight"/>
-              <span className="earthVisual" aria-hidden="true">
-                <span className="earthAtmosphere"/>
-                <svg className="earthGlobe" viewBox="0 0 240 240">
-                  <defs><radialGradient id="earthOcean" cx="34%" cy="28%" r="72%"><stop offset="0%" stopColor="#4fcfff"/><stop offset="28%" stopColor="#1765c5"/><stop offset="68%" stopColor="#0b2d72"/><stop offset="100%" stopColor="#030817"/></radialGradient><clipPath id="earthClip"><circle cx="120" cy="120" r="112"/></clipPath></defs>
-                  <circle cx="120" cy="120" r="112" fill="url(#earthOcean)"/>
-                  <g clipPath="url(#earthClip)" className="earthLongitude">
-                    <ellipse cx="120" cy="120" rx="82" ry="112"/><ellipse cx="120" cy="120" rx="46" ry="112"/><ellipse cx="120" cy="120" rx="112" ry="72"/><ellipse cx="120" cy="120" rx="112" ry="39"/>
-                  </g>
-                  <g clipPath="url(#earthClip)" className="earthContinents">
-                    <path d="M33 72l18-16 22 2 13 13-7 14-15 2-8 14-17-5-9-14Zm36 35 13 7 4 18-7 17-11-4-5-16Z"/>
-                    <path d="M99 71l17-12 20 4 12 12-5 13-16 4-9-7-15 3-8-8Zm34 31 21-3 16 10 10 14-9 8-17-3-8 8-10-12Z"/>
-                    <path d="M117 113l14 8 3 19-9 22-11 11-10-14 5-17-5-15Z"/>
-                    <path d="M174 155l16-4 17 8 5 13-14 8-18-3-10-9Z"/>
-                    <path d="M61 41l11-9 13 4 4 10-9 7-12-3Z"/>
-                  </g>
-                  <g className="earthLights"><circle cx="71" cy="88" r="2"/><circle cx="103" cy="103" r="2"/><circle cx="144" cy="82" r="2"/><circle cx="169" cy="132" r="2"/><circle cx="121" cy="145" r="2"/></g>
-                  <circle cx="120" cy="120" r="112" className="earthEdge"/>
-                  <ellipse cx="92" cy="71" rx="70" ry="34" className="earthHighlight"/>
-                </svg>
-              </span>
+              <DiscoverGlobe />
+/span>
               <strong>RALL<span>IVIO</span></strong><small>LIVING DISCOVERY SYSTEM</small><i><b>●</b> {loading ? "syncing" : `${ranked.length} verified signals`} · {activePlatform} focus</i>
             </button>
           </div>
@@ -385,7 +403,7 @@ export default function LivingDiscover() {
         <strong><i/> Live</strong>
       </div>
       <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(risingCreators)}</b><small>Rising Creators</small></div>
-      <div className="pulseMetric"><span>♨</span><b>{loading ? "—" : fmt(ranked.length)}</b><small>Verified Videos</small></div>
+      <div className="pulseMetric"><span>♨</span><b>{loading ? "—" : fmt(ranked.length)}</b><small>Verified Signals</small></div>
       <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(categoryPulse.length)}</b><small>Active Topics</small></div>
       <div className="pulseMetric"><span>♧</span><b>{loading ? "—" : fmt(creatorPool.length)}</b><small>Tracked Creators</small></div>
       <div className="pulseWorld">
