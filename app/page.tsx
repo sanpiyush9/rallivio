@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState, type PointerEvent } from "react";
+import { useEffect, useMemo, useState, type PointerEvent, type CSSProperties } from "react";
 import { siDiscord, siFacebook, siInstagram, siLinkedin, siPinterest, siReddit, siSnapchat, siSpotify, siTiktok, siTwitch, siX, siYoutube, type SimpleIcon } from "simple-icons";
 
 const DiscoverGlobe = dynamic(() => import("../components/DiscoverGlobe"), { ssr: false });
@@ -280,7 +280,7 @@ export default function Home() {
                 <div className="corePulse">{loading ? "Syncing verified signals" : `${items.length} verified signals in motion`}</div>
               </div>
             </div>
-            {platformNodes.map((platform) => <button key={platform.name} className={`platformNode ${platform.className} ${platform.position}`} style={{ ["--brand" as string]: `#${platform.icon.hex}` }} onClick={() => selectPlatform(platform.name)} aria-label={`${platform.name} platform environment`}><span className="platformIcon"><svg className="platformGlyph" viewBox="0 0 24 24" aria-hidden="true"><path d={platform.icon.path}/></svg><i className="iconSheen"/></span><strong>{platform.name}</strong><small>{platform.name === activePlatform ? "Selected" : platform.state}</small></button>)}</div>
+            {platformNodes.map((platform) => <button key={platform.name} className={`platformNode ${platform.className} ${platform.position}`} style={{ "--brand": `#${platform.icon.hex}` } as CSSProperties} onClick={() => selectPlatform(platform.name)} aria-label={`${platform.name} platform environment`}><span className="platformIcon"><svg className="platformGlyph" viewBox="0 0 24 24" aria-hidden="true"><path d={platform.icon.path}/></svg><i className="iconSheen"/></span><strong>{platform.name}</strong><small>{platform.name === activePlatform ? "Selected" : platform.state}</small></button>)}</div>
         </div>
 
         <aside className="activity">
