@@ -72,9 +72,41 @@ export async function signup(formData: FormData) {
     },
   });
 
-  if (error) redirect("/login?mode=signup&error=" + encodeURIComponent(error.message));
+  if (error) {
+    const normalizedError = error.message.toLowerCase();
+    if (
+      normalizedError.includes("already registered") ||
+      normalizedError.includes("already exists") ||
+      normalizedError.includes("email_exists") ||
+      normalizedError.includes("user_already_exists")
+    ) {
+      redirect(
+        "/login?mode=signup&message=" +
+          encodeURIComponent(
+            "This email may already be registered. Try Log in or Forgot password, or use a different email address."
+          )
+      );
+    }
+    redirect("/login?mode=signup&error=" + encodeURIComponent(error.message));
+  }
+
+  // When email confirmations are enabled, Supabase intentionally returns an
+  // obfuscated user with no identities for an existing email. Do not reveal
+  // whether the address exists; give the user the useful next steps instead.
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    redirect(
+      "/login?mode=signup&message=" +
+        encodeURIComponent(
+          "This email may already be registered. Try Log in or Forgot password, or use a different email address."
+        )
+    );
+  }
+
   if (data.session) redirect(next);
-  redirect("/login?mode=signup&message=Check%20your%20email%20to%20confirm%20your%20RALLIVIO%20account.");
+  redirect(
+    "/login?mode=signup&message=" +
+      encodeURIComponent("Check your email to confirm your RALLIVIO account.")
+  );
 }
 
 export async function forgotPassword(formData: FormData) {
