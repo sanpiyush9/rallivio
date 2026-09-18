@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+type YouTubeDiscoveryItem = {
+  id: string; title: string; channelTitle: string; publishedAt: string; thumbnail: string;
+  description?: string; views?: number; url: string; embeddable?: boolean; categoryId?: string;
+  channelSubscribers?: number; signal?: string; momentumScore?: number;
+};
 type Item = {
   id: string; title: string; channel_title: string; published_at: string; thumbnail: string;
   description: string; views: number; url: string; embeddable: boolean; topic: string; region?: string;
@@ -124,7 +129,7 @@ export default function LivingDiscover() {
         const r = await fetch("/api/youtube/trending?region=IN&category=0&format=all&signal=all", { cache: "no-store" });
         const b = await r.json();
         if (!r.ok || !b.ok) throw new Error(b.state || "YOUTUBE_UNAVAILABLE");
-        setItems(Array.isArray(b.items) ? b.items.map((x: any) => ({
+        setItems(Array.isArray(b.items) ? b.items.map((x: YouTubeDiscoveryItem) => ({
           id: x.id, title: x.title, channel_title: x.channelTitle, published_at: x.publishedAt,
           thumbnail: x.thumbnail, description: x.description || "", views: Number(x.views || 0),
           url: x.url, embeddable: x.embeddable !== false, topic: x.categoryId || "YouTube", region: b.region || "IN",
