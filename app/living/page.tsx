@@ -176,6 +176,15 @@ export default function LivingDiscover() {
       setRadarOffset(n => n + 1);
       setTopicOffset(n => n + 1);
       setSpotlightOffset(n => n + 1);
+      const el = pulseViewportRef.current;
+      if (el) {
+        const amount = Math.max(260, Math.round(el.clientWidth * 0.62));
+        if (el.scrollLeft + el.clientWidth + amount >= el.scrollWidth - 8) {
+          el.scrollTo({ left: 0, behavior: "auto" });
+        } else {
+          el.scrollBy({ left: amount, behavior: "smooth" });
+        }
+      }
     }, 8000);
     return () => window.clearInterval(id);
   }, [items.length]);
