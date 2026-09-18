@@ -347,3 +347,10 @@ This section is an operational snapshot for future AI sessions. It supplements t
 3. Validate and correct the signal engine so displayed signals have sufficient historical evidence and selected filters cannot disagree with item metadata.
 4. Remove/replace temporary QA bootstrap infrastructure before production.
 5. Continue creator platform implementation from the existing auth foundation without disturbing the Living Field baseline.
+
+
+## 15. Documentation-sync correction — 2026-09-18
+
+The continuity audit itself added five documentation commits after implementation SHA `82a1a391b9505da02d62be7e52625f4e2a2a470a`. Therefore the active feature branch HEAD is now `f4a1f5f2dc8ab5d8d72362458667f4d83c191e03`. The implementation baseline remains `82a1a391...`; the later commits are documentation-only continuity/self-healing updates. The latest READY Vercel deployment remains the implementation SHA `82a1a391...` until a later deployment is intentionally triggered.
+
+Do not confuse documentation HEAD with deployed implementation HEAD.
