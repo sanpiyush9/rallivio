@@ -312,3 +312,41 @@ Verify the new deployment by branch, commit SHA, Vercel state and deployment ID,
 - `docs/KNOWN_ISSUES.md`
 - `docs/RESILIENCE_SYSTEM.md`
 - `docs/SESSION_LOG.md`
+
+
+## 2026-09-19 — New-chat handoff snapshot
+Branch: `feature/creator-platform-subscription`
+Status: Ready for handoff; exact-SHA Vercel deployment still pending
+
+### Verified before handoff
+- Enumerated all visible GitHub branches and checkpoint refs.
+- Re-read the canonical continuity documents and current branch implementation.
+- Confirmed the actual served root route is `/` → `/living` through middleware.
+- Confirmed current feature HEAD: `2a5835b3370b430086a35301141ed66d23a60d5f`.
+- Confirmed current GitHub Actions verification is green.
+- Confirmed Supabase project identity and current discovery-pool data state.
+- Confirmed Vercel project access works for deployment metadata; exact current-HEAD READY deployment has not yet been observed.
+
+### Current product/work state
+The active work is the Discover/Living five-item precision pass on the Creator feature branch:
+- Header cleanup
+- Real Three.js globe
+- removal of LIVING FIELD pill
+- dimensional platform badges
+- database-driven dynamic hero headline
+
+The five items are implemented in code, but they are not yet accepted as live-complete until exact-SHA Vercel READY + deployed-route field verification succeeds.
+
+### Current truth-bound data state
+The discovery pool has 25 rows and 25 stored signal labels, but no fresh signal observations inside the requested two-hour window. The correct UI state is therefore the honest empty/freshness state rather than a fabricated trend headline. The named sample cards ROSÉ / Sur Music / Triple M Movies are not present in the current pool by exact title/channel match.
+
+### Current blockers/follow-ups
+1. Vercel latest deployment for the current HEAD is not yet READY/verified.
+2. Globe local texture localization remains pending due binary asset write limitation.
+3. Browser runtime verification of `[globe] init` and `[globe] frame` is still required.
+4. The transitional request-time YouTube route must eventually be replaced by background acquisition + Supabase-only serving.
+5. KI-004 signal/filter mismatch remains open.
+6. Temporary QA bootstrap must be removed/replaced before production.
+
+### New-chat first action
+Read `docs/CANONICAL.md` → `docs/AI_START_HERE.md` → `docs/RALLIVIO_STATE.md` → current area specs → latest 3 session-log entries → `docs/KNOWN_ISSUES.md`, then inspect branch HEAD and Vercel exact-SHA deployment status before changing code.
