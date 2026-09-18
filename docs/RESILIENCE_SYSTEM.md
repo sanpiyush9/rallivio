@@ -84,3 +84,27 @@ It is not an AI that repairs itself. Automatic responses are deterministic handl
 ## Measure of success
 
 The important maturity metric is how many documented issues have reached Level 3 or 4, not how large the issue file has become.
+
+
+## 2026-09-18 — Checkpoint integrity incident and prevention rule
+
+### Incident
+An existing checkpoint branch, `checkpoint/living-front-v10`, was moved from its original SHA `785b8c305708bf9d495601cf74b81728941c82f5` to the latest implementation SHA `82a1a391b9505da02d62be7e52625f4e2a2a470a` when a new checkpoint was requested. This violated the project rule that checkpoints are immutable recovery points.
+
+### Recovery
+The original SHA remains in Git history and was preserved explicitly with the immutable archive branch `archive/checkpoint-living-front-v10-original`. The v10 branch now represents the latest state and must not be moved again. Future new checkpoints must use the next unused version, v11, v12, etc.
+
+### Prevention
+- Before every checkpoint operation, enumerate existing checkpoint branches.
+- Never call a branch-update operation for an existing checkpoint branch.
+- Create a new branch from the current feature HEAD using the next unused checkpoint version.
+- Verify the new checkpoint SHA after creation.
+- If a checkpoint is accidentally moved, immediately preserve the prior SHA in a uniquely named archive branch and document the incident.
+
+### Target ladder
+**Level 4 — Prevented.** The workflow is now explicitly documented as a structural precondition: existing checkpoint refs are immutable and checkpoint creation must use a new version.
+
+### Related
+- `docs/AI_START_HERE.md`
+- `docs/RALLIVIO_STATE.md`
+- `docs/SESSION_LOG.md`
