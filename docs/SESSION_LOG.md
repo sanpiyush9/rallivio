@@ -3,6 +3,50 @@
 > Newest entries at the top.
 > Read the most recent 3 before starting work.
 
+## 2026-09-18 — Living Field precision pass: globe, pulse stream, radar and discovery surfaces
+Branch: feature/creator-platform-subscription
+Status: In progress
+
+### Done
+- Replaced the abstract leaf-like Earth treatment inside the RALLIVIO core with a coherent SVG globe: ocean shading, clipped continents, grid lines, highlight and blinking signal lights.
+- Reworked Global Activity to show verified source coverage and current tracked-video/creator counts instead of implying unsupported worldwide source coverage.
+- Improved category accuracy by using known YouTube category IDs before title/description keyword fallback.
+- Expanded RALLIVIO Pulse into a long horizontal verified-pool stream with left/right scrolling, automatic rightward movement, loop-back behavior, and keyboard-accessible cards.
+- Added a visible styled View all signals control.
+- Clicking a Pulse card now selects the relevant video and shows the official YouTube embed plus the full title and source metrics below the stream.
+- Reworked Trending Topics into animated momentum bars driven by the displayed RALLIVIO Momentum Score.
+- Made Creator Spotlight scrollable across the verified creator pool instead of a fixed three-item surface.
+- Centered the Discovery Radar ring/sweep and its signal glows.
+
+### Data/truth boundary
+- No new fabricated creator/video/metric values were added.
+- The Pulse stream repeats the currently verified pool for continuous presentation; it does not claim that repeated cards are newly acquired videos.
+- Source coverage is displayed from the records actually loaded by the current implementation. The existing direct /api/youtube/trending request path remains transitional architecture debt and was not expanded.
+
+### Verification status
+- GitHub feature commits: 16c9256b238af692b53218dca5a4d6eb7cda201c, 77475e6206380cb546d1eb7c9e00b472b37d0281, d70a60d118c278efcb46fddab48e1d2fbea5553a.
+- GitHub Actions workflow for the latest commit had not yet produced a run at the time of this entry.
+- Live deployment has not yet been re-verified against the latest commit.
+- Required next validation is npm run verify, then deployment verification by branch, SHA, Vercel state and deployment ID, followed by visual QA of /living.
+
+### Next session should
+- Run/confirm npm run verify on d70a60d118c278efcb46fddab48e1d2fbea5553a.
+- Verify the deployed /living page visually against the four supplied QA screenshots.
+- Confirm the inline Pulse player, continuous rightward stream, centered Radar, globe visibility and dynamic Spotlight/Topics.
+- Then continue the background-acquisition/Supabase-only serving architecture without adding more request-time YouTube calls.
+
+### Gotchas discovered
+- .pulseSectionHead>button did not style the actual View all signals button because the button is nested inside .pulseHeadActions.
+- A CSS approximation made of several floating land shapes reads as leaves when overlaid with the core text; a single clipped globe surface is visually clearer.
+- A continuous carousel must distinguish repeated presentation of a verified pool from new backend acquisition.
+
+### Documents touched
+- app/living/page.tsx
+- docs/KNOWN_ISSUES.md
+- docs/SESSION_LOG.md
+- docs/RALLIVIO_STATE.md
+- docs/AI_START_HERE.md
+
 ## 2026-09-18 — Creator authentication foundation: CI self-heal
 Branch: feature/creator-platform-subscription
 Status: In progress
