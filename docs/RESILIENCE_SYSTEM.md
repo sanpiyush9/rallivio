@@ -198,3 +198,26 @@ A visual QA pass is not complete until the tested URL, matched route, source fil
 ## 2026-09-19 — Binary asset limitation must be explicit
 
 The live 3D globe now uses the Three.js Earth assets from upstream raw GitHub URLs. The requested local `/public/textures` copies were not silently represented as complete because the current GitHub connector exposes UTF-8 text-file writes but not binary repository-file uploads through the available file-update path. When binary asset tooling becomes available, localize the three Earth assets and update `components/DiscoverGlobe.tsx`; until then this remains a documented follow-up.
+
+
+## 2026-09-19 — Build-evidence fallback order strengthened
+
+### Build-evidence sources, in order
+
+1. **Local production build — always try this first**
+   ```bash
+   git checkout <failing-sha>
+   rm -rf .next node_modules && npm ci
+   npm run build 2>&1 | tee build.log
+   npx tsc --noEmit
+   ```
+   Same Node/dependencies and the same Next.js production build path as Vercel. Reproduces parse, compile and type failures with full local output, needs no integration, and costs no deployment quota.
+
+2. Vercel build logs (connector or dashboard)
+3. GitHub Actions workflow logs
+4. Only if all three are unavailable: stop and request reconnection
+
+**Rule:** an unavailable connector is not a blocker when the same evidence is obtainable another way. Before declaring work blocked, confirm no equivalent source exists. "Tool unavailable, work stops" and "tool unavailable, evidence obtainable locally" are different situations.
+
+### 2026-09-19 — JSX build incident
+The /living build failure at app/living/page.tsx:391 was diagnosed from the Vercel log after the connector build-log capability was unavailable. The first error block showed an orphaned /span> parse error. Commit 8578ca555e97707f5ff01ea0b0ba36d6b08fb453 had already removed that exact line. This incident reinforces that the local production build must be the first fallback before connector troubleshooting.
