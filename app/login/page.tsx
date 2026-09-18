@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { login, signup, forgotPassword } from "./actions";
+import { login, signup, forgotPassword, oauthLogin } from "./actions";
 
 const shell = { minHeight: "100vh", display: "grid", placeItems: "center", padding: "90px 20px 40px", background: "radial-gradient(circle at 50% 8%, #8d4dff35, transparent 30%), #060817", color: "#f7f6ff" };
 const card = { width: "min(460px,100%)", padding: "34px", border: "1px solid #ffffff1c", borderRadius: "22px", background: "#0b0e1eea", boxShadow: "0 35px 100px #0008" };
@@ -26,7 +26,7 @@ function LoginContent() {
       <section style={card}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <span style={{ fontSize: 8, letterSpacing: 1.6, color: "#a96cff", fontWeight: 900 }}>
-            {mode === "signup" ? "JOIN RALLIVIO" : mode === "reset" ? "ACCOUNT RECOVERY" : "WELCOME BACK"}
+            {mode === "signup" ? "CREATE ACCOUNT" : mode === "reset" ? "ACCOUNT RECOVERY" : "SIGN IN"}
           </span>
           <h1 style={{ margin: "9px 0 8px", fontSize: 31 }}>{mode === "signup" ? "Create your account." : mode === "reset" ? "Reset your password." : "Welcome back."}</h1>
           <p style={{ color: "#8e8ba0", fontSize: 11 }}>
@@ -37,13 +37,34 @@ function LoginContent() {
         {error && <div style={{ padding: 10, marginBottom: 14, borderRadius: 9, background: "#ff476c12", color: "#ff9caf", fontSize: 10 }}>{error}</div>}
         {message && <div style={{ padding: 10, marginBottom: 14, borderRadius: 9, background: "#36d99a10", color: "#7ce4b9", fontSize: 10 }}>{message}</div>}
 
-        {mode === "login" && <form action={login} style={{ display: "grid", gap: 14 }}>
-          <input type="hidden" name="next" value={next ?? "/living"} />
-          <label style={{ display: "grid", gap: 6, fontSize: 10 }}>Email<input name="email" type="email" autoComplete="email" placeholder="you@example.com" style={input} required /></label>
-          <label style={{ display: "grid", gap: 6, fontSize: 10 }}>Password<input name="password" type="password" autoComplete="current-password" placeholder="••••••••" style={input} required /></label>
-          <div style={{ textAlign: "right", fontSize: 9 }}><Link href="/login?mode=reset" style={{ color: "#b581ff" }}>Forgot password?</Link></div>
-          <button type="submit" style={button}>Log in</button>
-        </form>}
+        {mode === "login" && <>
+          <div style={{ display: "grid", gap: 10, marginBottom: 18 }}>
+            <form action={oauthLogin}>
+              <input type="hidden" name="provider" value="google" />
+              <input type="hidden" name="next" value={next ?? "/living"} />
+              <button type="submit" style={{ ...button, width: "100%", background: "#fff", color: "#171526", border: "1px solid #ddd" }}>
+                <span style={{ marginRight: 8, fontSize: 16 }}>G</span> Continue with Google
+              </button>
+            </form>
+            <form action={oauthLogin}>
+              <input type="hidden" name="provider" value="github" />
+              <input type="hidden" name="next" value={next ?? "/living"} />
+              <button type="submit" style={{ ...button, width: "100%", background: "#171922", border: "1px solid #ffffff20" }}>
+                <span style={{ marginRight: 8, fontSize: 15 }}>◉</span> Continue with GitHub
+              </button>
+            </form>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0 16px", color: "#626071", fontSize: 9 }}>
+            <span style={{ height: 1, flex: 1, background: "#ffffff10" }} /> OR <span style={{ height: 1, flex: 1, background: "#ffffff10" }} />
+          </div>
+          <form action={login} style={{ display: "grid", gap: 14 }}>
+            <input type="hidden" name="next" value={next ?? "/living"} />
+            <label style={{ display: "grid", gap: 6, fontSize: 10 }}>Email<input name="email" type="email" autoComplete="email" placeholder="you@example.com" style={input} required /></label>
+            <label style={{ display: "grid", gap: 6, fontSize: 10 }}>Password<input name="password" type="password" autoComplete="current-password" placeholder="••••••••" style={input} required /></label>
+            <div style={{ textAlign: "right", fontSize: 9 }}><Link href="/login?mode=reset" style={{ color: "#b581ff" }}>Forgot password?</Link></div>
+            <button type="submit" style={button}>Log in with email</button>
+          </form>
+        </>}
 
         {mode === "signup" && <form action={signup} style={{ display: "grid", gap: 14 }}>
           <input type="hidden" name="next" value={next ?? "/living"} />
