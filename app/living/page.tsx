@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import * as si from "simple-icons";
 
 type Item = {
-  id: string; title: string; channel_title: string; published_at: string; thumbnail: string;
+  id: string; title: string; channel_title: string; channel_id: string; published_at: string; thumbnail: string;
   description: string; views: number; url: string; embeddable: boolean; topic: string; region?: string;
   metadata?: { subscriber_count?: number | null; signal?: string; momentum_score?: number };
 };
