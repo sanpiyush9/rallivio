@@ -133,3 +133,48 @@ The platform-icon prebuild check now also inspects `app/page.tsx` and fails if `
 ### Related
 `docs/KNOWN_ISSUES.md` → KI-008
 `docs/SESSION_LOG.md`
+
+
+## 2026-09-19 — External integration fallback: Vercel build logs unavailable
+
+### Incident
+The Vercel integration exposed deployment metadata but the build-log capability returned `Tool get_deployment_build_logs not found`. Reconnection did not restore that specific capability.
+
+### Recovery rule
+When a required integration capability is unavailable:
+1. Identify the exact unavailable capability.
+2. Do not guess or make production changes based on missing evidence.
+3. Check whether the same evidence can be obtained through an approved alternative path (for example, repository CI/workflow logs or a local reproducible build).
+4. If equivalent evidence is available, use it and record the fallback source.
+5. If no equivalent evidence exists, immediately tell the owner which integration/capability needs reconnection and stop diagnosis until access is restored.
+6. Record material integration outages in `SESSION_LOG.md` and this document.
+
+### RALLIVIO application
+For deployment/build failures, GitHub Actions is an approved evidence fallback because `npm run verify` executes the project's typecheck, lint, tests, production build, canonical check and documentation check. This fallback must not be treated as proof of Vercel-specific runtime behavior; Vercel deployment verification is still required after the repository verification passes.
+
+### Related
+- `docs/SESSION_LOG.md`
+- `docs/KNOWN_ISSUES.md`
+- Vercel deployment build-log capability
+
+## 2026-09-19 — DiscoverGlobe TypeScript failure: deterministic fix
+
+### Incident
+After the LinkedIn import failure was fixed, the next CI verification exposed a separate TypeScript error in `components/DiscoverGlobe.tsx`: `Property 'setTimeout' does not exist on type 'never'` at line 226.
+
+### Confirmed cause
+The expression checking `"requestIdleCallback" in window` was narrowed by TypeScript because the DOM type already declares that property. The fallback branch therefore became `never`, making `window.setTimeout` invalid.
+
+### Deterministic recovery
+Use runtime function checks (`typeof window.requestIdleCallback === "function"`) and use `globalThis.setTimeout` for the fallback. Apply the same pattern to `cancelIdleCallback`/ `globalThis.clearTimeout` during cleanup.
+
+### Verification
+The subsequent workflow confirmed that typecheck completed, lint completed with warnings only, tests passed, the Next.js production build compiled and generated all 22 static pages, and canonical checks passed. The remaining failure was documentation enforcement because the KNOWN_ISSUES index and SESSION_LOG were stale; this is a documentation consistency issue, not a DiscoverGlobe code failure.
+
+### Ladder
+**Level 3 — Detected / deterministic recovery, target Level 4.** The failure is now documented and the code pattern is deterministic. A stronger prevention rule can be added to a static lint/check if this browser-API pattern recurs.
+
+### Related
+- `docs/KNOWN_ISSUES.md` → KI-009
+- `docs/SESSION_LOG.md`
+- `components/DiscoverGlobe.tsx`
