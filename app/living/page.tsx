@@ -155,15 +155,31 @@ export default function LivingDiscover() {
         const r = await fetch("/api/discovery", { cache: "no-store" });
         const b = await r.json();
         if (!r.ok || !b.ok) throw new Error(b.state || "YOUTUBE_UNAVAILABLE");
-        setItems(Array.isArray(b.items) ? b.items.map((x: YouTubeDiscoveryItem) => ({
-          id: x.id, title: x.title, channel_title: x.channelTitle, published_at: x.publishedAt,
-          thumbnail: x.thumbnail, description: x.description || "", views: Number(x.views || 0),
-          url: x.url, embeddable: x.embeddable !== false, topic: x.categoryId || "YouTube", region: b.region || "IN",
-          likes: Number(x.likes || 0), comments: Number(x.comments || 0), engagement: Number(x.engagement || 0),
-          velocity: Number(x.velocity || 0), live: Boolean(x.live),
-          metadata: { subscriber_count: Number(x.channelSubscribers || 0), signal: x.signal, momentum_score: Number(x.momentumScore || 0) },
-          stats_refreshed_at: b.refreshedAt || undefined,
-        })) : []);
+        setItems(Array.isArray(b.items) ? b.items.map((x: any) => {
+          const views = Number(x.views || 0);
+          const likes = Number(x.likes || 0);
+          const comments = Number(x.comments || 0);
+          return {
+            id: x.id,
+            title: x.title,
+            channel_title: x.channel_title,
+            published_at: x.published_at,
+            thumbnail: x.thumbnail,
+            description: x.description || "",
+            views,
+            likes,
+            comments,
+            engagement: ((likes + comments) / Math.max(views, 1)) * 100,
+            velocity: 0,
+            live: x.live_broadcast_content === "live",
+            url: x.url,
+            embeddable: x.embeddable !== false,
+            topic: x.topic || "Unknown",
+            region: x.region || "WORLDWIDE",
+            metadata: x.metadata || {},
+            stats_refreshed_at: x.stats_refreshed_at || b.refreshedAt || undefined,
+          };
+        }) : []);
         setLastUpdatedAt(b.refreshedAt ? Date.parse(b.refreshedAt) : Date.now());
         setNotice("");
       } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
