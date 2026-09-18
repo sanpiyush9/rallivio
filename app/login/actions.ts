@@ -11,12 +11,12 @@ function safeNextPath(value: string | null | undefined) {
 export async function oauthLogin(formData: FormData) {
   const provider = String(formData.get("provider") ?? "");
   const next = safeNextPath(String(formData.get("next") ?? ""));
-  if (provider !== "google" && provider !== "github") redirect("/login?error=Unsupported%20sign-in%20provider.");
+  if (provider !== "google") redirect("/login?error=Unsupported%20sign-in%20provider.");
 
   const origin = (await headers()).get("origin") ?? "http://localhost:3000";
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: provider as "google" | "github",
+    provider: "google",
     options: {
       redirectTo: origin + "/auth/callback?next=" + encodeURIComponent(next),
     },
