@@ -34,7 +34,6 @@ export default function CreatorPage() {
   const [trendError, setTrendError] = useState("");
   const [followed, setFollowed] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [showPlans, setShowPlans] = useState(false);
   const [notice, setNotice] = useState("");
 
   const notify = (message: string) => { setNotice(message); window.setTimeout(() => setNotice(""), 2600); };
@@ -115,7 +114,7 @@ export default function CreatorPage() {
         <div className="side-label">Creator</div>
         {[["Overview", "⌂"], ["History", "◷"], ["Playlists", "▤"], ["Saved", "☆"], ["Following", "♡"]].map(([label, icon], index) => <button key={label} type="button" className={index === 0 ? "selected" : ""} onClick={() => index === 0 ? document.getElementById("overview")?.scrollIntoView({ behavior: "smooth" }) : notify("Log in to use your RALLIVIO library.")}><span>{icon}</span>{label}{index > 0 && <small>Login</small>}</button>)}
         <div className="side-label premium-label">Creator workspace</div>
-        {["Analytics", "Content Intelligence", "Promotion & Discovery", "Brand Opportunities", "Collaboration", "Alerts"].map(label => <button key={label} type="button" className="premium-link" onClick={() => setShowPlans(true)}><span>✦</span>{label}<small>RALLIVIO+</small></button>)}
+        {[["Analytics","View creator performance data and trends."],["Content Intelligence","Understand momentum, engagement and content patterns."],["Promotion & Discovery","See where RALLIVIO discovery can surface your content."],["Brand Opportunities","Explore relevant brand and campaign opportunities."],["Collaboration","Find relevant creators for collaboration."],["Alerts","Track meaningful changes and discovery signals."]].map(([label, text]) => <button key={label} type="button" className="premium-link" onClick={() => notify(text)}><span>✦</span>{label}</button>)}
       </aside>
 
       <section className="creator-main" id="overview">
@@ -146,7 +145,6 @@ export default function CreatorPage() {
       </section>
     </div>
 
-    {showPlans && <div className="modal" onClick={() => setShowPlans(false)}><div className="plan-modal" onClick={e => e.stopPropagation()}><button type="button" className="close" onClick={() => setShowPlans(false)}>×</button><span className="eyebrow">RALLIVIO+</span><h2>Free discovery. Deeper creator intelligence.</h2><p>Free users keep discovery, watching, following, saving and basic signals. RALLIVIO+ adds history, personalization, analytics, distribution receipts and opportunity tools.</p><div className="plan-columns"><div><h3>Free</h3><ul><li>Discover &amp; watch</li><li>Search &amp; categories</li><li>Basic creator profiles</li><li>Follow &amp; save</li><li>Basic signals</li></ul></div><div><h3>RALLIVIO+</h3><ul><li>Creator intelligence</li><li>Historical snapshots</li><li>Promotion &amp; discovery receipts</li><li>Brand opportunities</li><li>Collaboration matching</li><li>Alerts &amp; advanced tools</li></ul></div></div><button type="button" className="primary" onClick={() => { setShowPlans(false); notify("RALLIVIO+ preview enabled."); }}>Continue with RALLIVIO+</button></div></div>}
     {notice && <div className="toast">{notice}</div>}
 
     <style jsx global>{`
