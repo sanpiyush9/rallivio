@@ -213,7 +213,7 @@ Before stopping work, synchronize project memory:
 ### Current project identity
 - GitHub repo: `sanpiyush9/rallivio`.
 - Active branch: `feature/creator-platform-subscription`.
-- Current HEAD: `82a1a391b9505da02d62be7e52625f4e2a2a470a`.
+- Current HEAD: verify the latest feature branch SHA before every deployment; do not assume the documentation commit or deployed SHA is current.
 - Current latest checkpoint: v10, but its branch was accidentally moved once. The original v10 state is preserved at `archive/checkpoint-living-front-v10-original` → `785b8c305708bf9d495601cf74b81728941c82f5`. Treat both the checkpoint and archive as immutable from now on.
 - Never commit directly to `main` or `staging`.
 
