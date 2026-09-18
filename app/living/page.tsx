@@ -645,7 +645,7 @@ footer{padding:55px 5vw 65px}
 /* Live immersive field + continuous discovery motion */
 .fieldBadge{top:-1.5%!important;z-index:60!important}
 .fieldSpace{padding-top:2%!important}
-.platformMark.youtube{box-shadow:0 0 28px #ff000088,0 12px 32px #0008!important}
+.platformMark.youtube{box-shadow:0 8px 18px rgba(0,0,0,.28)!important}
 .earthVisual{position:absolute;left:50%;top:50%;width:78%;height:78%;transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;z-index:0;pointer-events:none;background:radial-gradient(circle at 35% 27%,#5edbff 0,#166bc8 19%,#0c2e73 45%,#07142e 72%,#020611 100%);box-shadow:inset -22px -20px 50px #000b,inset 14px 12px 34px #b7f1ff66,0 0 45px #3f91ff44}
 .earthAtmosphere{position:absolute;inset:-5%;border-radius:50%;border:2px solid #65d8ff88;box-shadow:0 0 25px #5bc9ff66,0 0 55px #6a5cff33;animation:earthBreathe 4s ease-in-out infinite}
 .earthGrid{position:absolute;inset:-9%;border-radius:50%;background:repeating-radial-gradient(ellipse at center,transparent 0 18px,#6edcff16 19px 20px),repeating-linear-gradient(90deg,transparent 0 21px,#66cfff16 22px 23px);animation:earthSpin 18s linear infinite;mix-blend-mode:screen}
