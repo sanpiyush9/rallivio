@@ -390,7 +390,7 @@ export default function LivingDiscover() {
           </svg>
           <i/><i/><i/><i/><i/><i/>
         </div>
-        <div><b>Global Activity</b><small>Verified source coverage · {`{new Set(items.map(x => x.region).filter(Boolean)).size ? Array.from(new Set(items.map(x => x.region).filter(Boolean))).join(", ") : "—"}`}<br/>{loading ? "Refreshing source observations…" : `{fmt(ranked.length)} videos · {fmt(creatorPool.length)} creators`}{lastUpdatedAt ? ` · {age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
+        <div><b>Global Activity</b><small>Verified source coverage · {new Set(items.map(x => x.region).filter(Boolean)).size ? Array.from(new Set(items.map(x => x.region).filter(Boolean))).join(", ") : "—"}<br/>{loading ? "Refreshing source observations…" : `${fmt(ranked.length)} videos · ${fmt(creatorPool.length)} creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
       </div>
     </section>
 
@@ -429,13 +429,13 @@ export default function LivingDiscover() {
       </div>
       {selectedPulse && <section className="pulseSelected" id="pulse-selected" aria-label="Selected signal">
         <div className="pulseSelectedPlayer">
-          {selectedPulse.embeddable ? <iframe src={`https://www.youtube.com/embed/{selectedPulse.id}?autoplay=1&rel=0`} title={selectedPulse.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen/> : <img src={selectedPulse.thumbnail} alt=""/>}
+          {selectedPulse.embeddable ? <iframe src={`https://www.youtube.com/embed/${selectedPulse.id}?autoplay=1&rel=0`} title={selectedPulse.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen/> : <img src={selectedPulse.thumbnail} alt=""/>}
         </div>
         <div className="pulseSelectedInfo">
           <span className="eyebrow">{selectedPulse.metadata?.signal || "Observed"} · VERIFIED OBSERVATION</span>
           <h3>{selectedPulse.title}</h3>
           <p>{selectedPulse.channel_title} · {fmt(selectedPulse.views)} views · {age(selectedPulse.published_at)}</p>
-          <div><span>{fmt(selectedPulse.likes)} likes</span><span>{fmt(selectedPulse.comments)} comments</span><span>{selectedPulse.engagement.toFixed(1)}% engagement</span><strong>{selectedPulse.metadata?.momentum_score != null ? `RALLIVIO Momentum Score {Math.round(selectedPulse.metadata.momentum_score)}` : "RALLIVIO signal verified"}</strong></div>
+          <div><span>{fmt(selectedPulse.likes)} likes</span><span>{fmt(selectedPulse.comments)} comments</span><span>{selectedPulse.engagement.toFixed(1)}% engagement</span><strong>{selectedPulse.metadata?.momentum_score != null ? `RALLIVIO Momentum Score ${Math.round(selectedPulse.metadata.momentum_score)}` : "RALLIVIO signal verified"}</strong></div>
           <button className="sourceButton" type="button" onClick={() => window.open(selectedPulse.url, "_blank", "noopener,noreferrer")}>Watch on YouTube ↗</button>
         </div>
       </section>}
