@@ -64,7 +64,7 @@ function LoginContent() {
           <input type="hidden" name="next" value={next ?? "/living"} />
           <label style={{ display: "grid", gap: 6, fontSize: 10 }}>Display name <small>(optional)</small><input name="display_name" autoComplete="name" placeholder="Your name or creator name" style={input} /></label>
           <label style={{ display: "grid", gap: 6, fontSize: 10 }}>Email<input name="email" type="email" autoComplete="email" placeholder="you@example.com" style={input} required /></label>
-          <label style={{ display: "grid", gap: 6, fontSize: 10 }}>Password<input name="password" type="password" autoComplete="new-password" placeholder="At least 8 characters" minLength={8} style={input} required /></label>
+          <label style={{ display: "grid", gap: 6, fontSize: 10 }}>Password<small style={{ color: "#777487" }}>8+ chars with uppercase, lowercase, number & symbol</small><input name="password" type="password" autoComplete="new-password" placeholder="Create a strong password" minLength={8} pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}" title="Use at least 8 characters with an uppercase letter, lowercase letter, number, and symbol." style={input} required /></label>
           <button type="submit" style={button}>Create free account</button>
           <p style={{ textAlign: "center", color: "#666375", fontSize: 8 }}>By creating an account, you agree to the <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy Policy</Link>.</p>
         </form>}
