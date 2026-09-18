@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { login, signup, forgotPassword } from "./actions";
 
@@ -9,7 +10,7 @@ const card = { width: "min(460px,100%)", padding: "34px", border: "1px solid #ff
 const input = { width: "100%", height: "45px", border: "1px solid #ffffff18", borderRadius: "10px", background: "#070a16", color: "#fff", padding: "0 13px", outline: "none" };
 const button = { height: "46px", border: 0, borderRadius: "10px", background: "linear-gradient(135deg,#7845ff,#b65cff)", color: "#fff", fontSize: "12px", fontWeight: 800 };
 
-export default function LoginPage() {
+function LoginContent() {
   const params = useSearchParams();
   const mode = params.get("mode") === "signup" || params.get("mode") === "reset" ? params.get("mode") : "login";
   const next = params.get("next")?.startsWith("/") ? params.get("next") : "/living";
@@ -63,5 +64,13 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main style={shell} />}>
+      <LoginContent />
+    </Suspense>
   );
 }
