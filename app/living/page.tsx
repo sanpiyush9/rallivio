@@ -6,19 +6,21 @@ import { createClient } from "@/lib/supabase/client";
 
 type YouTubeDiscoveryItem = {
   id: string; title: string; channelTitle: string; publishedAt: string; thumbnail: string;
-  description?: string; views?: number; url: string; embeddable?: boolean; categoryId?: string;
+  description?: string; views?: number; likes?: number; comments?: number; engagement?: number;
+  velocity?: number; url: string; embeddable?: boolean; categoryId?: string; live?: boolean;
   channelSubscribers?: number; signal?: string; momentumScore?: number;
 };
 type Item = {
   id: string; title: string; channel_title: string; published_at: string; thumbnail: string;
-  description: string; views: number; url: string; embeddable: boolean; topic: string; region?: string;
+  description: string; views: number; likes: number; comments: number; engagement: number; velocity: number;
+  live: boolean; url: string; embeddable: boolean; topic: string; region?: string;
   metadata?: { subscriber_count?: number | null; signal?: string; momentum_score?: number };
 };
 type Category = { name: string; icon: string; keywords: string[] };
 type Platform = { id: string; name: string; kind: string; connected: boolean; x: number; y: number };
 
 const platforms: Platform[] = [
-  { id: "youtube", name: "YouTube", kind: "youtube", x: 50.0, y: 8.0, connected: true },
+  { id: "youtube", name: "YouTube", kind: "youtube", x: 50.0, y: 13.0, connected: true },
   { id: "tiktok", name: "TikTok", kind: "tiktok", x: 71.0, y: 13.6, connected: false },
   { id: "linkedin", name: "LinkedIn", kind: "linkedin", x: 86.4, y: 29.0, connected: false },
   { id: "reddit", name: "Reddit", kind: "reddit", x: 92.0, y: 50.0, connected: false },
@@ -104,6 +106,10 @@ export default function LivingDiscover() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [theme, setTheme] = useState("nebula");
   const [showThemes, setShowThemes] = useState(false);
+  const [pulseOffset, setPulseOffset] = useState(0);
+  const [radarOffset, setRadarOffset] = useState(0);
+  const [topicOffset, setTopicOffset] = useState(0);
+  const [spotlightOffset, setSpotlightOffset] = useState(0);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("rallivio-theme");
@@ -133,6 +139,8 @@ export default function LivingDiscover() {
           id: x.id, title: x.title, channel_title: x.channelTitle, published_at: x.publishedAt,
           thumbnail: x.thumbnail, description: x.description || "", views: Number(x.views || 0),
           url: x.url, embeddable: x.embeddable !== false, topic: x.categoryId || "YouTube", region: b.region || "IN",
+          likes: Number(x.likes || 0), comments: Number(x.comments || 0), engagement: Number(x.engagement || 0),
+          velocity: Number(x.velocity || 0), live: Boolean(x.live),
           metadata: { subscriber_count: Number(x.channelSubscribers || 0), signal: x.signal, momentum_score: Number(x.momentumScore || 0) },
         })) : []);
         setNotice("");
@@ -146,6 +154,17 @@ export default function LivingDiscover() {
 
   useEffect(() => { if (!notice) return; const id = window.setTimeout(() => setNotice(""), 4200); return () => window.clearTimeout(id); }, [notice]);
 
+  useEffect(() => {
+    if (items.length < 2) return;
+    const id = window.setInterval(() => {
+      setPulseOffset(n => n + 1);
+      setRadarOffset(n => n + 1);
+      setTopicOffset(n => n + 1);
+      setSpotlightOffset(n => n + 1);
+    }, 8000);
+    return () => window.clearInterval(id);
+  }, [items.length]);
+
   const ranked = useMemo(() => [...items].sort((a, b) => (b.metadata?.momentum_score || 0) - (a.metadata?.momentum_score || 0)), [items]);
   const shown = useMemo(() => {
     const base = filter === "Trending" ? ranked : ranked.filter(x => categoryFor(x) === filter);
@@ -153,25 +172,45 @@ export default function LivingDiscover() {
     return s ? base.filter(x => `${x.title} ${x.channel_title} ${x.description} ${x.topic}`.toLowerCase().includes(s)) : base;
   }, [ranked, filter, q]);
   const visibleCategories = showAllCategories ? categories : categories.slice(0, 10);
-  const signalGroups = useMemo(() => signalTypes.map(name => ({ name, items: ranked.filter(x => signalMatches(x, name)).slice(0, 3) })), [ranked]);
-  const categoryPulse = useMemo(() => categories.slice(1).map(c => ({
-    ...c,
-    count: ranked.filter(x => categoryFor(x) === c.name).length,
-  })).filter(c => c.count > 0).sort((a, b) => b.count - a.count).slice(0, 6), [ranked]);
-  const creatorPulse = useMemo(() => {
-    const creators = new Set(ranked.map(x => x.channel_title).filter(Boolean));
-    const topics = new Set(ranked.map(x => categoryFor(x)).filter(x => x !== "Other"));
-    return { creators: creators.size, videos: ranked.length, topics: topics.size };
-  }, [ranked]);
+  const signalGroups = useMemo(() => signalTypes.map(name => ({ name, items: ranked.filter(x => signalMatches(x, name)) })), [ranked]);
+  const categoryPulse = useMemo(() => categories.slice(1).map(c => {
+    const matches = ranked.filter(x => categoryFor(x) === c.name);
+    const momentum = matches.length ? Math.round(matches.reduce((sum, x) => sum + (x.metadata?.momentum_score || 0), 0) / matches.length) : 0;
+    return { ...c, count: matches.length, momentum };
+  }).filter(c => c.count > 0).sort((a, b) => b.momentum - a.momentum), [ranked]);
 
-  const spotlightCreators = useMemo(() => {
+  const radarCategories = useMemo(() => {
+    const source = categoryPulse.length ? categoryPulse : categories.slice(1).map(c => ({ ...c, count: 0, momentum: 0 }));
+    return Array.from({ length: Math.min(8, source.length) }, (_, i) => source[(radarOffset + i) % source.length]);
+  }, [categoryPulse, radarOffset]);
+
+  const topicRows = useMemo(() => {
+    const source = categoryPulse.length ? categoryPulse : categories.slice(1).map(c => ({ ...c, count: 0, momentum: 0 }));
+    return Array.from({ length: Math.min(5, source.length) }, (_, i) => source[(topicOffset + i) % source.length]);
+  }, [categoryPulse, topicOffset]);
+
+  const creatorPool = useMemo(() => {
     const seen = new Set<string>();
     return ranked.filter(x => {
       if (!x.channel_title || seen.has(x.channel_title)) return false;
       seen.add(x.channel_title);
       return true;
-    }).slice(0, 3);
+    });
   }, [ranked]);
+
+  const spotlightCreators = useMemo(() => {
+    if (!creatorPool.length) return [];
+    return Array.from({ length: Math.min(3, creatorPool.length) }, (_, i) => creatorPool[(spotlightOffset + i) % creatorPool.length]);
+  }, [creatorPool, spotlightOffset]);
+
+  const risingCreators = useMemo(() => new Set(
+    ranked.filter(x => ["now moving", "on the rise", "breaking out"].includes(signalKey(x.metadata?.signal))).map(x => x.channel_title)
+  ).size, [ranked]);
+
+  const pulseCards = useMemo(() => {
+    if (!ranked.length) return [];
+    return Array.from({ length: Math.min(6, ranked.length) }, (_, i) => ranked[(pulseOffset + i) % ranked.length]);
+  }, [ranked, pulseOffset]);
 
   const go = (p: string) => { router.push(p); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const pulseField = (message: string) => { setPulse(n => n + 1); setNotice(message); };
@@ -271,6 +310,7 @@ export default function LivingDiscover() {
             </button>)}
             <button className="core" type="button" aria-label="Activate RALLIVIO living discovery core" onClick={activateCore} onPointerDown={() => setPulse(n => n + 1)}>
               <span className="coreHalo h1"/><span className="coreHalo h2"/><span className="coreHalo h3"/><span className="coreLight"/>
+              <span className="earthVisual" aria-hidden="true"><span className="earthAtmosphere"/><span className="earthGrid"/><span className="earthLand land1"/><span className="earthLand land2"/><span className="earthLand land3"/><span className="earthLand land4"/><span className="earthShine"/></span>
               <strong>RALL<span>IVIO</span></strong><small>LIVING DISCOVERY SYSTEM</small><i><b>●</b> {loading ? "syncing" : `${ranked.length} verified signals`} · {activePlatform} focus</i>
             </button>
           </div>
@@ -284,76 +324,74 @@ export default function LivingDiscover() {
         <small>GLOBAL CREATOR PULSE</small>
         <strong><i/> Live</strong>
       </div>
-      <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(creatorPulse.creators)}</b><small>Rising Creators</small></div>
-      <div className="pulseMetric"><span>♨</span><b>{loading ? "—" : fmt(creatorPulse.videos)}</b><small>Trending Videos</small></div>
-      <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(creatorPulse.topics)}</b><small>Breakout Topics</small></div>
+      <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(risingCreators)}</b><small>Rising Creators</small></div>
+      <div className="pulseMetric"><span>♨</span><b>{loading ? "—" : fmt(ranked.length)}</b><small>Trending Videos</small></div>
+      <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(categoryPulse.length)}</b><small>Breakout Topics</small></div>
       <div className="pulseMetric"><span>♧</span><b>{loading ? "—" : fmt(spotlightCreators.length)}</b><small>Creator Spotlight</small></div>
       <div className="pulseWorld">
-        <div className="worldDots"><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/><i/></div>
+        <div className="worldMap" aria-hidden="true"><svg viewBox="0 0 180 64"><path d="M8 19l11-5 8 2 5 7-5 5-8-1-5 5-7-3Zm25 9 10-3 7 5-2 7-8 3-7-5Zm31-17 13-5 14 4 4 7-7 4-9-2-8 4-8-4Zm25 16 12-5 12 2 4 6-8 4-5 8-9-3-4-7Zm31-10 11-4 11 5 8 7-3 6-10-1-7-5-9 2-5-5Zm-8 24 10-3 8 4-2 7-9 2-8-5Z" fill="currentColor"/><path className="mapRoad r1" d="M18 25C49 9 77 48 110 24S154 14 173 39"/><path className="mapRoad r2" d="M12 43C42 28 61 21 92 39s52 8 76-5"/></svg><i/><i/><i/><i/><i/></div>
         <div><b>Global Activity</b><small>Real-time signals<br/>from around the world</small></div>
       </div>
     </section>
 
     <section className="pulseSection">
       <div className="pulseSectionHead">
-        <div className="pulseTitle"><span className="pulseWave">⌁</span><div><h2>RALLIVIO PULSE</h2><p>Real signals. Real movement. Updated from our discovery pool.</p></div></div>
-        <button type="button" onClick={() => setNotice("Showing the current verified signal stream.")}>View all signals&nbsp; →</button>
+        <div className="pulseTitle"><span className="pulseWave">⌁</span><div><h2>RALLIVIO PULSE</h2><p>Real signals. Real movement. Rotating continuously from the verified discovery pool.</p></div></div>
+        <div className="pulseHeadActions"><span className="pulseLive"><i/> Updating</span><button type="button" onClick={() => setNotice("RALLIVIO Pulse is rotating through the live verified discovery pool.")}>View all signals&nbsp; →</button></div>
       </div>
       <div className="pulseTabs">
         {signalGroups.map((g, i) => (
           <button key={g.name} type="button" className={g.items.length ? (i === 0 ? "active" : "") : "empty"} onClick={() => {
-            if (g.items[0]) setModal(g.items[0]);
+            if (g.items[0]) setModal(g.items[(pulseOffset + i) % g.items.length]);
             else setNotice("No verified " + g.name + " observations are available right now.");
           }}>
             <span className="pulseTabIcon">{["🔥","ϟ","↗","◉","★","◉"][i]}</span><b>{g.name}</b><small>{g.items.length}</small>
           </button>
         ))}
       </div>
-      <div className="pulseCards">
-        {ranked.slice(0, 6).map((x) => (
-          <article className="pulseCard" key={x.id} onClick={() => setModal(x)}>
-            <div className="pulseThumb"><img src={x.thumbnail} alt="" /><span>{x.metadata?.signal || "Observed"}</span><time>{age(x.published_at)}</time></div>
-            <h3>{x.title}</h3>
-            <p className="pulseCreator">◉ {x.channel_title}</p>
-            <small>{fmt(x.views)} views · {categoryFor(x)}</small>
-            <div className="pulseCardMeta"><span>♡ {fmt(Math.max(0, Math.round(x.views * 0.04)))}</span><span>◌ {fmt(Math.max(0, Math.round(x.views * 0.0018)))}</span><strong>↗ {x.metadata?.momentum_score != null ? Math.round(x.metadata.momentum_score) + "%" : "Verified"}</strong></div>
-          </article>
-        ))}
-        {!loading && !ranked.length && <div className="pulseEmpty">No verified observations are available yet.</div>}
+      <div className="pulseCarousel">
+        <button className="pulseArrow left" type="button" aria-label="Previous signals" onClick={() => setPulseOffset(n => Math.max(0, n - 1))}>←</button>
+        <div className="pulseCards">
+          {pulseCards.map((x) => (
+            <article className="pulseCard" key={x.id} onClick={() => setModal(x)}>
+              <div className="pulseThumb"><img src={x.thumbnail} alt="" /><span>{x.live ? "LIVE" : (x.metadata?.signal || "Observed")}</span><time>{age(x.published_at)}</time></div>
+              <h3>{x.title}</h3>
+              <p className="pulseCreator">◉ {x.channel_title}</p>
+              <small>{fmt(x.views)} views · {x.engagement.toFixed(1)}% engagement</small>
+              <div className="pulseCardMeta"><span>♡ {fmt(x.likes)}</span><span>◌ {fmt(x.comments)}</span><strong>↗ {x.metadata?.momentum_score != null ? Math.round(x.metadata.momentum_score) + " momentum" : "Verified"}</strong></div>
+            </article>
+          ))}
+          {!loading && !pulseCards.length && <div className="pulseEmpty">No verified observations are available yet.</div>}
+        </div>
+        <button className="pulseArrow right" type="button" aria-label="Next signals" onClick={() => setPulseOffset(n => n + 1)}>→</button>
       </div>
+      <div className="pulseTicker"><i/> Field refreshes automatically · New attention can move into view every cycle</div>
     </section>
 
     <section className="radarSection">
       <div className="radarPanel">
-        <div className="radarPanelHead"><div><h3>Discovery Radar</h3><p>Where attention is building right now</p></div></div>
-        <div className="radarVisual"><div className="radarRings"><i/><i/><i/><i/><b/></div><div className="radarGlow one"/><div className="radarGlow two"/><div className="radarGlow three"/></div>
+        <div className="radarPanelHead"><div><h3>Discovery Radar</h3><p>Continuously scanning 21 categories for emerging signals</p></div><span className="scanState"><i/> SCANNING</span></div>
+        <div className="radarVisual liveRadar"><div className="radarSweep"/><div className="radarRings"><i/><i/><i/><i/><b/></div><div className="radarGlow one"/><div className="radarGlow two"/><div className="radarGlow three"/></div>
         <div className="radarList">
-          {categoryPulse.slice(0, 5).map((c, i) => {
-            const pct = ranked.length ? Math.round(c.count / ranked.length * 100) : 0;
-            return <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank">{i + 1}</span><b>{c.name}</b><strong>{pct}%</strong></button>;
+          {radarCategories.map((c, i) => {
+            const pct = ranked.length ? Math.round((c.count / ranked.length) * 100) : 0;
+            return <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank">{i + 1}</span><b>{c.name}</b><strong>{c.count ? pct + "%" : "—"}</strong></button>;
           })}
-          {!categoryPulse.length && <p className="radarEmpty">Waiting for verified observations.</p>}
         </div>
       </div>
-
       <div className="topicsPanel">
-        <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>Fastest growing topics across the field</p></div><button type="button" onClick={() => { setFilter("Trending"); setQ(""); }}>View all&nbsp; →</button></div>
+        <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>Live movement across the discovery field</p></div><span className="scanState"><i/> ROTATING</span></div>
         <div className="topicList">
-          {categoryPulse.slice(0, 5).map((c, i) => {
-            const pct = ranked.length ? Math.round(c.count / ranked.length * 100) : 0;
-            return <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); }}><span className="topicRank">{i + 1}</span><b>{c.name}</b><i className={"spark spark-" + (i + 1)}><em/><em/><em/><em/><em/></i><strong>+{pct * 10}%</strong></button>;
-          })}
-          {!categoryPulse.length && <p className="radarEmpty">Topic movement will appear as verified observations arrive.</p>}
+          {topicRows.map((c, i) => (
+            <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); }}><span className="topicRank">{i + 1}</span><b>{c.name}</b><i className={"spark spark-" + (i + 1)}><em/><em/><em/><em/><em/></i><strong>{c.momentum ? c.momentum + " momentum" : "—"}</strong></button>
+          ))}
         </div>
       </div>
-
       <div className="spotlightPanel">
-        <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>Emerging creators to watch</p></div><button type="button" onClick={() => go("/creators")}>View all&nbsp; →</button></div>
+        <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>Rotating creators to watch</p></div><span className="scanState"><i/> ROTATING</span></div>
         <div className="spotlightList">
           {spotlightCreators.map(x => (
-            <button key={x.channel_title} type="button" onClick={() => setModal(x)}>
-              <img src={x.thumbnail} alt="" /><span><b>@{x.channel_title.replace(/\s+/g, "").slice(0, 22)}</b><small>{categoryFor(x)} · {fmt(x.metadata?.subscriber_count || 0)} subscribers</small></span><em>Follow</em>
-            </button>
+            <button key={x.channel_title} type="button" onClick={() => setModal(x)}><img src={x.thumbnail} alt="" /><span><b>@{x.channel_title.replace(/\s+/g, "").slice(0, 22)}</b><small>{categoryFor(x)} · {fmt(x.metadata?.subscriber_count || 0)} subscribers</small></span><em>Follow</em></button>
           ))}
           {!spotlightCreators.length && <p className="radarEmpty">Creator spotlight will appear as verified data arrives.</p>}
         </div>
@@ -455,4 +493,26 @@ footer{padding:55px 5vw 65px}
 @media(max-width:800px){.pulseStrip{grid-template-columns:repeat(2,1fr);padding:10px 16px}.pulseStripLabel{grid-column:1/-1}.pulseSection,.radarSection{margin-left:16px;margin-right:16px}.pulseTabs{grid-template-columns:repeat(3,1fr)}.pulseCards{grid-template-columns:repeat(2,1fr)}.radarSection{grid-template-columns:1fr}.spotlightPanel{grid-column:auto}.spotlightList{grid-template-columns:1fr}.pulseSectionHead{align-items:flex-start}.pulseSectionHead>button{display:none}}
 @media(max-width:520px){.pulseTabs{grid-template-columns:repeat(2,1fr)}.pulseCards{grid-template-columns:1fr}.pulseSection{padding:16px 12px}.pulseTitle h2{font-size:20px}.pulseMetric b{font-size:14px}}
 
+
+/* Live immersive field + continuous discovery motion */
+.fieldBadge{top:-1.5%!important;z-index:60!important}
+.fieldSpace{padding-top:2%!important}
+.platformMark.youtube{box-shadow:0 0 28px #ff000088,0 12px 32px #0008!important}
+.earthVisual{position:absolute;left:50%;top:50%;width:78%;height:78%;transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;z-index:0;pointer-events:none;background:radial-gradient(circle at 35% 27%,#5edbff 0,#166bc8 19%,#0c2e73 45%,#07142e 72%,#020611 100%);box-shadow:inset -22px -20px 50px #000b,inset 14px 12px 34px #b7f1ff66,0 0 45px #3f91ff44}
+.earthAtmosphere{position:absolute;inset:-5%;border-radius:50%;border:2px solid #65d8ff88;box-shadow:0 0 25px #5bc9ff66,0 0 55px #6a5cff33;animation:earthBreathe 4s ease-in-out infinite}
+.earthGrid{position:absolute;inset:-9%;border-radius:50%;background:repeating-radial-gradient(ellipse at center,transparent 0 18px,#6edcff16 19px 20px),repeating-linear-gradient(90deg,transparent 0 21px,#66cfff16 22px 23px);animation:earthSpin 18s linear infinite;mix-blend-mode:screen}
+.earthLand{position:absolute;background:linear-gradient(135deg,#45e4a0,#1aa876 65%,#0c654f);filter:drop-shadow(0 0 7px #42dca066);border-radius:48% 52% 44% 56%;opacity:.9}
+.land1{width:27%;height:20%;left:18%;top:24%;transform:rotate(-18deg);animation:landDrift 12s ease-in-out infinite}.land2{width:22%;height:32%;left:43%;top:18%;transform:rotate(24deg);animation:landDrift 15s ease-in-out infinite reverse}.land3{width:16%;height:26%;left:58%;top:49%;transform:rotate(-8deg);animation:landDrift 13s ease-in-out infinite}.land4{width:23%;height:13%;left:22%;top:60%;transform:rotate(12deg);animation:landDrift 17s ease-in-out infinite reverse}
+.earthShine{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 28% 23%,#fff7 0 3%,transparent 16%),linear-gradient(120deg,transparent 34%,#73e6ff0c 48%,transparent 58%);animation:earthShimmer 5s ease-in-out infinite}
+.core>strong,.core>small,.core>i{position:relative;z-index:5;text-shadow:0 2px 16px #000c}.core>strong{background:linear-gradient(90deg,#fff,#a8d8ff,#b975ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes earthSpin{to{transform:rotate(360deg)}}@keyframes earthBreathe{50%{transform:scale(1.025);opacity:.8}}@keyframes earthShimmer{50%{transform:translateX(3%);opacity:.75}}@keyframes landDrift{50%{translate:8px -3px;filter:drop-shadow(0 0 13px #42dca099)}}
+.worldMap{position:relative;width:155px;height:52px;color:#2f86e9;filter:drop-shadow(0 0 8px #2f86e966)}.worldMap svg{width:100%;height:100%;opacity:.5}.mapRoad{fill:none;stroke:#63b8ff;stroke-width:1;stroke-dasharray:4 5;animation:roadMove 3s linear infinite}.mapRoad.r2{animation-duration:4.2s;animation-direction:reverse}.worldMap i{position:absolute;width:4px;height:4px;border-radius:50%;background:#66d6ff;box-shadow:0 0 10px #66d6ff;animation:mapBlink 1.4s infinite}.worldMap i:nth-of-type(1){left:25%;top:36%}.worldMap i:nth-of-type(2){left:39%;top:54%;animation-delay:.3s}.worldMap i:nth-of-type(3){left:56%;top:35%;animation-delay:.7s}.worldMap i:nth-of-type(4){left:72%;top:47%;animation-delay:1s}.worldMap i:nth-of-type(5){left:84%;top:34%;animation-delay:.5s}@keyframes roadMove{to{stroke-dashoffset:-36}}@keyframes mapBlink{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1.5)}}
+.pulseHeadActions{display:flex;align-items:center;gap:14px}.pulseLive,.scanState{display:flex;align-items:center;gap:6px;color:#66e6ae;font-size:7px;font-weight:900;letter-spacing:.8px;white-space:nowrap}.pulseLive i,.scanState i{width:6px;height:6px;border-radius:50%;background:#61e0aa;box-shadow:0 0 10px #61e0aa;animation:livePulse 1s infinite}
+.pulseCarousel{position:relative;display:grid;grid-template-columns:34px minmax(0,1fr) 34px;align-items:center;gap:7px;margin-top:13px}.pulseCarousel .pulseCards{margin-top:0}.pulseArrow{width:32px;height:32px;border:1px solid #5ba8ff88;border-radius:50%;background:linear-gradient(145deg,#103d86,#0b1c43);color:#fff;font-size:17px;cursor:pointer;box-shadow:0 0 18px #287fff22}.pulseArrow:hover{transform:scale(1.08);box-shadow:0 0 25px #287fff55}.pulseTicker{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;color:#69708d;font-size:7px}.pulseTicker i{width:5px;height:5px;border-radius:50%;background:#58e6a9;box-shadow:0 0 8px #58e6a9;animation:livePulse 1.1s infinite}
+.liveRadar .radarSweep{position:absolute;left:50%;top:50%;width:50%;height:50%;transform-origin:0 0;border-left:2px solid #5fc9ff88;border-top:2px solid transparent;border-radius:100% 0 0 0;animation:radarSweep 2.2s linear infinite;filter:drop-shadow(0 0 7px #5fc9ff)}.liveRadar .radarRings{animation:radarPulse 2.2s ease-in-out infinite}.scanState{color:#6dc8ff}.scanState i{background:#5cc9ff;box-shadow:0 0 10px #5cc9ff}
+@keyframes radarSweep{to{transform:rotate(360deg)}}@keyframes radarPulse{50%{transform:scale(1.035);opacity:.95}}
+.radarPanelHead{align-items:center!important}
+@media(max-width:1250px){.pulseCarousel{grid-template-columns:30px minmax(0,1fr) 30px}.pulseCards{grid-template-columns:repeat(3,1fr)}.worldMap{width:120px}.pulseHeadActions{gap:8px}}
+@media(max-width:800px){.pulseHeadActions .pulseLive{display:none}.pulseCarousel{grid-template-columns:26px minmax(0,1fr) 26px}.pulseArrow{width:27px;height:27px}.pulseCards{grid-template-columns:repeat(2,1fr)}.worldMap{width:120px}.earthVisual{width:74%;height:74%}}
+@media(max-width:520px){.pulseCarousel{grid-template-columns:24px minmax(0,1fr) 24px}.pulseCards{grid-template-columns:1fr}.pulseArrow{width:24px;height:24px;font-size:13px}.pulseTicker{font-size:6px}.worldMap{width:110px}.pulseHeadActions button{display:none}}
 `;
