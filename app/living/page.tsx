@@ -204,7 +204,10 @@ export default function LivingDiscover() {
   }).filter(c => c.count > 0).sort((a, b) => b.momentum - a.momentum), [ranked]);
 
   const radarCategories = useMemo(() => {
-    const source = categoryPulse.length ? categoryPulse : categories.slice(1).map(c => ({ ...c, count: 0, momentum: 0 }));
+    const source = categories.slice(1).map(c => {
+      const live = categoryPulse.find(active => active.name === c.name);
+      return live || { ...c, count: 0, momentum: 0 };
+    }).sort((a, b) => b.momentum - a.momentum || b.count - a.count);
     return Array.from({ length: Math.min(8, source.length) }, (_, i) => source[(radarOffset + i) % source.length]);
   }, [categoryPulse, radarOffset]);
 
@@ -224,7 +227,7 @@ export default function LivingDiscover() {
 
   const spotlightCreators = useMemo(() => {
     if (!creatorPool.length) return [];
-    return Array.from({ length: Math.min(3, creatorPool.length) }, (_, i) => creatorPool[(spotlightOffset + i) % creatorPool.length]);
+    return Array.from({ length: Math.min(8, creatorPool.length) }, (_, i) => creatorPool[(spotlightOffset + i) % creatorPool.length]);
   }, [creatorPool, spotlightOffset]);
 
   const risingCreators = useMemo(() => new Set(
