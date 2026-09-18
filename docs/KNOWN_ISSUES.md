@@ -13,7 +13,8 @@
 | KI-004 | Breaking Out, Just Dropped, signal mismatch, selected signal | 1 | Open |
 | KI-005 | useSearchParams, Suspense, /login prerender, CSR bailout | 2 | Resolved |
 | KI-006 | checkpoint branch moved, immutable recovery point | 4 | Resolved |
-| KI-007 | Earth hidden, leaf-like globe, Pulse controls, radar alignment, static topics/creators | 2 | Resolved |\n| KI-008 | simple-icons, siLinkedin, Discover build, import error | 3 | Resolved |
+| KI-007 | Earth hidden, leaf-like globe, Pulse controls, radar alignment, static topics/creators | 2 | Resolved |
+| KI-008 | simple-icons, siLinkedin, Discover build, import error | 3 | Resolved |
 | KI-009 | DiscoverGlobe, setTimeout, never, TypeScript, CI | 3 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
@@ -24,8 +25,8 @@
 | Level | Count |
 |---|---:|
 | 1 — Documented | 1 |
-| 2 — Detected | 2 |
-| 3 — Auto-recovered | 3 |
+| 2 — Detected | 1 |
+| 3 — Auto-recovered | 4 |
 | 4 — Prevented | 1 |
 
 > Update this table whenever an entry changes level.
