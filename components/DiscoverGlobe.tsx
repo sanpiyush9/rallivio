@@ -221,14 +221,14 @@ export default function DiscoverGlobe() {
       }
     };
 
-    const schedule = "requestIdleCallback" in window
+    const schedule = typeof window.requestIdleCallback === "function"
       ? window.requestIdleCallback(init, { timeout: 900 })
-      : window.setTimeout(init, 350);
+      : globalThis.setTimeout(init, 350);
 
     return () => {
       disposed = true;
-      if ("cancelIdleCallback" in window && typeof schedule === "number") window.cancelIdleCallback(schedule);
-      else window.clearTimeout(schedule);
+      if (typeof window.cancelIdleCallback === "function" && typeof schedule === "number") window.cancelIdleCallback(schedule);
+      else globalThis.clearTimeout(schedule);
       window.cancelAnimationFrame(frame);
       resizeObserver?.disconnect();
       intersectionObserver?.disconnect();
