@@ -225,3 +225,33 @@ When development resumes, first read the canonical chain and current specs, insp
 - `docs/RESILIENCE_SYSTEM.md`
 - `docs/SESSION_LOG.md`
 - `docs/KNOWN_ISSUES.md` if a new failure is discovered; no new functional bug was introduced by this audit.
+
+
+## 2026-09-19 — Discover build failure diagnosed and fixed: LinkedIn icon export
+Branch: feature/creator-platform-subscription
+Status: Resolved pending live deployment verification
+
+### Incident
+The Discover live hero/header + 3D ecosystem pass failed its Vercel build. The initial Vercel summary was only `import_error`, so no code change was made until the actual build log was obtained.
+
+### Confirmed cause
+Vercel deployment `dpl_Da58Jp98hndj4V2QbeXvsyxaYZAW` failed because `app/page.tsx` imported `siLinkedin` from `simple-icons`, but `simple-icons@16.31.0` does not export that symbol. The repository's prebuild icon checker already defines LinkedIn as a local exception.
+
+### Fix
+- Removed `siLinkedin` from the Simple Icons import.
+- Restored the existing local LinkedIn icon path in `app/page.tsx`.
+- Strengthened `scripts/check-platform-icons.mjs` so the prebuild fails immediately if `siLinkedin` is reintroduced.
+- Recorded KI-008 and the resilience ladder decision.
+
+### Verification
+The code change is committed to the active feature branch; live Vercel verification is the remaining step. No checkpoint branch was changed.
+
+### Next session should
+Verify the new deployment by branch, commit SHA, Vercel state and deployment ID, then field-test Discover at desktop widths and confirm the 3D globe/platform nodes/headline behavior.
+
+### Documents touched
+- `app/page.tsx`
+- `scripts/check-platform-icons.mjs`
+- `docs/KNOWN_ISSUES.md`
+- `docs/RESILIENCE_SYSTEM.md`
+- `docs/SESSION_LOG.md`
