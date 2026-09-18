@@ -2,9 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState, type PointerEvent, type CSSProperties } from "react";
-import { siDiscord, siFacebook, siInstagram, siLinkedin, siPinterest, siReddit, siSnapchat, siSpotify, siTiktok, siTwitch, siX, siYoutube, type SimpleIcon } from "simple-icons";
+import { siDiscord, siFacebook, siInstagram, siLinkedin, siPinterest, siReddit, siSnapchat, siSpotify, siTiktok, siTwitch, siX, siYoutube } from "simple-icons";
 
 const DiscoverGlobe = dynamic(() => import("../components/DiscoverGlobe"), { ssr: false });
+
+type PlatformIcon = { hex: string; path: string };
 
 type DiscoveryItem = {
   id: string;
@@ -28,7 +30,7 @@ type DiscoveryItem = {
 };
 
 const topics = ["Trending", "AI", "Travel", "Food", "Gaming", "Fitness"];
-const platformNodes: Array<{ name: string; icon: SimpleIcon; className: string; state: string; position: string }> = [
+const platformNodes: Array<{ name: string; icon: PlatformIcon; className: string; state: string; position: string }> = [
   { name: "YouTube", icon: siYoutube, className: "youtube", state: "Connected", position: "p1" },
   { name: "Instagram", icon: siInstagram, className: "instagram", state: "Coming next", position: "p2" },
   { name: "TikTok", icon: siTiktok, className: "tiktok", state: "Coming next", position: "p3" },
