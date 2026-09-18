@@ -19,7 +19,6 @@ function getRequestOrigin(requestHeaders: Headers) {
 
 export async function oauthLogin(formData: FormData) {
   const provider = String(formData.get("provider") ?? "");
-  const next = safeNextPath(String(formData.get("next") ?? ""));
   if (provider !== "google") redirect("/login?error=Unsupported%20sign-in%20provider.");
 
   const requestHeaders = await headers();
@@ -28,7 +27,9 @@ export async function oauthLogin(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: origin + "/auth/callback?next=" + encodeURIComponent(next),
+      // Keep the Supabase redirect target exact. The callback itself defaults to /living,
+      // so there is no need to put a dynamic ?next= query parameter on redirectTo.
+      redirectTo: origin + "/auth/callback",
     },
   });
 
