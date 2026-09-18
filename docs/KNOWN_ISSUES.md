@@ -11,6 +11,7 @@
 | KI-002 | eslint, nextVitals, not iterable, lint not enforced | 2 | Resolved |
 | KI-003 | Vercel Authentication, Preview SSO, 302, bootstrap blocked | 3 | Resolved for QA |
 | KI-004 | Breaking Out, Just Dropped, signal mismatch, selected signal | 1 | Open |
+| KI-005 | useSearchParams, Suspense, /login prerender, CSR bailout | 2 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -20,7 +21,7 @@
 | Level | Count |
 |---|---:|
 | 1 — Documented | 1 |
-| 2 — Detected | 1 |
+| 2 — Detected | 2 |
 | 3 — Auto-recovered | 2 |
 | 4 — Prevented | 0 |
 
@@ -142,4 +143,27 @@ Add automated coverage asserting that when a signal filter is selected, every re
 `app/page.tsx`
 `app/api/discovery/route.ts`
 `docs/RALLIVIO_STATE.md`
+`docs/SESSION_LOG.md`
+
+---
+
+## KI-005 — Login page useSearchParams requires a Suspense boundary
+First seen: 2026-09-18 · Status: Resolved · Ladder level: 2 → target 4
+Severity: HIGH
+
+### Symptom
+CI typecheck and lint completed successfully, but the production build failed while prerendering `/login` with:
+`useSearchParams() should be wrapped in a suspense boundary at page "/login"`.
+
+### Cause
+`app/login/page.tsx` called `useSearchParams()` directly from the page-level client component. Next.js 15 requires the client subtree using `useSearchParams` to be behind a Suspense boundary during prerendering.
+
+### Fix
+Kept the interactive login UI client-side, moved the `useSearchParams` consumer into `LoginContent`, and wrapped it with React `<Suspense>` from the page component.
+
+### Prevention
+For Next.js App Router pages, always place page-level `useSearchParams` consumers behind a Suspense boundary, and keep `npm run build` in the verification pipeline so prerender-only failures are caught before deployment.
+
+### Related
+`app/login/page.tsx`
 `docs/SESSION_LOG.md`
