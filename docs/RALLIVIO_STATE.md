@@ -354,3 +354,22 @@ This section is an operational snapshot for future AI sessions. It supplements t
 The continuity audit itself added five documentation commits after implementation SHA `82a1a391b9505da02d62be7e52625f4e2a2a470a`. Therefore the active feature branch HEAD is now `f4a1f5f2dc8ab5d8d72362458667f4d83c191e03`. The implementation baseline remains `82a1a391...`; the later commits are documentation-only continuity/self-healing updates. The latest READY Vercel deployment remains the implementation SHA `82a1a391...` until a later deployment is intentionally triggered.
 
 Do not confuse documentation HEAD with deployed implementation HEAD.
+
+## 16. Living Field precision pass — 2026-09-18
+
+Current requirement → Living Field lower surfaces must feel continuously active and professionally informative while remaining truth-bound to verified observations.
+
+New implementation → The Living Field now presents a coherent globe behind the RALLIVIO core, source-coverage-aware Global Activity, a horizontally scrolling verified Pulse stream with inline selected playback, centered Radar motion, momentum-driven topic graphs, and a scrollable creator spotlight pool.
+
+Why it changed → Field QA showed the previous Earth treatment was visually obscured/leaf-like, the Pulse interaction was too limited, the Radar sweep was misaligned, and the topic/creator surfaces appeared static.
+
+Impact → app/living/page.tsx changes only. Existing header/hero/ecosystem baseline is preserved. No new source calls were added and no fabricated metrics were introduced.
+
+Implementation status → IMPLEMENTING / awaiting live QA.
+
+Validation/QA → Source/category bindings were reviewed after implementation. GitHub Actions for the latest commit had not yet emitted a run at the time of this update; live deployment still requires SHA/state verification.
+
+Truth boundary → The continuous Pulse stream may repeat the currently verified pool for presentation continuity. It must not be described as newly acquired content unless the background acquisition system supplies new records.
+
+Date: 2026-09-18
+
