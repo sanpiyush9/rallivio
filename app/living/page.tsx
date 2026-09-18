@@ -681,3 +681,44 @@ footer{padding:55px 5vw 65px}
 @media(max-width:520px){.pulseHeadActions>button.viewSignalsButton{font-size:8px;padding:7px 9px}.pulseCarousel{grid-template-columns:28px minmax(0,1fr) 28px!important}.pulseViewport .pulseCard{flex-basis:220px!important;width:220px!important}.worldMap{width:125px!important}.pulseSelectedInfo h3{font-size:14px}}
 
 `;
+
+/* 2026-09-19 Discover precision pass: / is rewritten to /living, so these rules apply to the actual served Discover page. */
+.topbar{height:72px!important;min-height:72px!important;flex-wrap:nowrap!important;align-items:center!important;gap:24px!important;padding:0 34px!important}
+.topbar nav{display:flex!important;align-items:center!important;gap:32px!important;flex:1 1 auto!important;min-width:0!important;white-space:nowrap!important}
+.topbar nav button{font-size:15px!important;font-weight:500!important;line-height:1!important;white-space:nowrap!important;padding:9px 0!important;margin:0!important;flex:0 0 auto!important}
+.headerSearchWrap{display:contents}
+.topbar .search{flex:0 1 300px!important;width:min(300px,24vw)!important;min-width:220px!important;margin-right:24px!important}
+.topActions{display:flex!important;align-items:center!important;gap:12px!important;flex:0 0 auto!important;min-width:max-content!important}
+.topActions .round,.topActions .loginButton{height:38px!important;min-height:38px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;overflow:visible!important;padding:0 14px!important}
+.topActions .themePickerWrap{flex:0 0 auto!important}
+.themeButton{max-width:120px!important;overflow:visible!important;white-space:nowrap!important}
+.loginButton{min-width:72px!important}
+
+.heroHeadlineWrap{min-height:180px!important;display:block!important}
+.heroDynamicTitle{margin:18px 0!important;min-height:180px!important}
+.heroDynamicTitle>span{display:inline-block!important;white-space:nowrap!important}
+.heroDynamicTitle>strong{display:block!important;max-width:560px!important;min-height:1.12em!important;font-size:clamp(34px,3.7vw,58px)!important;line-height:1.02!important;letter-spacing:-2.8px!important;color:#dfe2ff!important;animation:heroTitleIn .4s cubic-bezier(.4,0,.2,1) both!important}
+@keyframes heroTitleIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Actual 3D globe layer mounted by DiscoverGlobe.tsx. */
+.globeStage{position:absolute!important;inset:-7%!important;z-index:1!important;border-radius:50%!important;overflow:visible!important;pointer-events:none!important;filter:drop-shadow(0 0 34px rgba(63,156,255,.45))!important}
+.discoverGlobeCanvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:block!important;opacity:0!important;transition:opacity .25s ease!important}
+.globeFallback{position:absolute!important;inset:0!important;border-radius:50%!important;overflow:hidden!important;background:radial-gradient(circle at 32% 25%,#66dcff 0,#1b64c7 27%,#09275e 59%,#020711 100%)!important;box-shadow:inset -28px -20px 45px #000c,inset 18px 10px 28px rgba(107,230,255,.2),0 0 0 1px rgba(117,220,255,.48),0 0 35px rgba(60,157,255,.32)!important;transition:opacity .25s ease!important}
+.globeFallback::before{content:"";position:absolute;inset:7%;border-radius:50%;background:linear-gradient(100deg,transparent 0 28%,rgba(255,255,255,.1) 38%,transparent 47% 100%);mix-blend-mode:screen}
+.globeFallback::after{content:"";position:absolute;inset:-7%;border-radius:50%;border:2px solid rgba(110,223,255,.45);box-shadow:0 0 18px rgba(95,217,255,.45),0 0 55px rgba(106,85,255,.18)}
+.globeLand{position:absolute;background:rgba(57,217,160,.76);filter:drop-shadow(0 0 4px rgba(71,230,180,.34));clip-path:polygon(5% 30%,24% 8%,50% 17%,61% 40%,46% 56%,27% 50%,19% 78%,7% 61%)}
+.landA{left:10%;top:22%;width:37%;height:34%}.landB{left:43%;top:20%;width:38%;height:30%;transform:rotate(8deg)}.landC{left:56%;top:51%;width:30%;height:25%;transform:rotate(-13deg)}
+.globeStage.globeReady .globeFallback{opacity:0!important}.globeStage.globeReady .discoverGlobeCanvas{opacity:1!important}
+.core>strong,.core>small,.core>i{position:relative!important;z-index:12!important;text-shadow:0 2px 16px #000c}
+
+/* Spherical platform badges: one shared light direction with the globe. */
+.platformMark{position:relative!important;border-radius:50%!important;overflow:visible!important;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease!important;box-shadow:inset -9px -11px 16px rgba(0,0,0,.28),inset 6px 6px 12px rgba(255,255,255,.24),0 12px 30px rgba(0,0,0,.38)!important}
+.platformMark:before{content:"";position:absolute;left:20%;top:14%;width:27%;height:23%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.72),rgba(255,255,255,.18) 42%,transparent 72%);filter:blur(.5px);pointer-events:none;z-index:3}
+.platformMark:after{inset:5px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.12)!important;box-shadow:inset -5px -6px 8px rgba(0,0,0,.2)!important}
+.platform:hover .platformMark,.platform:focus-visible .platformMark,.platform.selected .platformMark{transform:scale(1.08)!important;filter:brightness(1.08)!important}
+.platform.youtube .platformMark{background:#FF0000!important}.platform.instagram .platformMark{background:linear-gradient(135deg,#833AB4,#FD1D1D,#FCB045)!important}.platform.tiktok .platformMark,.platform.x .platformMark{background:#000!important}.platform.linkedin .platformMark{background:#0A66C2!important}.platform.facebook .platformMark{background:#1877F2!important}.platform.reddit .platformMark{background:#FF4500!important}.platform.discord .platformMark{background:#5865F2!important}.platform.snapchat .platformMark{background:#FFFC00!important;color:#000!important}.platform.pinterest .platformMark{background:#E60023!important}.platform.spotify .platformMark{background:#1DB954!important;color:#000!important}.platform.twitch .platformMark{background:#9146FF!important}
+.field.responding .orbit{animation-duration:1.2s!important}.field.responding .energyRing,.field.responding .energyArc{animation-duration:1.1s!important}.field.responding .core{animation:coreResponse .55s ease-out!important}
+@keyframes coreResponse{50%{transform:translate(-50%,-50%) scale(1.08);box-shadow:0 0 120px #9b62ffb0,0 0 190px #7440ff55,0 0 0 34px #7e4aff18}}
+
+@media(max-width:1250px){.topbar{gap:18px!important;padding:0 24px!important}.topbar nav{gap:24px!important}.topbar .search{width:250px!important;min-width:190px!important;margin-right:18px!important}.topbar nav button{font-size:14px!important}}
+@media(max-width:950px){.topbar{height:auto!important;min-height:72px!important;flex-wrap:wrap!important;padding:10px 16px!important}.topbar nav{order:3;width:100%;overflow:auto;gap:20px!important}.topbar .search{flex:1 1 220px!important;width:auto!important;margin-right:0!important}.topActions{margin-left:auto!important}}
