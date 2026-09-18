@@ -325,15 +325,28 @@ async function readPool() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return configError();
   const params = new URLSearchParams({
     select: "id,title,channel_title,channel_id,published_at,thumbnail,description,views,likes,comments,duration,url,embeddable,live_broadcast_content,topic,format,region,metadata,acquired_at,stats_refreshed_at",
-    topic: `eq.${TOPIC}`,
-    region: `eq.${REGION}`,
     order: "views.desc",
-    limit: "25",
+    limit: "100",
   });
   const response = await supabase(`youtube_discovery_pool?${params.toString()}`);
   if (!response.ok) return NextResponse.json({ ok: false, state: "DATA_UNAVAILABLE" }, { status: 503 });
-  const items = await response.json();
-  return NextResponse.json({ ok: true, source: "RALLIVIO_DISCOVERY_POOL", refreshedAt: items[0]?.stats_refreshed_at ?? null, items }, { headers: { "Cache-Control": "no-store" } });
+  const items = await response.json() as DiscoveryRow[];
+  const usageResponse = await supabase("api_usage?select=created_at&service=eq.youtube&order=created_at.desc&limit=1");
+  const usageRows = usageResponse.ok ? await usageResponse.json() as { created_at: string }[] : [];
+  const signalResponse = await supabase("discovery_signals?select=video_id,signal_type,momentum_score&order=momentum_score.desc&limit=2500");
+  const signals = signalResponse.ok ? await signalResponse.json() as { video_id: string; signal_type: string; momentum_score: number }[] : [];
+  const signalByVideo = new Map(signals.map(x => [x.video_id, x]));
+  const enriched = items.map(item => {
+    const signal = signalByVideo.get(item.id);
+    return signal ? { ...item, metadata: { ...item.metadata, signal: signal.signal_type, momentum_score: signal.momentum_score } } : item;
+  });
+  return NextResponse.json({
+    ok: true,
+    source: "RALLIVIO_DISCOVERY_POOL",
+    refreshedAt: enriched[0]?.stats_refreshed_at ?? enriched[0]?.fetched_at ?? null,
+    apiUsageLatestAt: usageRows[0]?.created_at ?? null,
+    items: enriched,
+  }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function GET(request: Request) {
