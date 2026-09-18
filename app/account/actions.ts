@@ -24,3 +24,9 @@ export async function updateProfile(formData: FormData) {
   if (error) redirect("/account?error=" + encodeURIComponent(error.message));
   redirect("/account?saved=1");
 }
+
+export async function logout() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
+}
