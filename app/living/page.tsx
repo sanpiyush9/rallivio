@@ -320,7 +320,7 @@ export default function LivingDiscover() {
         <aside className="categoryPulse">
           <div><span className="eyebrow">CATEGORY PULSE</span><strong>Where attention is gathering</strong><small>Based on the current verified YouTube pool.</small></div>
           {categoryPulse.length ? categoryPulse.map(c => <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); pulseField(`Field tuned to ${c.name}.`); }}>
-            <span><b>{c.icon}</b>{c.name}</span><strong>{c.count}</strong><i style={{"--w": `${Math.max(14, Math.min(100, c.count / Math.max(1, ranked.length) * 100))}%`} as React.CSSProperties}/></button>) : <p className="categoryEmpty">Category pulse will appear as verified observations arrive.</p>}
+            <span><b>{c.icon}</b>{c.name}</span><strong>{c.count}</strong><i style={{"--w": `${Math.max(14, Math.min(100, c.count / Math.max(1, ranked.length) * 100))}%`} as { [key: string]: string }}/></button>) : <p className="categoryEmpty">Category pulse will appear as verified observations arrive.</p>}
         </aside>
       </div>
     </section>
