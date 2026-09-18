@@ -178,3 +178,23 @@ The subsequent workflow confirmed that typecheck completed, lint completed with 
 - `docs/KNOWN_ISSUES.md` → KI-009
 - `docs/SESSION_LOG.md`
 - `components/DiscoverGlobe.tsx`
+
+
+## 2026-09-19 — Served-route verification rule for Discover UI
+
+### Incident
+The root URL is rewritten by `middleware.ts` to `/living`. Earlier Discover visual changes were implemented in `app/page.tsx`, which built successfully but was not the actual page the user was viewing.
+
+### Recovery rule
+For UI incidents, verify the served route before editing the visual component:
+1. Inspect middleware/rewrites/redirects.
+2. Confirm the URL's matched route in deployed HTML or deployment metadata.
+3. Confirm the requested visual component exists in that route's source file.
+4. Only then modify code and report the exact served file.
+
+### Prevention
+A visual QA pass is not complete until the tested URL, matched route, source file, commit SHA and deployed SHA are all recorded. A successful build of a different route is not evidence that the user-visible page changed.
+
+## 2026-09-19 — Binary asset limitation must be explicit
+
+The live 3D globe now uses the Three.js Earth assets from upstream raw GitHub URLs. The requested local `/public/textures` copies were not silently represented as complete because the current GitHub connector exposes UTF-8 text-file writes but not binary repository-file uploads through the available file-update path. When binary asset tooling becomes available, localize the three Earth assets and update `components/DiscoverGlobe.tsx`; until then this remains a documented follow-up.
