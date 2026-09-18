@@ -110,17 +110,17 @@ const categoryFor = (x: Item) => {
 function PlatformIcon({ kind }: { kind: string }) {
   const common = { width: 30, height: 30, viewBox: "0 0 32 32", fill: "none", "aria-hidden": true as const };
   switch (kind) {
-    case "youtube": return <svg {...common}><rect x="3" y="7" width="26" height="18" rx="5" fill="currentColor"/><path d="M13 11.5 22 16l-9 4.5v-9Z" fill="#0b0d20"/></svg>;
+    case "youtube": return <svg {...common}><rect x="3" y="7" width="26" height="18" rx="5" fill="currentColor"/><path d="M13 11.5 22 16l-9 4.5v-9Z" fill="#fff"/></svg>;
     case "instagram": return <svg {...common}><rect x="5" y="5" width="22" height="22" rx="6" stroke="currentColor" strokeWidth="3"/><circle cx="16" cy="16" r="5" stroke="currentColor" strokeWidth="3"/><circle cx="23" cy="9" r="1.7" fill="currentColor"/></svg>;
     case "tiktok": return <svg {...common}><path d="M19 5c.4 3.3 2.1 5.2 5 5.7v4.2c-2.2-.1-4-.8-5.6-2v7.3a6.1 6.1 0 1 1-5.2-6v4.2a2 2 0 1 0 1 1.8V5H19Z" fill="currentColor"/></svg>;
     case "x": return <svg {...common}><path d="M7 6h5.1l4.1 5.8L21.1 6H25l-7 8.1L25.4 26h-5.1l-4.9-6.8L9.4 26H5.5l7.4-8.5L7 6Z" fill="currentColor"/></svg>;
-    case "linkedin": return <svg {...common}><rect x="5" y="5" width="22" height="22" rx="3" fill="currentColor"/><circle cx="10" cy="11" r="1.7" fill="#0b0d20"/><path d="M8.7 14h2.7v9H8.7v-9Zm4.5 0h2.6v1.2c.8-1 1.8-1.6 3.4-1.6 2.7 0 3.9 1.7 3.9 4.6V23h-2.7v-4.4c0-1.4-.5-2.3-1.7-2.3-1.3 0-1.8 1-1.8 2.4V23h-2.7v-9Z" fill="#0b0d20"/></svg>;
-    case "spotify": return <svg {...common}><circle cx="16" cy="16" r="12" fill="currentColor"/><path d="M10 13c4.4-1.1 8.2-.7 11.7.9M10.8 17c3.6-.8 6.8-.5 9.7.7M12 20.5c2.5-.5 4.8-.2 6.8.6" stroke="#0b0d20" strokeWidth="2" strokeLinecap="round"/></svg>;
-    case "twitch": return <svg {...common}><path d="M5 5h22v16l-5 5h-6l-4 3v-3H5V5Z" fill="currentColor"/><path d="M10 10h3v7h-3v-7Zm7 0h3v7h-3v-7Z" fill="#0b0d20"/></svg>;
-    case "facebook": return <svg {...common}><circle cx="16" cy="16" r="12" fill="currentColor"/><path d="M18 10h2V6.5c-.7-.1-1.6-.2-2.7-.2-3.1 0-5.2 1.9-5.2 5.4v2.9H9v3.8h3.1V26h3.9v-7.6h3.2l.5-3.8H16v-2.4c0-1.1.3-2.2 2-2.2Z" fill="#0b0d20"/></svg>;
-    case "pinterest": return <svg {...common}><circle cx="16" cy="16" r="12" fill="currentColor"/><path d="M14 24c.7-2 1-3.1 1.4-4.8-.9-.8-1.4-2-1.4-3.5 0-2.7 1.8-4.9 4.2-4.9 2 0 3.4 1.5 3.4 3.5 0 2.3-1.1 5.1-3.1 5.1-1 0-1.8-.8-1.6-1.9l.6-2.5c.3-1 .1-1.8-.8-1.8-1 0-1.7 1-1.7 2.3 0 .9.3 1.5.3 1.5l-1.1 4.5c-.3 1.2-.1 2.7 0 3.5Z" fill="#0b0d20"/></svg>;
+    case "linkedin": return <svg {...common}><rect x="5" y="5" width="22" height="22" rx="3" fill="currentColor"/><circle cx="10" cy="11" r="1.7" fill="#fff"/><path d="M8.7 14h2.7v9H8.7v-9Zm4.5 0h2.6v1.2c.8-1 1.8-1.6 3.4-1.6 2.7 0 3.9 1.7 3.9 4.6V23h-2.7v-4.4c0-1.4-.5-2.3-1.7-2.3-1.3 0-1.8 1-1.8 2.4V23h-2.7v-9Z" fill="#fff"/></svg>;
+    case "spotify": return <svg {...common}><circle cx="16" cy="16" r="12" fill="currentColor"/><path d="M10 13c4.4-1.1 8.2-.7 11.7.9M10.8 17c3.6-.8 6.8-.5 9.7.7M12 20.5c2.5-.5 4.8-.2 6.8.6" stroke="#000" strokeWidth="2" strokeLinecap="round"/></svg>;
+    case "twitch": return <svg {...common}><path d="M5 5h22v16l-5 5h-6l-4 3v-3H5V5Z" fill="currentColor"/><path d="M10 10h3v7h-3v-7Zm7 0h3v7h-3v-7Z" fill="#fff"/></svg>;
+    case "facebook": return <svg {...common}><circle cx="16" cy="16" r="12" fill="currentColor"/><path d="M18 10h2V6.5c-.7-.1-1.6-.2-2.7-.2-3.1 0-5.2 1.9-5.2 5.4v2.9H9v3.8h3.1V26h3.9v-7.6h3.2l.5-3.8H16v-2.4c0-1.1.3-2.2 2-2.2Z" fill="#fff"/></svg>;
+    case "pinterest": return <svg {...common}><circle cx="16" cy="16" r="12" fill="currentColor"/><path d="M14 24c.7-2 1-3.1 1.4-4.8-.9-.8-1.4-2-1.4-3.5 0-2.7 1.8-4.9 4.2-4.9 2 0 3.4 1.5 3.4 3.5 0 2.3-1.1 5.1-3.1 5.1-1 0-1.8-.8-1.6-1.9l.6-2.5c.3-1 .1-1.8-.8-1.8-1 0-1.7 1-1.7 2.3 0 .9.3 1.5.3 1.5l-1.1 4.5c-.3 1.2-.1 2.7 0 3.5Z" fill="#fff"/></svg>;
     case "reddit": return <svg {...common}><circle cx="16" cy="17" r="9" fill="currentColor"/><path d="M11.5 16.5h.1m8.8 0h.1M13 20c1.8 1.4 4.2 1.4 6 0M19.5 11l1-3 3 .7" stroke="#0b0d20" strokeWidth="1.8" strokeLinecap="round"/></svg>;
-    case "discord": return <svg {...common}><path d="M6.5 8.5c4.2-2.2 14.8-2.2 19 0l2 13c-3.4 2.5-6.6 3.4-9.5 3.6l-1.5-2.1c1.5-.4 2.7-1 3.7-1.7-4 .9-5.9.9-10 0 1 .7 2.2 1.3 3.7 1.7L12.4 25c-2.9-.2-6.1-1.1-9.5-3.6l2-13Z" fill="currentColor"/><circle cx="12" cy="16" r="1.7" fill="#0b0d20"/><circle cx="20" cy="16" r="1.7" fill="#0b0d20"/></svg>;
+    case "discord": return <svg {...common}><path d="M6.5 8.5c4.2-2.2 14.8-2.2 19 0l2 13c-3.4 2.5-6.6 3.4-9.5 3.6l-1.5-2.1c1.5-.4 2.7-1 3.7-1.7-4 .9-5.9.9-10 0 1 .7 2.2 1.3 3.7 1.7L12.4 25c-2.9-.2-6.1-1.1-9.5-3.6l2-13Z" fill="currentColor"/><circle cx="12" cy="16" r="1.7" fill="#fff"/><circle cx="20" cy="16" r="1.7" fill="#fff"/></svg>;
     case "snapchat": return <svg {...common}><path d="M16 4.8c-4.2 0-6.7 3-6.7 7.2v2.3c0 .7-.4 1.2-1.2 1.7-.7.4-1.3.7-1.3 1.3 0 .7 1.2 1 2.1 1.2.7.2 1.2.5 1.4 1.1.2.8.5 1.2 1.3 1.2 1.1 0 1.8-.7 2.9-.7.9 0 1.7.8 3.5.8s2.6-.8 3.5-.8c1.1 0 1.8.7 2.9.7.8 0 1.1-.4 1.3-1.2.2-.6.7-.9 1.4-1.1.9-.2 2.1-.5 2.1-1.2 0-.6-.6-.9-1.3-1.3-.8-.5-1.2-1-1.2-1.7V12c0-4.2-2.5-7.2-6.7-7.2Z" fill="currentColor"/></svg>;
     default: return <span className="genericMark">•</span>;
   }
@@ -146,6 +146,7 @@ export default function LivingDiscover() {
   const [spotlightOffset, setSpotlightOffset] = useState(0);
   const [selectedPulse, setSelectedPulse] = useState<Item | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [apiUsageLatestAt, setApiUsageLatestAt] = useState<number | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const pulseViewportRef = useRef<HTMLDivElement>(null);
@@ -199,7 +200,8 @@ export default function LivingDiscover() {
             stats_refreshed_at: x.stats_refreshed_at || b.refreshedAt || undefined,
           };
         }) : []);
-        setLastUpdatedAt(b.refreshedAt ? Date.parse(b.refreshedAt) : Date.now());
+        setLastUpdatedAt(b.refreshedAt ? Date.parse(b.refreshedAt) : null);
+        setApiUsageLatestAt(b.apiUsageLatestAt ? Date.parse(b.apiUsageLatestAt) : null);
         setNotice("");
       } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
       finally { setLoading(false); }
@@ -273,6 +275,7 @@ export default function LivingDiscover() {
   }).filter(c => c.count > 0).sort((a, b) => b.momentum - a.momentum), [ranked]);
 
   const radarCategories = useMemo(() => {
+    if (!categoryPulse.length) return [];
     const source = categories.slice(1).map(c => {
       const live = categoryPulse.find(active => active.name === c.name);
       return live || { ...c, count: 0, momentum: 0 };
@@ -281,7 +284,8 @@ export default function LivingDiscover() {
   }, [categoryPulse, radarOffset]);
 
   const topicRows = useMemo(() => {
-    const source = categoryPulse.length ? categoryPulse : categories.slice(1).map(c => ({ ...c, count: 0, momentum: 0 }));
+    if (!categoryPulse.length) return [];
+    const source = categoryPulse;
     return Array.from({ length: Math.min(5, source.length) }, (_, i) => source[(topicOffset + i) % source.length]);
   }, [categoryPulse, topicOffset]);
 
@@ -508,19 +512,19 @@ export default function LivingDiscover() {
 
     <section className="radarSection">
       <div className="radarPanel">
-        <div className="radarPanelHead"><div><h3>Discovery Radar</h3><p>Continuously scanning 21 categories for emerging signals</p></div><span className="scanState"><i/> SCANNING</span></div>
-        <div className="radarVisual liveRadar"><div className="radarSweep"/><div className="radarRings"><i/><i/><i/><i/><b/></div><div className="radarGlow one"/><div className="radarGlow two"/><div className="radarGlow three"/></div>
+        <div className="radarPanelHead"><div><h3>Discovery Radar</h3><p>{apiUsageLatestAt ? "Continuously scanning verified source observations" : "Awaiting first acquisition"}</p></div><span className="scanState">{apiUsageLatestAt ? <><i/> SCANNING</> : "Awaiting first acquisition"}</span></div>
+        <div className={`radarVisual liveRadar ${apiUsageLatestAt ? "" : "radarIdle"}`}>{apiUsageLatestAt ? <><div className="radarSweep"/><div className="radarRings"><i/><i/><i/><i/><b/></div><div className="radarGlow one"/><div className="radarGlow two"/><div className="radarGlow three"/></> : <span className="radarEmpty">No acquisition activity yet.</span>}</div>
         <div className="radarList">
-          {radarCategories.map((c, i) => {
+          {radarCategories.length ? radarCategories.map((c, i) => {
             const pct = ranked.length ? Math.round((c.count / ranked.length) * 100) : 0;
             return <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank">{i + 1}</span><b>{c.name}</b><strong>{c.count ? pct + "%" : "—"}</strong></button>;
-          })}
+          }) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
       <div className="topicsPanel">
-        <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>Live movement across the discovery field</p></div><span className="scanState"><i/> ROTATING</span></div>
+        <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>{categoryPulse.length ? "Live movement across verified observations" : "No measured topic movement yet"}</p></div><span className="scanState">{categoryPulse.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
         <div className="topicList">
-          {topicRows.map((c, i) => (
+          {topicRows.length ? topicRows.map((c, i) => (
             <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); }}>
               <span className="topicRank">{i + 1}</span><b>{c.name}</b>
               <i className={"spark spark-" + (i + 1)} aria-label={`${c.name} momentum ${c.momentum || 0}`}>
@@ -528,11 +532,11 @@ export default function LivingDiscover() {
               </i>
               <strong>{c.momentum ? c.momentum + " momentum" : "—"}</strong>
             </button>
-          ))}
+          )) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
       <div className="spotlightPanel">
-        <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>Rotating creators to watch</p></div><span className="scanState"><i/> ROTATING</span></div>
+        <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>{spotlightCreators.length ? "Creators to watch from verified observations" : "Waiting for verified creator observations"}</p></div><span className="scanState">{spotlightCreators.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
         <div className="spotlightList">
           {spotlightCreators.map(x => (
             <button key={x.channel_title} type="button" onClick={() => setModal(x)}><img src={x.thumbnail} alt="" /><span><b>@{x.channel_title.replace(/\s+/g, "").slice(0, 22)}</b><small>{categoryFor(x)} · {fmt(x.metadata?.subscriber_count || 0)} subscribers</small></span><em>Follow</em></button>
@@ -745,7 +749,7 @@ footer{padding:55px 5vw 65px}
 .core>strong,.core>small,.core>i{position:relative!important;z-index:12!important;text-shadow:0 2px 16px #000c}
 
 /* Spherical platform badges: one shared light direction with the globe. */
-.platformMark{position:relative!important;border-radius:50%!important;overflow:visible!important;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease!important;box-shadow:inset -9px -11px 16px rgba(0,0,0,.28),inset 6px 6px 12px rgba(255,255,255,.24),0 12px 30px rgba(0,0,0,.38)!important}
+.platformMark{position:relative!important;border-radius:50%!important;overflow:hidden!important;transition:transform .2s ease,box-shadow .2s ease!important;box-shadow:0 8px 18px rgba(0,0,0,.28)!important}.platformMark:before,.platformMark:after{content:none!important;display:none!important}.platform:hover .platformMark,.platform:focus-visible .platformMark,.platform.selected .platformMark{transform:scale(1.05)!important}.platform.youtube .platformMark{background:#FF0000!important}.platform.instagram .platformMark{background:#E1306C!important}.platform.tiktok .platformMark,.platform.x .platformMark{background:#000!important}.platform.linkedin .platformMark{background:#0A66C2!important}.platform.facebook .platformMark{background:#1877F2!important}.platform.reddit .platformMark{background:#FF4500!important}.platform.discord .platformMark{background:#5865F2!important}.platform.snapchat .platformMark{background:#FFFC00!important;color:#000!important}.platform.pinterest .platformMark{background:#E60023!important}.platform.spotify .platformMark{background:#1DB954!important;color:#000!important}.platform.twitch .platformMark{background:#9146FF!important}
 .platformMark:before{content:"";position:absolute;left:20%;top:14%;width:27%;height:23%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.72),rgba(255,255,255,.18) 42%,transparent 72%);filter:blur(.5px);pointer-events:none;z-index:3}
 .platformMark:after{inset:5px!important;border-radius:50%!important;border:1px solid rgba(255,255,255,.12)!important;box-shadow:inset -5px -6px 8px rgba(0,0,0,.2)!important}
 .platform:hover .platformMark,.platform:focus-visible .platformMark,.platform.selected .platformMark{transform:scale(1.08)!important;filter:brightness(1.08)!important}
@@ -757,3 +761,5 @@ footer{padding:55px 5vw 65px}
 @media(max-width:950px){.topbar{height:auto!important;min-height:72px!important;flex-wrap:wrap!important;padding:10px 16px!important}.topbar nav{order:3;width:100%;overflow:auto;gap:20px!important}.topbar .search{flex:1 1 220px!important;width:auto!important;margin-right:0!important}.topActions{margin-left:auto!important}}
 
 `;
+\n<style data-rallivio-badge-fix>{
+}\n
