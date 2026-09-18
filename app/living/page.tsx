@@ -190,18 +190,32 @@ export default function LivingDiscover() {
     <section className="hero">
       <div className="heroCopy">
         <span className="pill"><i/> LIVE / THE CREATOR ECONOMY IS MOVING RIGHT NOW</span>
-        <h1>Discover<br/><em>A Brighter</em><br/>Tomorrow.</h1>
-        <p>Real trends. Real creators. Real brands. One ecosystem. Unlimited opportunities.</p>
+        <h1>See what’s<br/><em>moving.</em><br/>Shape what’s next.</h1>
+        <p>RALLIVIO turns the creator internet into a living field — people, culture, signals and opportunities moving together in one place.</p>
         <form className="heroSearch" onSubmit={e => { e.preventDefault(); command(q); }}><span className="searchMark">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="What do you want to discover?" aria-label="Universal discovery search"/><button type="submit" aria-label="Search">→</button></form>
         <div className="categoryRail" aria-label="Discovery categories">
           {visibleCategories.map(c => <button key={c.name} className={filter === c.name ? "active" : ""} type="button" onClick={() => { setFilter(c.name); setQ(""); pulseField(`Field tuned to ${c.name}.`); }}><span>{c.icon}</span>{c.name}</button>)}
           <button className="more" type="button" onClick={() => setShowAllCategories(v => !v)}>{showAllCategories ? "Less ↑" : `+${categories.length - 10} more`}</button>
+        </div>
+        <div className="liveStrip" aria-label="Live discovery activity">
+          <div className="liveStripHead"><span><i/> LIVE FIELD</span><small>{loading ? "syncing" : `${ranked.length} verified signals`}</small></div>
+          <div className="liveStripItems">
+            {ranked.slice(0, 3).map((x, i) => (
+              <button key={x.id} type="button" onClick={() => setModal(x)}>
+                <img src={x.thumbnail} alt="" />
+                <span><b>{x.metadata?.signal || "Observed"}</b><small>{x.channel_title}</small></span>
+                <em>{i === 0 ? "●" : "↗"}</em>
+              </button>
+            ))}
+            {!ranked.length && <div className="liveStripEmpty">Waiting for the field to sync…</div>}
+          </div>
         </div>
       </div>
 
       <div className="ecosystem">
         <div className={`field ${pulse ? "responding" : ""}`} aria-label="RALLIVIO living platform field" style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", flexShrink: 0 }}>
           <div className="fieldSpace">
+            <div className="fieldBadge"><i/> LIVING FIELD <span>12 platforms · live interaction</span></div>
             <div className="fieldGrid"/><div className="nebula n1"/><div className="nebula n2"/>
             <div className="energyRing er1"/><div className="energyRing er2"/><div className="energyRing er3"/>
             <div className="orbit o1"/><div className="orbit o2"/><div className="orbit o3"/>
@@ -235,6 +249,54 @@ export default function LivingDiscover() {
 }
 
 const css = `
+/* Living Field v2 — interaction, depth and product energy */
+.rv{--surface:rgba(255,255,255,.055);--surfaceStrong:rgba(255,255,255,.09);--glassBorder:rgba(255,255,255,.14);position:relative}
+.rv:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:linear-gradient(115deg,transparent 0 42%,rgba(160,100,255,.045) 49%,transparent 57%),radial-gradient(circle at 72% 22%,rgba(90,190,255,.06),transparent 24%);mix-blend-mode:screen}
+.topbar,.hero,.signals,.discoverySurface,footer{position:relative;z-index:2}
+.topbar{padding:13px 38px;background:rgba(6,8,20,.72);border-bottom-color:rgba(255,255,255,.1);box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.brand{font-size:30px;transition:transform .2s ease}.brand:hover{transform:translateY(-1px)}
+.topbar nav button{position:relative;color:#b9b8ca;transition:color .2s,background .2s}.topbar nav button:after{content:"";position:absolute;left:14px;right:14px;bottom:4px;height:2px;border-radius:3px;background:var(--accent);transform:scaleX(0);transition:transform .2s}.topbar nav button:hover:after,.topbar nav button.active:after{transform:scaleX(1)}
+.search{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.round,.loginButton{box-shadow:0 8px 24px rgba(120,70,255,.22);transition:transform .2s,box-shadow .2s}.round:hover,.loginButton:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(120,70,255,.34)}
+.hero{min-height:calc(100vh - 72px);padding:48px 5vw 58px;grid-template-columns:minmax(470px,.9fr) minmax(620px,1.25fr);gap:2vw;align-items:center}
+.heroCopy{max-width:650px;padding-top:4px}
+.pill{letter-spacing:.3px;box-shadow:0 0 28px rgba(255,66,101,.1)}
+.heroCopy h1{font-size:clamp(62px,6.2vw,100px);line-height:.9;letter-spacing:-5.5px;margin:24px 0 18px;text-wrap:balance}
+.heroCopy h1 em{background:linear-gradient(100deg,#fff 5%,var(--accent) 56%,var(--accent2));filter:drop-shadow(0 0 20px color-mix(in srgb,var(--accent) 25%,transparent))}
+.heroCopy>p{font-size:18px;line-height:1.6;color:#c6c5d8;max-width:570px}
+.heroSearch{height:66px;margin-top:26px;border:1px solid rgba(255,255,255,.45);box-shadow:0 18px 55px rgba(0,0,0,.28),0 0 45px color-mix(in srgb,var(--accent) 13%,transparent);transition:transform .2s,box-shadow .2s}
+.heroSearch:focus-within{transform:translateY(-2px);box-shadow:0 22px 65px rgba(0,0,0,.35),0 0 65px color-mix(in srgb,var(--accent) 24%,transparent)}
+.heroSearch button{background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 22px color-mix(in srgb,var(--accent) 35%,transparent)}
+.categoryRail{margin-top:17px;gap:8px}
+.categoryRail button{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.1);backdrop-filter:blur(8px);transition:transform .18s,border-color .18s,background .18s}
+.categoryRail button:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 60%,transparent);background:rgba(255,255,255,.07)}
+.categoryRail button.active{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent);box-shadow:0 0 22px color-mix(in srgb,var(--accent) 12%,transparent)}
+.liveStrip{margin-top:21px;width:min(620px,100%);padding:10px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:linear-gradient(120deg,rgba(255,255,255,.065),rgba(255,255,255,.025));box-shadow:0 16px 45px rgba(0,0,0,.2);backdrop-filter:blur(18px)}
+.liveStripHead{display:flex;align-items:center;justify-content:space-between;padding:2px 5px 8px;font-size:8px;letter-spacing:1.2px;font-weight:900}.liveStripHead span{display:flex;gap:7px;align-items:center;color:#f1f0f8}.liveStripHead i{width:6px;height:6px;border-radius:50%;background:#62e6ad;box-shadow:0 0 12px #62e6ad;animation:livePulse 1.2s infinite}.liveStripHead small{color:#74768f;font-size:7px;letter-spacing:.4px;font-weight:700}
+.liveStripItems{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.liveStripItems>button{min-width:0;display:grid;grid-template-columns:34px 1fr 12px;align-items:center;gap:7px;padding:7px;border:1px solid transparent;border-radius:12px;background:rgba(255,255,255,.035);text-align:left;transition:transform .18s,border-color .18s,background .18s}.liveStripItems>button:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.075)}.liveStripItems img{width:34px;height:34px;object-fit:cover;border-radius:8px}.liveStripItems span{min-width:0;display:grid;gap:2px}.liveStripItems b{font-size:7px;color:var(--accent);text-transform:uppercase;letter-spacing:.7px}.liveStripItems small{font-size:7px;color:#aaa9bc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.liveStripItems em{font-style:normal;color:#71e3b3;font-size:9px}.liveStripEmpty{padding:10px;color:#74768f;font-size:8px}
+.ecosystem{min-height:690px;display:grid;place-items:center;filter:drop-shadow(0 25px 60px rgba(0,0,0,.22))}
+.field{width:min(720px,100%);overflow:visible}
+.fieldSpace{overflow:visible}
+.fieldBadge{position:absolute;left:50%;top:3%;transform:translateX(-50%);z-index:35;display:flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(7,9,22,.62);box-shadow:0 10px 30px rgba(0,0,0,.22);backdrop-filter:blur(12px);white-space:nowrap;font-size:8px;font-weight:900;letter-spacing:1.2px;color:#e7e5f2}.fieldBadge i{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:livePulse 1.5s infinite}.fieldBadge span{color:#777a92;font-size:7px;letter-spacing:.3px;font-weight:700}
+.fieldGrid{opacity:.9;background:repeating-radial-gradient(circle at 50% 50%,transparent 0 62px,rgba(255,255,255,.045) 63px 64px),radial-gradient(circle,color-mix(in srgb,var(--accent) 8%,transparent),transparent 62%);mask-image:radial-gradient(circle,#000 18%,transparent 78%)}
+.field:after{content:"";position:absolute;inset:14% 7%;border:1px solid color-mix(in srgb,var(--accent) 14%,transparent);border-radius:50%;pointer-events:none;animation:fieldBreathe 5s ease-in-out infinite}@keyframes fieldBreathe{50%{transform:scale(1.015);opacity:.45}}
+.platform{padding:7px;border-radius:18px;transition:transform .2s,filter .2s}.platformMark{width:64px;height:64px;border-radius:20px;background:linear-gradient(145deg,rgba(28,31,60,.9),rgba(8,11,28,.92));border-color:rgba(255,255,255,.13);box-shadow:0 14px 35px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);position:relative}.platformMark:after{content:"";position:absolute;inset:4px;border-radius:16px;border:1px solid rgba(255,255,255,.05);pointer-events:none}.platform b{font-size:10px;color:#f1eff8}.platform small{color:#74778e}.platform:hover .platformMark,.platform:focus-visible .platformMark,.platform.selected .platformMark{border-color:var(--accent);box-shadow:0 0 38px color-mix(in srgb,var(--accent) 45%,transparent),0 0 0 6px color-mix(in srgb,var(--accent) 9%,transparent),inset 0 0 25px color-mix(in srgb,var(--accent) 10%,transparent)}
+.core{width:238px;height:238px;border-color:color-mix(in srgb,var(--accent) 78%,white);background:radial-gradient(circle at 34% 22%,color-mix(in srgb,var(--accent) 40%,#39458c) 0,color-mix(in srgb,var(--accent) 20%,#171c3d) 30%,#090c1d 75%);box-shadow:0 0 75px color-mix(in srgb,var(--accent) 48%,transparent),0 0 150px color-mix(in srgb,var(--accent) 18%,transparent),0 0 0 20px color-mix(in srgb,var(--accent) 5%,transparent);transition:transform .25s,box-shadow .25s}.core strong{font-size:39px}.core:hover,.core:focus-visible{box-shadow:0 0 120px color-mix(in srgb,var(--accent) 68%,transparent),0 0 210px color-mix(in srgb,var(--accent) 24%,transparent),0 0 0 34px color-mix(in srgb,var(--accent) 9%,transparent)}
+.core i{color:#70e4b2}
+.particle{opacity:.5;box-shadow:0 0 15px var(--accent);background:#e4dcff}
+.energyArc{border-top-color:color-mix(in srgb,var(--accent) 50%,transparent);border-right-color:color-mix(in srgb,var(--accent2) 28%,transparent)}
+.er1,.er2,.er3{border-color:color-mix(in srgb,var(--accent) 25%,transparent);box-shadow:0 0 24px color-mix(in srgb,var(--accent) 10%,transparent)}
+.fieldHint{bottom:-10px;background:rgba(7,9,22,.72);border-color:rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.25);backdrop-filter:blur(12px);color:#9698ae}
+.signals{margin:8px 5vw 0;padding:31px 28px;border-radius:28px;background:linear-gradient(135deg,rgba(14,18,42,.94),rgba(8,11,26,.92));border-color:rgba(255,255,255,.1);box-shadow:0 30px 90px rgba(0,0,0,.2)}
+.signalType{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.08);transition:transform .18s,border-color .18s,background .18s}.signalType:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 60%,transparent)}.signalType.hasData{border-color:color-mix(in srgb,var(--accent) 28%,transparent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.signalCard{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.08);transition:transform .18s,border-color .18s,background .18s}.signalCard:hover{border-color:color-mix(in srgb,var(--accent) 55%,transparent);background:rgba(255,255,255,.07);box-shadow:0 12px 35px rgba(0,0,0,.18)}
+.discoverySurface{margin:20px 5vw 35px;padding:32px 28px;background:linear-gradient(135deg,#f7f6fb,#ecebf5);border-radius:28px;box-shadow:0 25px 80px rgba(0,0,0,.12)}
+.card{border-radius:19px;box-shadow:0 10px 25px rgba(38,35,77,.08);transition:transform .22s,box-shadow .22s}.card:hover{transform:translateY(-6px) scale(1.01);box-shadow:0 22px 45px rgba(38,35,77,.16)}
+footer{padding:55px 5vw 65px}
+@media(max-width:1250px){.hero{grid-template-columns:1fr 1fr}.ecosystem{min-height:600px}}
+@media(max-width:950px){.hero{grid-template-columns:1fr;padding-top:35px}.ecosystem{min-height:560px}.liveStrip{max-width:none}.topbar{gap:10px}}
+@media(max-width:600px){.hero{min-height:auto;padding:32px 18px 48px}.heroCopy h1{font-size:55px;letter-spacing:-4px}.heroCopy>p{font-size:15px}.liveStripItems{grid-template-columns:1fr}.liveStripItems>button:nth-child(n+3){display:none}.ecosystem{min-height:510px;margin-top:18px}.fieldBadge{top:1%;font-size:7px}.fieldBadge span{display:none}.field{width:112vw;max-width:680px}.core{width:180px;height:180px}.core strong{font-size:30px}.platformMark{width:48px;height:48px;border-radius:15px}.platformMark:after{border-radius:11px}.platform b{font-size:8px}.fieldHint{font-size:7px;max-width:88%}.signals,.discoverySurface{margin-left:16px;margin-right:16px}}
+
 .themeScrim{display:none}.themePickerWrap{position:relative;z-index:80}.themeButton{min-width:auto;display:flex;align-items:center;gap:6px}.themeButton span{font-size:10px}.themeMenu{position:absolute;right:0;top:47px;width:220px;padding:10px;border:1px solid var(--line);border-radius:17px;background:rgba(10,12,29,.96);box-shadow:0 20px 55px #0009;backdrop-filter:blur(22px);z-index:90}.themeMenuTitle{padding:5px 8px 8px;color:#777b99;font-size:7px;letter-spacing:1.5px;font-weight:900}.themeOption{width:100%;display:grid;grid-template-columns:28px 1fr 12px;gap:9px;align-items:center;text-align:left;border:1px solid transparent;border-radius:12px;background:transparent;padding:9px 8px}.themeOption:hover,.themeOption.active{background:#ffffff09;border-color:#ffffff14}.themeOption span{display:grid;gap:3px}.themeOption b{font-size:10px}.themeOption small{font-size:7px;color:#777b99}.themeOption em{font-style:normal;color:var(--accent)}.themeSwatch{width:22px;height:22px;border-radius:8px;border:1px solid #ffffff30;box-shadow:0 0 15px currentColor}.themeSwatch.nebula{color:#9b62ff;background:linear-gradient(135deg,#5d35ff,#d36cff)}.themeSwatch.aurora{color:#38e4c2;background:linear-gradient(135deg,#08a7d8,#54e39a)}.themeSwatch.neon{color:#ff4fb3;background:linear-gradient(135deg,#ff287f,#ff9b4a)}.themeSwatch.lunar{color:#a8d8ff;background:linear-gradient(135deg,#657da8,#e9f7ff)}
 .theme-nebula{--accent:#a868ff;--accent2:#c16bff;--bg1:#090b21;--bg2:#07081a;--glow:#7440ff}.theme-aurora{--accent:#42e6c0;--accent2:#6de9ff;--bg1:#061a20;--bg2:#061316;--glow:#12cfae}.theme-neon{--accent:#ff62c6;--accent2:#ff9b5e;--bg1:#1b0717;--bg2:#10070d;--glow:#ff3b9d}.theme-lunar{--accent:#a9dcff;--accent2:#e8f5ff;--bg1:#101725;--bg2:#070b12;--glow:#7dbfff}
 .theme-aurora.rv{background:radial-gradient(circle at 63% 28%,#12cfae26,transparent 31%),radial-gradient(circle at 18% 42%,#38e4c018,transparent 32%),linear-gradient(135deg,var(--bg1),var(--bg2) 58%,var(--bg1))}.theme-neon.rv{background:radial-gradient(circle at 63% 28%,#ff3b9d26,transparent 31%),radial-gradient(circle at 18% 42%,#ff9b4a16,transparent 32%),linear-gradient(135deg,var(--bg1),var(--bg2) 58%,var(--bg1))}.theme-lunar.rv{background:radial-gradient(circle at 63% 28%,#7dbfff24,transparent 31%),radial-gradient(circle at 18% 42%,#d9efff14,transparent 32%),linear-gradient(135deg,var(--bg1),var(--bg2) 58%,var(--bg1))}
