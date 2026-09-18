@@ -3,6 +3,31 @@
 > Newest entries at the top.
 > Read the most recent 3 before starting work.
 
+## 2026-09-18 — Creator authentication foundation: CI self-heal
+Branch: feature/creator-platform-subscription
+Status: In progress
+
+### Done
+- Added Supabase browser/server clients, authentication actions, login/signup/recovery UI, email callback, password reset page, authenticated header state, and protected account page.
+- Verified the existing Supabase `public.profiles` creation path instead of adding duplicate profile creation logic.
+- CI confirmed typecheck, lint, tests, icon validation, and compilation were successful.
+- CI initially failed only during Next.js production prerendering of `/login` because `useSearchParams()` was not behind a Suspense boundary.
+- Confirmed the failure from workflow job logs rather than guessing from annotations.
+- Fixed `app/login/page.tsx` by moving the `useSearchParams` consumer into `LoginContent` and wrapping it with React `Suspense`.
+- Added KI-005 to `docs/KNOWN_ISSUES.md` so the failure and prevention rule are retained for future sessions.
+
+### Verification status
+- Previous failed workflow: run `35337110461`, job `105574377819`, commit `e48bdaa1dcf7e95d320a13c3af9e40015ef153fa`.
+- The failure was a build/prerender failure, not a TypeScript or lint error.
+- A new CI run must confirm the fix before deployment is considered complete.
+
+### Next session should
+- Verify the new CI run for `app/login/page.tsx` and confirm `npm run verify` passes all stages before attempting live deployment and QA of `/login`, signup, recovery, callback, and `/account`.
+
+### Gotchas discovered
+- `npm run lint` can pass while `next build` still catches App Router prerender constraints such as missing Suspense boundaries.
+- Documentation enforcement is part of `npm run verify`; every code fix must update `KNOWN_ISSUES.md` and `SESSION_LOG.md`.
+
 ## 2026-09-16 — Living real-data Discover architecture implemented
 Branch: feature/youtube-real-discovery
 Status: In progress
@@ -21,7 +46,7 @@ Status: In progress
 
 ### Architecture direction now locked
 - **Discover** = RALLIVIO ecosystem front page. It senses user movement/touch, presents live-feeling discovery, and surfaces what is moving across the connected ecosystem.
-- **Platform environments** = YouTube, Instagram, TikTok, X, LinkedIn and future adapters. Each platform gets its own data rules, visual language and page while sharing the RALLIVIO intelligence layer.
+- **Platform environments** = YouTube, Instagram, TikTok, X and future adapters. Each platform gets its own data rules, visual language and page while sharing the RALLIVIO intelligence layer.
 - **Simulation layer** = animation, spatial movement, transitions, parallax, focus, ambient effects and discovery choreography. It can communicate verified state but cannot fabricate metrics, creators, rankings or activity.
 - **Truth layer** = verified acquisition → normalized discovery pool → signal calculation → serving. Source observations control what is actually shown as trending/moving.
 - **Adaptive environment** = when source signals change, card prominence, topic emphasis, activity ordering, hero content and discovery selections can change with them. This is the mechanism that makes the site feel alive rather than static.
