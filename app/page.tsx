@@ -144,10 +144,10 @@ export default function Home() {
     const topic = topicFor(heroSignal);
     const region = heroSignal.region && heroSignal.region.toUpperCase() !== "GLOBAL" ? heroSignal.region : "worldwide";
     const signal = signalFor(heroSignal).toLowerCase();
-    if (/accelerat|acceleration/.test(signal)) return `\${topic} is accelerating in \${region}.`;
-    if (/emerg|newcom|rising/.test(signal) || ((heroSignal.metadata?.subscriber_count ?? 0) > 0 && (heroSignal.metadata?.subscriber_count ?? 0) <= 500_000)) return `Newcomers are rising in \${topic} in \${region}.`;
-    if (/surge|break|velocity|momentum|spike/.test(signal)) return `\${topic} content is surging in \${region}.`;
-    return `\${topic} is moving in \${region}.`;
+    if (/accelerat|acceleration/.test(signal)) return `${topic} is accelerating in ${region}.`;
+    if (/emerg|newcom|rising/.test(signal) || ((heroSignal.metadata?.subscriber_count ?? 0) > 0 && (heroSignal.metadata?.subscriber_count ?? 0) <= 500_000)) return `Newcomers are rising in ${topic} in ${region}.`;
+    if (/surge|break|velocity|momentum|spike/.test(signal)) return `${topic} content is surging in ${region}.`;
+    return `${topic} is moving in ${region}.`;
   }, [heroSignal]);
 
   useEffect(() => {
@@ -260,7 +260,7 @@ export default function Home() {
               <strong key={heroSignal?.id ?? "waiting"}>{heroHeadline}</strong>
             </h1>
           </div>
-          <div className="heroUpdated"><span className="heroUpdatedDot" />{lastSync ? `updated \${ageLabel(lastSync)}` : "waiting for verified refresh"}</div>
+          <div className="heroUpdated"><span className="heroUpdatedDot" />{lastSync ? `updated ${ageLabel(lastSync)}` : "waiting for verified refresh"}</div>
           <p className="heroLead">Real trends. Real creators. Real brands. Real opportunities — changing as verified signals move.</p>
 
           <div className="heroSearch"><input aria-label="What would you like to discover" placeholder="What would you like to discover today?" onKeyDown={(event) => { if (event.key === "Enter") document.getElementById("moving")?.scrollIntoView({ behavior: "smooth" }); }} /><button onClick={() => document.getElementById("moving")?.scrollIntoView({ behavior: "smooth" })}>→</button></div>
