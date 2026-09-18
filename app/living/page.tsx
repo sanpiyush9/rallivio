@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import * as si from "simple-icons";
 
 type Item = {
   id: string; title: string; channel_title: string; published_at: string; thumbnail: string;
@@ -67,22 +68,31 @@ const age = (s: string) => { const h = Math.max(0, (Date.now() - new Date(s).get
 const categoryFor = (x: Item) => { const text = `${x.topic} ${x.title} ${x.description}`.toLowerCase(); return categories.find(c => c.name !== "Trending" && c.keywords.some(k => text.includes(k)))?.name || "Other"; };
 
 function PlatformIcon({ kind }: { kind: string }) {
-  const common = { width: 30, height: 30, viewBox: "0 0 32 32", fill: "none", "aria-hidden": true as const };
-  switch (kind) {
-    case "youtube": return <svg {...common}><rect x="3" y="7" width="26" height="18" rx="5" fill="currentColor"/><path d="M13 11.5 22 16l-9 4.5v-9Z" fill="#0b0d20"/></svg>;
-    case "instagram": return <svg {...common}><rect x="5" y="5" width="22" height="22" rx="6" stroke="currentColor" strokeWidth="3"/><circle cx="16" cy="16" r="5" stroke="currentColor" strokeWidth="3"/><circle cx="23" cy="9" r="1.7" fill="currentColor"/></svg>;
-    case "tiktok": return <svg {...common}><path d="M19 5c.4 3.3 2.1 5.2 5 5.7v4.2c-2.2-.1-4-.8-5.6-2v7.3a6.1 6.1 0 1 1-5.2-6v4.2a2 2 0 1 0 1 1.8V5H19Z" fill="currentColor"/></svg>;
-    case "x": return <svg {...common}><path d="M7 6h5.1l4.1 5.8L21.1 6H25l-7 8.1L25.4 26h-5.1l-4.9-6.8L9.4 26H5.5l7.4-8.5L7 6Z" fill="currentColor"/></svg>;
-    case "linkedin": return <svg {...common}><rect x="5" y="5" width="22" height="22" rx="3" fill="currentColor"/><circle cx="10" cy="11" r="1.7" fill="#0b0d20"/><path d="M8.7 14h2.7v9H8.7v-9Zm4.5 0h2.6v1.2c.8-1 1.8-1.6 3.4-1.6 2.7 0 3.9 1.7 3.9 4.6V23h-2.7v-4.4c0-1.4-.5-2.3-1.7-2.3-1.3 0-1.8 1-1.8 2.4V23h-2.7v-9Z" fill="#0b0d20"/></svg>;
-    case "spotify": return <svg {...common}><circle cx="16" cy="16" r="12" fill="currentColor"/><path d="M10 13c4.4-1.1 8.2-.7 11.7.9M10.8 17c3.6-.8 6.8-.5 9.7.7M12 20.5c2.5-.5 4.8-.2 6.8.6" stroke="#0b0d20" strokeWidth="2" strokeLinecap="round"/></svg>;
-    case "twitch": return <svg {...common}><path d="M5 5h22v16l-5 5h-6l-4 3v-3H5V5Z" fill="currentColor"/><path d="M10 10h3v7h-3v-7Zm7 0h3v7h-3v-7Z" fill="#0b0d20"/></svg>;
-    case "facebook": return <svg {...common}><circle cx="16" cy="16" r="12" fill="currentColor"/><path d="M18 10h2V6.5c-.7-.1-1.6-.2-2.7-.2-3.1 0-5.2 1.9-5.2 5.4v2.9H9v3.8h3.1V26h3.9v-7.6h3.2l.5-3.8H16v-2.4c0-1.1.3-2.2 2-2.2Z" fill="#0b0d20"/></svg>;
-    case "pinterest": return <svg {...common}><circle cx="16" cy="16" r="12" fill="currentColor"/><path d="M14 24c.7-2 1-3.1 1.4-4.8-.9-.8-1.4-2-1.4-3.5 0-2.7 1.8-4.9 4.2-4.9 2 0 3.4 1.5 3.4 3.5 0 2.3-1.1 5.1-3.1 5.1-1 0-1.8-.8-1.6-1.9l.6-2.5c.3-1 .1-1.8-.8-1.8-1 0-1.7 1-1.7 2.3 0 .9.3 1.5.3 1.5l-1.1 4.5c-.3 1.2-.1 2.7 0 3.5Z" fill="#0b0d20"/></svg>;
-    case "reddit": return <svg {...common}><circle cx="16" cy="17" r="9" fill="currentColor"/><path d="M11.5 16.5h.1m8.8 0h.1M13 20c1.8 1.4 4.2 1.4 6 0M19.5 11l1-3 3 .7" stroke="#0b0d20" strokeWidth="1.8" strokeLinecap="round"/></svg>;
-    case "discord": return <svg {...common}><path d="M6.5 8.5c4.2-2.2 14.8-2.2 19 0l2 13c-3.4 2.5-6.6 3.4-9.5 3.6l-1.5-2.1c1.5-.4 2.7-1 3.7-1.7-4 .9-5.9.9-10 0 1 .7 2.2 1.3 3.7 1.7L12.4 25c-2.9-.2-6.1-1.1-9.5-3.6l2-13Z" fill="currentColor"/><circle cx="12" cy="16" r="1.7" fill="#0b0d20"/><circle cx="20" cy="16" r="1.7" fill="#0b0d20"/></svg>;
-    case "snapchat": return <svg {...common}><path d="M16 4.8c-4.2 0-6.7 3-6.7 7.2v2.3c0 .7-.4 1.2-1.2 1.7-.7.4-1.3.7-1.3 1.3 0 .7 1.2 1 2.1 1.2.7.2 1.2.5 1.4 1.1.2.8.5 1.2 1.3 1.2 1.1 0 1.8-.7 2.9-.7.9 0 1.7.8 3.5.8s2.6-.8 3.5-.8c1.1 0 1.8.7 2.9.7.8 0 1.1-.4 1.3-1.2.2-.6.7-.9 1.4-1.1.9-.2 2.1-.5 2.1-1.2 0-.6-.6-.9-1.3-1.3-.8-.5-1.2-1-1.2-1.7V12c0-4.2-2.5-7.2-6.7-7.2Z" fill="currentColor"/></svg>;
-    default: return <span className="genericMark">•</span>;
-  }
+  const icons: Record<string, { path: string; title: string }> = {
+    youtube: si.siYoutube,
+    instagram: si.siInstagram,
+    tiktok: si.siTiktok,
+    x: si.siX,
+    linkedin: {
+      title: "LinkedIn",
+      path: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"
+    },
+    spotify: si.siSpotify,
+    twitch: si.siTwitch,
+    facebook: si.siFacebook,
+    pinterest: si.siPinterest,
+    reddit: si.siReddit,
+    discord: si.siDiscord,
+    snapchat: si.siSnapchat,
+  };
+  const icon = icons[kind];
+  if (!icon) return <span className="genericMark">•</span>;
+  return (
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" role="img">
+      <title>{icon.title}</title>
+      <path d={icon.path} />
+    </svg>
+  );
 }
 
 export default function LivingDiscover() {
