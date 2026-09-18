@@ -416,3 +416,12 @@ Latest observed Vercel deployments for this branch are queued on earlier commits
 - v11 exists and is immutable.
 - v10 and its original archive are immutable.
 - Next checkpoint is v12, after enumerating existing checkpoint refs.
+
+
+## 2026-09-19 — Checkpoint record correction
+Branch: feature/creator-platform-subscription
+Status: Documentation correction
+
+The previous living-state record stated that v10 was the latest checkpoint. That is stale. `checkpoint/living-front-v11` now exists and is the latest protected checkpoint. v11 is immutable and must never be overwritten, moved, or reused. Future checkpoint creation must enumerate existing checkpoint branches and use the next unused version.
+
+This is recorded as a state change rather than silently rewriting the historical checkpoint note.
