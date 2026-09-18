@@ -108,3 +108,28 @@ The original SHA remains in Git history and was preserved explicitly with the im
 - `docs/AI_START_HERE.md`
 - `docs/RALLIVIO_STATE.md`
 - `docs/SESSION_LOG.md`
+
+
+## 2026-09-19 — Discover build import failure: LinkedIn icon exception
+
+### Incident
+The Discover hero/header + 3D ecosystem pass introduced an import of `siLinkedin` from `simple-icons`. The installed package does not export that symbol, so Vercel's production build failed during TypeScript validation.
+
+### Diagnosis
+The actual Vercel log, rather than the generic `import_error` classification, identified the exact failure:
+`"simple-icons" has no exported member named 'siLinkedin'`.
+
+The repository already contained a LinkedIn local-exception path in `scripts/check-platform-icons.mjs`; the page implementation failed to honor that contract.
+
+### Deterministic recovery
+Replace the invalid package import with the existing local LinkedIn path, then run the platform-icon prebuild check and full production build before deployment.
+
+### Prevention
+The platform-icon prebuild check now also inspects `app/page.tsx` and fails if `siLinkedin` is imported. This moves the failure from a late Next.js build/type-check failure to an earlier deterministic prebuild diagnostic.
+
+### Ladder
+**Level 3 — Detected / deterministic recovery, target Level 4.** The recovery is deterministic and the prebuild gate detects recurrence before Next.js compilation.
+
+### Related
+`docs/KNOWN_ISSUES.md` → KI-008
+`docs/SESSION_LOG.md`
