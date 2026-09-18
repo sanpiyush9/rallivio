@@ -276,3 +276,74 @@ At the end of every development session:
 **Security/cleanup:** the temporary QA bootstrap token is development-only and considered exposed. It must not be promoted to Production or reused as a production credential. The bootstrap route must be removed or replaced before production.
 
 **Exact next action:** run `npm run verify`, inspect the resulting checks, deploy/confirm Preview, field-test the Living Discovery Environment, then reproduce and fix the **Breaking Out vs Just Dropped** signal mismatch in isolation.
+
+
+## 14. Continuity snapshot — 2026-09-18
+
+This section is an operational snapshot for future AI sessions. It supplements the historical sections above and must not erase prior history.
+
+### GitHub repository and branch map
+- Repository: `sanpiyush9/rallivio`.
+- Active implementation branch: `feature/creator-platform-subscription`.
+- Protected/base branches: `main`, `staging`. Never develop directly on either.
+- Feature branches currently present: `feature/creator-platform-subscription`, `feature/discover-front-simplification-01`, `feature/discover-upper-approved-01`, `feature/docs-enforcement`, `feature/living-core-platform-routing`, `feature/living-ecosystem-v3`, `feature/living-position-editor`, `feature/phase0-data-foundation`, `feature/verify-pipeline`, `feature/youtube-qa-bootstrap`, `feature/youtube-real-discovery`, `feature/youtube-real-discovery-qa`, `feature/youtube-real-discovery-qa2`, `feature/youtube-real-discovery-qa3`, `feature/youtube-real-discovery-qa4`.
+- Immutable UI checkpoint branches: `checkpoint/living-front-v2` through `checkpoint/living-front-v10` (9 checkpoints currently).
+- Checkpoint immutability rule: an existing checkpoint branch is never moved. A new checkpoint always gets the next unused version.
+- Recovery archive created after the 2026-09-18 checkpoint mistake: `archive/checkpoint-living-front-v10-original` points to the original v10 SHA `785b8c305708bf9d495601cf74b81728941c82f5`.
+- Original v10 was accidentally moved to `82a1a391b9505da02d62be7e52625f4e2a2a470a`. The original commit remains in Git history and is additionally preserved by the archive branch above. Do not move either branch.
+
+### Current implementation HEAD
+- `feature/creator-platform-subscription` HEAD: `82a1a391b9505da02d62be7e52625f4e2a2a470a`.
+- Commit: `Make Living Field immersive and Discover data continuously dynamic`.
+- Latest verified READY Preview deployment for this SHA: `dpl_73jrohxYojiFhiNvvaDiG9H7Pd3v`, URL `https://rallivio-6v1emmzyc-san-eca6.vercel.app`, feature alias `https://rallivio-git-feature-creator-platform-subscription-san-eca6.vercel.app`.
+- The same SHA was also deployed from the checkpoint branch as `dpl_BL7ucCBqd9NoLr9AA74c5UL9MstP`.
+- Previous v10 deployment for SHA `785b8c305708bf9d495601cf74b81728941c82f5`: `dpl_Fy9Kv8dhgBPY6Vhs8vHNvoymsSSq`.
+
+### Current UI implementation
+- `app/living/page.tsx` is the current Living Field implementation on the active branch.
+- The current Living Field keeps the user-approved visual baseline and adds isolated immersive/dynamic behavior: YouTube node repositioning to avoid overlap, an animated Earth-like visual behind the RALLIVIO core, an abstract global activity map with moving roadway/light effects, rotating Discovery Radar categories, rotating Trending Topics, rotating Creator Spotlight, and a continuously cycling RALLIVIO Pulse carousel with left/right controls.
+- The Earth is a CSS/visual approximation, not a geographically accurate 3D globe. The global map is an abstract visual map, not a geographic data map.
+- Dynamic rotation changes presentation over the current verified pool; it does not by itself constitute new source acquisition or infinite backend pagination.
+- Current data fields used by the Living page include real views, likes, comments, engagement, velocity, momentum and live state when supplied by the API.
+
+### Current creator/auth implementation
+- Creator/auth work is on `feature/creator-platform-subscription` and includes Supabase browser/server clients, authentication actions, login/signup/recovery UI, email callback, password reset, authenticated header state and protected account page.
+- Existing `public.profiles` creation path is reused; duplicate profile creation logic was not added.
+- A Next.js 15 prerender issue on `/login` was fixed by placing the `useSearchParams` consumer behind React Suspense; tracked as KI-005.
+
+### Current data architecture and known drift
+- Canonical target architecture remains: background YouTube acquisition/refresh → Supabase persisted pool/snapshots → RALLIVIO signal computation → request-time Supabase reads → UI.
+- The current feature branch still contains a direct `/api/youtube/trending` request path used by the Living/Discover experience. This is a known architectural gap against the Data Pipeline specification because user requests must not call YouTube. Do not deepen this pattern; future data work should move toward background acquisition and Supabase-only serving.
+- YouTube acquisition currently remains the only real connected external discovery source. Cross-platform adapters are not yet connected.
+- The requested broad Radar taxonomy is presentation-ready, but truthful cross-category coverage requires the acquisition pool and signal engine to contain verified observations for those cells. Do not fabricate category activity to make every category appear populated.
+- True infinite new-video loading is not yet implemented; current behavior cycles through the available verified pool.
+- Signal history remains insufficient for some acceleration/baseline claims; signal labels must remain evidence-based.
+
+### Supabase operational identity
+- Project: `rallivio`.
+- Project ID: `dzcnmatbszerparrcgem`.
+- Organization ID: `klqcejvspgguigbtkzzw`.
+- Region: `ap-south-1`.
+- Status observed: `ACTIVE_HEALTHY`.
+- Current database contains the existing product schema including `public.profiles`, community/battle/report/payment/analytics tables and the discovery-intelligence foundation tables introduced through the Phase 0 migrations. Exact schema should always be re-read before DDL changes.
+- Migration history includes the discovery pool/topic/intelligence foundation, Phase 0 data foundation and YouTube quota usage/locking migrations, plus the 2026-09-18 `add_delete_current_user_function` migration.
+
+### Vercel operational identity
+- Project ID: `prj_FKsi7Jy0AtS7GAuAYEk3UbuIJBFU`.
+- Team ID: `team_CivLA0IfaNod65bkBLLRkBeZ`.
+- Latest active feature deployment is the READY deployment listed above.
+- Deployment verification rule: branch/ref, expected SHA, deployed SHA, Vercel state and deployment ID must agree before declaring a change live.
+
+### Documentation and source hierarchy
+- Start with `docs/CANONICAL.md`.
+- Then `docs/AI_START_HERE.md` and `docs/RALLIVIO_STATE.md`.
+- Then the current spec/design for the requested area, followed by the latest 3 `docs/SESSION_LOG.md` entries and `docs/KNOWN_ISSUES.md`.
+- Existing creator and YouTube pipeline specifications supplied by the owner remain source requirements for those areas; when a spec is not registered in CANONICAL, do not silently treat it as canonical. Reconcile/registration is an explicit documentation task.
+- Repository files are the durable project memory. Chat memory is supplementary only.
+
+### Exact current next work
+1. Preserve the approved visual baseline; do not broadly redesign.
+2. Fix the YouTube request-time architecture by implementing/finishing background acquisition, snapshots and Supabase-only serving in accordance with the data pipeline requirements.
+3. Validate and correct the signal engine so displayed signals have sufficient historical evidence and selected filters cannot disagree with item metadata.
+4. Remove/replace temporary QA bootstrap infrastructure before production.
+5. Continue creator platform implementation from the existing auth foundation without disturbing the Living Field baseline.
