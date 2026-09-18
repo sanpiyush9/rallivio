@@ -74,7 +74,7 @@ export default function CreatorPage() {
     const p = params.get("platform");
     const videoId = params.get("video");
     setQuery(q); setInput(q); if (p?.toLowerCase() === "youtube") setPlatform("YouTube");
-    void loadCreator(q);\n    void loadTrends(q);
+    void loadCreator(q);
     void loadTrends(q);
     if (videoId) {
       setSelected({ id: videoId, title: "Selected YouTube video", publishedAt: new Date().toISOString(), thumbnail: "", views: 0, likes: 0, comments: 0, engagement: 0, velocity: 0, url: `https://www.youtube.com/watch?v=${videoId}`, embeddable: true });
