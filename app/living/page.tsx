@@ -695,7 +695,6 @@ footer{padding:55px 5vw 65px}
 @media(max-width:800px){.pulseSelected{grid-template-columns:1fr}.pulseSelectedInfo h3{font-size:15px}.pulseSelectedPlayer,.pulseSelectedPlayer iframe,.pulseSelectedPlayer img{min-height:220px}.pulseHeadActions>button.viewSignalsButton{padding:8px 10px}.worldMap{width:145px!important}.radarVisual{height:145px!important}}
 @media(max-width:520px){.pulseHeadActions>button.viewSignalsButton{font-size:8px;padding:7px 9px}.pulseCarousel{grid-template-columns:28px minmax(0,1fr) 28px!important}.pulseViewport .pulseCard{flex-basis:220px!important;width:220px!important}.worldMap{width:125px!important}.pulseSelectedInfo h3{font-size:14px}}
 
-`;
 
 /* 2026-09-19 Discover precision pass: / is rewritten to /living, so these rules apply to the actual served Discover page. */
 .topbar{height:72px!important;min-height:72px!important;flex-wrap:nowrap!important;align-items:center!important;gap:24px!important;padding:0 34px!important}
@@ -737,3 +736,5 @@ footer{padding:55px 5vw 65px}
 
 @media(max-width:1250px){.topbar{gap:18px!important;padding:0 24px!important}.topbar nav{gap:24px!important}.topbar .search{width:250px!important;min-width:190px!important;margin-right:18px!important}.topbar nav button{font-size:14px!important}}
 @media(max-width:950px){.topbar{height:auto!important;min-height:72px!important;flex-wrap:wrap!important;padding:10px 16px!important}.topbar nav{order:3;width:100%;overflow:auto;gap:20px!important}.topbar .search{flex:1 1 220px!important;width:auto!important;margin-right:0!important}.topActions{margin-left:auto!important}}
+
+`;
