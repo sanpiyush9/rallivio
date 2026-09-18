@@ -388,3 +388,31 @@ Date: 2026-09-18
 
 **Date:** 2026-09-19
 
+
+
+## 2026-09-19 — New-chat continuity snapshot
+
+### Verified repository state
+- Active branch: `feature/creator-platform-subscription`
+- Current HEAD: `2a5835b3370b430086a35301141ed66d23a60d5f`
+- Current HEAD verification: GitHub Actions `npm run verify` passed.
+- Current implementation is still QA/feature work; no production merge.
+- The actual root route is middleware-rewritten to `/living`; visual QA must inspect `app/living/page.tsx`.
+
+### Current five-item Discover status
+- Header: IMPLEMENTED in `app/living/page.tsx`.
+- 3D globe: IMPLEMENTED in `app/living/page.tsx` + `components/DiscoverGlobe.tsx`; live runtime verification remains pending. Local texture copies remain unimplemented because binary GitHub file writes are not available through the current connector.
+- LIVING FIELD pill: IMPLEMENTED as markup removal in `app/living/page.tsx`.
+- Platform badges: IMPLEMENTED in `app/living/page.tsx` CSS/interaction.
+- Dynamic headline: IMPLEMENTED from the persisted `/api/discovery` response; current DB freshness means it honestly displays `Listening for signals…` until fresh signal observations arrive.
+
+### Current database truth
+Supabase `public.youtube_discovery_pool` currently has 25 rows, 25 stored signal rows, zero signal rows fresh within two hours, and latest `stats_refreshed_at` of 2026-09-15 18:37:10.647+00. No ROSÉ, Sur Music or Triple M Movies named seed matches were found. Therefore any UI claim of 50 fresh verified signals would currently be false.
+
+### Current Vercel truth
+Latest observed Vercel deployments for this branch are queued on earlier commits; the exact current HEAD `2a5835b...` has not yet been verified as a READY deployment. Do not provide a live URL as proof for the current work.
+
+### Checkpoint safety
+- v11 exists and is immutable.
+- v10 and its original archive are immutable.
+- Next checkpoint is v12, after enumerating existing checkpoint refs.
