@@ -385,3 +385,8 @@ Verify the active branch's newest deployment by exact SHA and Vercel state, then
 - `docs/RALLIVIO_STATE.md`
 - `docs/SESSION_LOG.md`
 - `.husky/pre-push`
+
+
+## 2026-09-19 — Vercel deployment trigger recovery
+Branch: feature/creator-platform-subscription
+Status: Triggering deployment from verified feature HEAD; no application behavior changed.
