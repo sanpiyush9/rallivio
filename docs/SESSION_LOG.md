@@ -1,3 +1,31 @@
+## 2026-09-19 — Discover five-item QA recheck: actual served route identified
+Branch: feature/creator-platform-subscription
+Status: Code changes applied; verification gate needs one clean run
+
+### Deployment/source diagnosis
+The root URL is rewritten by `middleware.ts` from `/` to `/living`. Vercel preview HTML confirmed `x-matched-path: /living`. The five requested visual changes therefore had to be implemented in `app/living/page.tsx`, not only `app/page.tsx`.
+
+### Five-item implementation
+1. **Header:** `app/living/page.tsx` now uses “Opportunities”, a fixed 72px single-row desktop header, 32px nav gap, 500-weight/15px nav typography, nowrap nav items, and a separate LIVE/Nebula/Login `.topActions` cluster with 12px spacing and 24px search separation.
+2. **Globe:** `app/living/page.tsx` now mounts `components/DiscoverGlobe.tsx` instead of the previous static SVG globe. The globe component has initialization/error/frame logging and actual 60-second rotation. Current texture URLs use upstream Three.js raw assets; local `/public/textures` copies were not added because binary external assets are not writable through the current GitHub text-file connector path. This remains an explicit follow-up.
+3. **LIVING FIELD pill:** the `fieldBadge` markup was removed from `app/living/page.tsx`.
+4. **Platform badges:** `app/living/page.tsx` now applies spherical brand-color fills, upper-left specular highlight, lower-right inner shadow, soft depth shadow, 1.08 hover scale and synchronized field/core response.
+5. **Dynamic headline:** `app/living/page.tsx` now reads `/api/discovery`, which serves the Supabase `youtube_discovery_pool` rather than the live YouTube API. Hero candidates require a signal and `stats_refreshed_at` within two hours, are reduced to the strongest row per topic+region, cycle every 5.5 seconds, pause on hover, and fall back honestly to “Listening for signals…”. The refresh indicator uses the database `refreshedAt`.
+
+### Data truth check
+Supabase current state at verification time:
+- `youtube_discovery_pool`: 25 rows.
+- Rows with a non-null signal and `stats_refreshed_at` within the last 2 hours: 0.
+- Latest `stats_refreshed_at`: 2026-09-15 18:37:10 UTC.
+- Named seeded-card matches for ROSÉ / Sur Music / Triple M Movies: 0.
+Therefore the hero should honestly show “Listening for signals…” until fresh verified observations exist. The three Live Field cards remain pool-derived; no seeded named list was found.
+
+### Build verification
+The latest application build compiled successfully, generated 22/22 static pages, passed canonical-check, and passed all 6 tests. The remaining failure was `check:docs` because KI-007 and KI-008 were missing from the KNOWN_ISSUES index; the index has now been corrected.
+
+### Next session should
+Run `npm run verify` on the latest descendant of the current feature branch, confirm `check:docs` passes, then inspect the new Vercel preview HTML for `/living` and verify the globe canvas/console frame logs before reporting the five items complete.
+
 # SESSION LOG
 
 > Newest entries at the top.
