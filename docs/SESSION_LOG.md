@@ -115,3 +115,41 @@ Status: In progress
 - Signal consistency remains an open issue: earlier QA showed a Breaking Out selection while the item's stored metadata was Just Dropped.
 - The scoring/relevance model is still a Phase 0 implementation and needs historical observations and stronger evidence.
 - The temporary bootstrap endpoint and exposed development token must not be reused for production.
+
+
+## 2026-09-18 — Project continuity and checkpoint integrity snapshot
+Branch: feature/creator-platform-subscription
+Status: Current operational baseline
+
+### Done
+- Audited the repository branch map and recorded all currently visible GitHub branches in the living project state.
+- Confirmed the repository is `sanpiyush9/rallivio` and the active implementation branch is `feature/creator-platform-subscription`.
+- Audited the existing checkpoint sequence: v2 through v10, nine checkpoint branches.
+- Discovered that v10 already existed before the latest checkpoint request and had originally pointed to `785b8c305708bf9d495601cf74b81728941c82f5`.
+- Preserved that original v10 state in `archive/checkpoint-living-front-v10-original`.
+- Recorded the current feature HEAD `82a1a391b9505da02d62be7e52625f4e2a2a470a` and the latest READY Vercel deployments for that SHA.
+- Audited the current app/supabase/docs structure and current Supabase/Vercel project identities.
+- Added explicit checkpoint immutability and deployment verification rules to the AI operating contract and resilience system.
+
+### Current implementation baseline
+- Living Field current implementation is in `app/living/page.tsx`.
+- Creator/auth foundation is on the same active feature branch, including login/signup/recovery/callback/account/header authentication work.
+- Current Living Field dynamic presentation includes the animated Earth-like core visual, global activity map, rotating radar/topics/spotlight and pulse carousel controls.
+- Current real data remains YouTube-backed; the data-pipeline architecture still needs to be completed so user requests read Supabase only.
+
+### Known architectural/functional gaps retained intentionally
+- Direct request-time `/api/youtube/trending` use is transitional and conflicts with the data pipeline specification. Do not add more direct source calls.
+- Current infinite pulse behavior cycles the verified pool; it is not yet true backend infinite acquisition/pagination.
+- Cross-platform adapters are not connected.
+- Signal history/consistency needs validation; KI-004 remains open.
+- Temporary QA bootstrap remains a cleanup item before production.
+
+### Exact next action
+When development resumes, first read the canonical chain and current specs, inspect the active branch and current HEAD, then make the smallest isolated change for the user's requested task. For checkpoint requests, create the next unused checkpoint version and never move an existing checkpoint branch.
+
+### Documents touched
+- `docs/RALLIVIO_STATE.md`
+- `docs/AI_START_HERE.md`
+- `docs/RESILIENCE_SYSTEM.md`
+- `docs/SESSION_LOG.md`
+- `docs/KNOWN_ISSUES.md` if a new failure is discovered; no new functional bug was introduced by this audit.
