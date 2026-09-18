@@ -8,6 +8,24 @@ function safeNextPath(value: string | null | undefined) {
   return value && value.startsWith("/") && !value.startsWith("//") ? value : "/living";
 }
 
+export async function oauthLogin(formData: FormData) {
+  const provider = String(formData.get("provider") ?? "");
+  const next = safeNextPath(String(formData.get("next") ?? ""));
+  if (provider !== "google" && provider !== "github") redirect("/login?error=Unsupported%20sign-in%20provider.");
+
+  const origin = (await headers()).get("origin") ?? "http://localhost:3000";
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: provider as "google" | "github",
+    options: {
+      redirectTo: origin + "/auth/callback?next=" + encodeURIComponent(next),
+    },
+  });
+
+  if (error || !data.url) redirect("/login?error=" + encodeURIComponent(error?.message ?? "Unable to start social sign-in."));
+  redirect(data.url);
+}
+
 export async function login(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
