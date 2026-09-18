@@ -19,7 +19,7 @@ export default async function AccountPage() {
       {avatarUrl ? <img className="avatar" src={avatarUrl} alt="" /> : <div className="avatar placeholder">{displayName.charAt(0).toUpperCase()}</div>}
       <div><h1>{displayName}</h1><p>{profile?.username ? "@" + profile.username : "Complete your profile to build your RALLIVIO identity."}</p><span className="badge">{kind === "brand" ? "Brand" : "Creator"}</span></div>
     </div>
-    <form action={updateProfile} className="profile-form">
+    <div className="profile-form"><form action={updateProfile}>
       <div className="section-heading"><span>01</span><div><h2>Profile information</h2><p>This is the identity other RALLIVIO members can see.</p></div></div>
       <div className="grid">
         <label>Display name<input name="display_name" defaultValue={profile?.display_name ?? displayName} placeholder="Your name" /></label>
@@ -32,7 +32,7 @@ export default async function AccountPage() {
       <label>Bio<textarea name="bio" defaultValue={profile?.bio ?? ""} rows={4} placeholder="Tell RALLIVIO who you are, what you create, or what your brand does." /></label>
       <input type="hidden" name="avatar_url" value={avatarUrl} />
       <div className="form-footer"><span>Changes are saved to your RALLIVIO profile.</span><button type="submit">Save profile</button></div>
-      <div className="section-heading second"><span>02</span><div><h2>Account & connections</h2><p>Authentication and social connections will live here.</p></div></div>
+      </form><div className="section-heading second"><span>02</span><div><h2>Account & connections</h2><p>Authentication and social connections will live here.</p></div></div>
       <div className="connection-card"><div><strong>Google</strong><small>Connected for sign-in</small></div><span className="connected">Connected</span></div>
       <div className="connection-card muted"><div><strong>Social platforms</strong><small>YouTube, Instagram, TikTok, X and other integrations will appear here as they are connected.</small></div><span>Coming next</span></div>
       <div className="section-heading second"><span>03</span><div><h2>RALLIVIO activity</h2><p>These areas will grow with your account.</p></div></div>
