@@ -199,3 +199,29 @@ Before stopping work, synchronize project memory:
 - Every relaxation is recorded and displayed.
 
 **If you are stuck:** say so. Ask rather than guess when two documents conflict, a spec is silent, a task is out of scope, or compliance is uncertain.
+
+
+## Operational continuity rules — added 2026-09-18
+
+### Checkpoint immutability — NON-NEGOTIABLE
+- Never overwrite, move, force-update, or reuse an existing checkpoint branch.
+- Before creating a checkpoint, query GitHub for existing `checkpoint/*` branches and choose the next unused version.
+- If `checkpoint/living-front-v10` exists, the next checkpoint is v11. Do not move v10.
+- Checkpoints are immutable recovery points. If a checkpoint was accidentally moved, preserve its previous SHA in an archive branch and document the incident before continuing.
+- A user request saying "make checkpoint" means create a NEW checkpoint, not update an existing checkpoint.
+
+### Current project identity
+- GitHub repo: `sanpiyush9/rallivio`.
+- Active branch: `feature/creator-platform-subscription`.
+- Current HEAD: `82a1a391b9505da02d62be7e52625f4e2a2a470a`.
+- Current latest checkpoint: v10, but its branch was accidentally moved once. The original v10 state is preserved at `archive/checkpoint-living-front-v10-original` → `785b8c305708bf9d495601cf74b81728941c82f5`. Treat both the checkpoint and archive as immutable from now on.
+- Never commit directly to `main` or `staging`.
+
+### Live/deployment verification
+For every deployment-related task, verify all five: current branch, expected commit SHA, deployed commit SHA, Vercel state, deployment ID. A URL alone is not proof that the intended code is live.
+
+### Product continuity
+The current user-approved Living Field visual baseline is protected. Make isolated changes only. Do not replace the header, hero, ecosystem geometry, theme or other accepted surfaces unless the user explicitly requests it. Dynamic visual effects may communicate verified state but must never fabricate metrics or activity.
+
+### Architecture continuity
+The target data architecture is background acquisition/refresh → Supabase snapshots/pool → signal engine → Supabase-only request-time serving. The current direct YouTube trending route is transitional technical debt. Do not add additional request-time YouTube calls.
