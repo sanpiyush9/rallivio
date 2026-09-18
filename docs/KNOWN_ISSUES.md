@@ -12,7 +12,7 @@
 | KI-003 | Vercel Authentication, Preview SSO, 302, bootstrap blocked | 3 | Resolved for QA |
 | KI-004 | Breaking Out, Just Dropped, signal mismatch, selected signal | 1 | Open |
 | KI-005 | useSearchParams, Suspense, /login prerender, CSR bailout | 2 | Resolved |
-| KI-007 | Earth hidden, leaf-like globe, Pulse controls, radar alignment, static topics/creators | 2 | Resolved |
+| KI-007 | Earth hidden, leaf-like globe, Pulse controls, radar alignment, static topics/creators | 2 | Resolved |\n| KI-008 | simple-icons, siLinkedin, Discover build, import error | 3 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -217,3 +217,30 @@ app/living/page.tsx
 docs/RALLIVIO_STATE.md
 docs/SESSION_LOG.md
 
+
+
+## KI-008 — Discover build fails on nonexistent Simple Icons LinkedIn export
+First seen: 2026-09-19 · Status: Resolved · Ladder level: 3 → target 4
+Severity: HIGH
+
+### Symptom
+Vercel deployment `dpl_Da58Jp98hndj4V2QbeXvsyxaYZAW` failed during the production build with:
+`Type error: '"simple-icons"' has no exported member named 'siLinkedin'. Did you mean 'siLinkerd'?`
+
+The build log also showed:
+`Attempted import error: 'siLinkedin' is not exported from 'simple-icons'`.
+
+### Cause
+`app/page.tsx` imported `siLinkedin` from `simple-icons`, but the installed `simple-icons@16.31.0` package does not export that symbol. The repository's existing `scripts/check-platform-icons.mjs` already treated LinkedIn as a local exception, so the page import had drifted away from the established icon contract.
+
+### Fix
+Removed the invalid `siLinkedin` import and restored the existing LinkedIn local-exception path in `app/page.tsx`, preserving the existing brand color and exact validated path. Strengthened `scripts/check-platform-icons.mjs` to fail the prebuild if `siLinkedin` is reintroduced into `app/page.tsx`.
+
+### Prevention
+Keep platform icon validation as a prebuild gate and explicitly enforce the LinkedIn local exception. This is a deterministic, automatically detected known failure; target Level 4 by centralizing the exception contract if additional platform icon integrations are added.
+
+### Related
+`app/page.tsx`
+`scripts/check-platform-icons.mjs`
+`docs/RESILIENCE_SYSTEM.md`
+`docs/SESSION_LOG.md`
