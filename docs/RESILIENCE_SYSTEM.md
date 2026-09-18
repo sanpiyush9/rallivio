@@ -221,3 +221,31 @@ The live 3D globe now uses the Three.js Earth assets from upstream raw GitHub UR
 
 ### 2026-09-19 — JSX build incident
 The /living build failure at app/living/page.tsx:391 was diagnosed from the Vercel log after the connector build-log capability was unavailable. The first error block showed an orphaned /span> parse error. Commit 8578ca555e97707f5ff01ea0b0ba36d6b08fb453 had already removed that exact line. This incident reinforces that the local production build must be the first fallback before connector troubleshooting.
+
+## 2026-09-19 — Discovery deployment failure: malformed CSS tail in app/living/page.tsx
+
+### Incident
+The discovery/platform-badge implementation reached Vercel as an ERROR deployment and GitHub verification also failed. The Vercel deployment metadata reported only the generic build classification: `lint_or_type_error`, `npm run build` exited with 1. Because the Vercel build-log capability was unavailable, the approved GitHub Actions fallback was used.
+
+### Confirmed cause
+GitHub Actions run `35401884156` for commit `4a81db4da8bcee365255cfacfd21b1f7e44a2a2a` provided the first concrete error during `npm run typecheck`:
+- `app/living/page.tsx(764,1): TS1127 Invalid character`
+- `app/living/page.tsx(764,10): TS1005 ';' expected`
+- `app/living/page.tsx(765,2): TS1127 Invalid character`
+
+Inspection of the exact source showed a malformed CSS tail containing literal escaped newline characters and an extra empty `<style>` fragment after the CSS template literal. This was the immediate build blocker.
+
+### Deterministic recovery
+Removed the malformed trailing fragment from `app/living/page.tsx` and committed:
+`eb01419aa7dc4aee80695c9030ce5094217e218e` — `Fix invalid badge CSS block`.
+
+### Prevention
+For large CSS/template-literal edits in `app/living/page.tsx`:
+1. Keep CSS inside the intended template literal only.
+2. Never append escaped literal `\\n` text or a second `<style>` fragment outside the existing style mechanism.
+3. Run typecheck before treating the visual change as deployment-ready.
+4. If Vercel build logs are unavailable, retrieve the first failing CI step/log before making another code change.
+
+### Ladder
+**Level 3 — Detected / deterministic recovery, target Level 4.** CI catches invalid characters before deployment; the exact malformed-tail pattern is now documented for recurrence prevention.
+
