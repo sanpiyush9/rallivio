@@ -3,6 +3,35 @@
 > Newest entries at the top.
 > Read the most recent 3 before starting work.
 
+## 2026-09-19 — Discover build diagnosis: LinkedIn import + Globe timer + verification follow-up
+Branch: feature/creator-platform-subscription
+Status: Code issue resolved; documentation gate needs re-verification
+
+### Confirmed incidents
+1. **LinkedIn import failure:** Vercel deployment `dpl_Da58Jp98hndj4V2QbeXvsyxaYZAW` failed because `app/page.tsx` imported `siLinkedin` from `simple-icons@16.31.0`, but that symbol is not exported. The existing icon checker already defined LinkedIn as a local exception.
+2. **DiscoverGlobe TypeScript failure:** GitHub Actions run #412 for commit `5e149e30e6e776b4dddb6166cc8bb7af524386f8` failed at typecheck with `components/DiscoverGlobe.tsx(226,16): error TS2339: Property 'setTimeout' does not exist on type 'never'.`
+3. **Verification follow-up:** After the Globe fix, GitHub Actions run #413 completed the application checks successfully through typecheck, lint, tests, production build, and canonical-check. The final `check:docs` stage failed because KI-006, KI-007 and KI-008 were missing from the KNOWN_ISSUES index. That documentation consistency failure is now recorded and the index has been updated.
+
+### Fixes
+- LinkedIn: removed invalid `siLinkedin` package import, restored the validated local LinkedIn path, and strengthened the prebuild icon guard.
+- DiscoverGlobe: replaced `"requestIdleCallback" in window` feature detection with a runtime `typeof ... === "function"` check and used `globalThis.setTimeout/clearTimeout` for the fallback path.
+- Documentation: added KI-009, restored KI-006 to the KNOWN_ISSUES index, added the integration fallback rule to the resilience system, and recorded this incident.
+
+### Claude suggestion and how it was used
+Claude correctly advised against speculative fixes and recommended obtaining the first real error block from build evidence. Claude also suggested an approved alternative when Vercel build-log access was unavailable: reproduce the same verification locally or use repository CI logs. It further identified that the Vercel error-class change from `import_error` to `lint_or_type_error` indicated a new failure rather than recurrence. We followed that evidence-first approach using GitHub Actions workflow/job logs.
+
+### Verification
+- The Globe TypeScript error is confirmed fixed: `npm run typecheck` passed in run #413.
+- Lint completed with warnings only.
+- Tests: 2 files, 6 tests passed.
+- Next.js production build: compiled successfully and generated 22/22 static pages.
+- canonical-check: passed.
+- Final verify failure: documentation index mismatch; no application build/type failure remained in that run.
+
+### Next session should
+Run the updated `npm run verify` through GitHub Actions, confirm `check:docs` passes, then verify the corresponding Vercel deployment is READY and field-test the Discover hero/globe at the required desktop widths.
+
+
 ## 2026-09-19 — Discover hero/header and 3D ecosystem live-field pass
 Branch: feature/creator-platform-subscription
 Status: In progress — deployment building
