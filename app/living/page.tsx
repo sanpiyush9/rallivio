@@ -18,6 +18,25 @@ type Item = {
   metadata?: { subscriber_count?: number | null; signal?: string; momentum_score?: number };
   stats_refreshed_at?: string;
 };
+type DiscoveryPoolItem = {
+  id: string;
+  title: string;
+  channel_title: string;
+  published_at: string;
+  thumbnail: string;
+  description?: string;
+  views?: number;
+  likes?: number;
+  comments?: number;
+  url: string;
+  embeddable?: boolean;
+  live_broadcast_content?: string | null;
+  topic?: string;
+  region?: string;
+  metadata?: { subscriber_count?: number | null; signal?: string; momentum_score?: number };
+  stats_refreshed_at?: string | null;
+};
+
 type Category = { name: string; icon: string; keywords: string[] };
 type Platform = { id: string; name: string; kind: string; connected: boolean; x: number; y: number };
 
@@ -155,7 +174,7 @@ export default function LivingDiscover() {
         const r = await fetch("/api/discovery", { cache: "no-store" });
         const b = await r.json();
         if (!r.ok || !b.ok) throw new Error(b.state || "YOUTUBE_UNAVAILABLE");
-        setItems(Array.isArray(b.items) ? b.items.map((x: any) => {
+        setItems(Array.isArray(b.items) ? b.items.map((x: DiscoveryPoolItem) => {
           const views = Number(x.views || 0);
           const likes = Number(x.likes || 0);
           const comments = Number(x.comments || 0);
