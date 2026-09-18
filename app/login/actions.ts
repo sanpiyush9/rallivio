@@ -61,7 +61,8 @@ export async function signup(formData: FormData) {
   if (!email || !password) redirect("/login?mode=signup&error=Please%20enter%20your%20email%20and%20password.");
   if (password.length < 8) redirect("/login?mode=signup&error=Password%20must%20be%20at%20least%208%20characters.");
 
-  const origin = (await headers()).get("origin") ?? "http://localhost:3000";
+  const requestHeaders = await headers();
+  const origin = getRequestOrigin(requestHeaders);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -113,7 +114,8 @@ export async function forgotPassword(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   if (!email) redirect("/login?mode=reset&error=Enter%20your%20email%20address%20first.");
 
-  const origin = (await headers()).get("origin") ?? "http://localhost:3000";
+  const requestHeaders = await headers();
+  const origin = getRequestOrigin(requestHeaders);
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: origin + "/auth/reset-password",
