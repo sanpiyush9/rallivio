@@ -59,7 +59,7 @@ const themeDefinitions = [
   { id: "neon", name: "Neon Reactor", short: "Neon", desc: "magenta / ember", mode: "reactor", accent: "magenta" },
   { id: "lunar", name: "Lunar Glass", short: "Lunar", desc: "ice / silver", mode: "calm", accent: "ice" },
 ] as const;
-const nav = [["Discover", "/"], ["Creators", "/creators"], ["Brands", "/brands"], ["Opportunities", "/opportunities"], ["Community", "/community"], ["About", "/about"]] as const;
+const nav = [["Discover", "/"], ["Creators", "/creators"], ["Brands & Opportunities", "/brands"], ["Community", "/community"], ["About", "/about"]] as const;
 const signalKey = (s?: string) => (s || "").toLowerCase().replace(/[_-]/g, " ").trim();
 const signalMatches = (item: Item, signal: string) => signalKey(item.metadata?.signal) === signalKey(signal);
 const fmt = (n: number) => n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString();
