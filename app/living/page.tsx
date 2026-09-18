@@ -131,10 +131,25 @@ export default function LivingDiscover() {
   useEffect(() => {
     const load = async () => {
       try {
-        const r = await fetch("/api/discovery", { cache: "no-store" });
+        const r = await fetch("/api/youtube/trending?region=IN&category=0&format=all&signal=all", { cache: "no-store" });
         const b = await r.json();
-        if (!r.ok) throw new Error(b.state || "DATA_UNAVAILABLE");
-        setItems(Array.isArray(b.items) ? b.items : []);
+        if (!r.ok || !b.ok) throw new Error(b.state || "YOUTUBE_UNAVAILABLE");
+        const next: Item[] = Array.isArray(b.items) ? b.items.map((x: any) => ({
+          id: x.id,
+          title: x.title,
+          channel_title: x.channelTitle,
+          channel_id: x.channelId,
+          published_at: x.publishedAt,
+          thumbnail: x.thumbnail,
+          description: x.description || "",
+          views: Number(x.views || 0),
+          url: x.url,
+          embeddable: x.embeddable !== false,
+          topic: x.categoryId || "YouTube",
+          region: b.region || "IN",
+          metadata: { subscriber_count: Number(x.channelSubscribers || 0), signal: x.signal, momentum_score: Number(x.momentumScore || 0) },
+        })) : [];
+        setItems(next);
         setNotice("");
       } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
       finally { setLoading(false); }
