@@ -69,6 +69,7 @@ export default function Home() {
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const [notice, setNotice] = useState("");
+  const [heroIndex, setHeroIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,6 +108,15 @@ export default function Home() {
     const subscribers = item.metadata?.subscriber_count ?? 0;
     return subscribers > 0 && subscribers <= 500_000;
   }).slice(0, 5), [ranked]);
+
+  const heroSignals = useMemo(() => ranked.slice(0, 10), [ranked]);
+  const heroSignal = heroSignals[heroSignals.length ? heroIndex % heroSignals.length : 0] ?? null;
+
+  useEffect(() => {
+    if (heroSignals.length < 2) return;
+    const timer = window.setInterval(() => setHeroIndex((index) => index + 1), 4500);
+    return () => window.clearInterval(timer);
+  }, [heroSignals.length]);
 
   const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -153,27 +163,67 @@ export default function Home() {
         .emerging{margin:16px 0 0;border-radius:20px;background:rgba(255,255,255,.95);color:#17172f;padding:20px 22px}.emergingList{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.creator{display:grid;grid-template-columns:40px 1fr auto;gap:8px;align-items:center;padding:9px;border:1px solid #e8e5f5;border-radius:14px}.creator img{width:40px;height:40px;border-radius:50%;object-fit:cover}.creator strong{font-size:10px;display:block}.creator span{font-size:8px;color:#77758e}.creator b{font-size:10px;color:#22b95e}.follow{border:0;background:#7a48ed;color:#fff;border-radius:10px;padding:6px 8px;font-size:9px}.footerNote{padding:35px 48px 55px;color:#9291ad;font-size:10px;display:flex;justify-content:space-between}.footerLogo{font-size:18px;font-weight:900}.footerLogo small{display:block;font-size:8px;font-weight:400;margin-top:3px}.notice{position:fixed;right:24px;bottom:24px;z-index:100;padding:12px 16px;border:1px solid rgba(181,121,255,.35);border-radius:14px;background:rgba(12,13,34,.92);box-shadow:0 15px 45px rgba(0,0,0,.35);font-size:11px;color:#eee}
         @media(max-width:1150px){.topbar{gap:12px;padding:12px 20px}.nav button{padding:9px 10px}.topSearch{width:230px}.hero{grid-template-columns:1fr 1.2fr;padding:35px 25px}.activity{display:none}.movingSection{margin:-25px 25px 0}.movingGrid{grid-template-columns:repeat(3,1fr)}.emergingList{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:760px){.topbar{position:relative;flex-wrap:wrap}.nav{order:3;width:100%;overflow:auto}.topSearch{flex:1;width:auto}.hero{display:block;min-height:auto;padding:30px 18px 12px}.hero h1{font-size:50px;letter-spacing:-2.8px}.heroLead{font-size:15px}.ecosystem{height:430px;margin-top:15px}.core{width:170px;height:170px}.coreLogo{font-size:27px}.platformIcon{width:48px;height:48px;font-size:22px}.p1{top:0;left:39%}.p2{top:17%;right:0}.p3{bottom:9%;right:2%}.p4{top:43%;left:0}.p5{bottom:0;left:38%}.thumbNode{transform:scale(.86)}.t1{top:24%;left:8%}.t2{top:14%;left:66%}.t3{bottom:15%;left:7%}.t4{bottom:20%;right:-3%}.t5{top:55%;right:-2%}.movingSection{margin:0 12px;padding:14px}.movingGrid{grid-template-columns:repeat(2,1fr)}.trendImage{height:110px}.lowerGrid{grid-template-columns:1fr}.journeySteps{grid-template-columns:1fr 1fr}.emergingList{grid-template-columns:1fr}.stats{overflow:auto}.stat{min-width:80px}.footerNote{padding:25px 18px;display:block}.footerNote span{display:block;margin-top:10px}}
+        /* LIVE DISCOVER precision pass */
+        .topbar{height:74px;padding:10px 38px;gap:22px;position:sticky;top:0;z-index:100;background:rgba(5,7,20,.9);border-bottom:1px solid rgba(150,120,255,.18);box-shadow:0 8px 30px rgba(0,0,0,.2)}
+        .brand{font-size:29px;line-height:.82;min-width:195px}.brand small{font-size:6px}
+        .nav{gap:2px;align-items:center}.nav button{font-size:13px;padding:11px 13px;white-space:nowrap}.nav button:nth-child(3){max-width:150px;line-height:1.05}
+        .headerSearchWrap{position:relative;display:flex;align-items:center;flex:0 1 360px;min-width:230px}.headerSearchWrap>span{position:absolute;left:14px;color:#747b99;font-size:14px;z-index:1}.headerSearchWrap .topSearch{width:100%;padding-left:35px;height:42px}
+        .topActions{gap:8px}.headerLive,.headerLunar,.headerLogin{height:40px;border-radius:22px;font-size:11px;font-weight:850;cursor:pointer}.headerLive{padding:0 16px;border:1px solid #7a5dff88;background:linear-gradient(135deg,#8b43ff,#bb60ff);color:#fff;box-shadow:0 0 22px #914eff33}.headerLive i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#61efb2;box-shadow:0 0 10px #61efb2;margin-right:7px}.headerLunar{padding:0 14px;border:1px solid #ffffff18;background:#10132a;color:#d7d8e8}.headerLogin{padding:0 19px;border:0;background:linear-gradient(135deg,#9850ff,#c061ff);color:#fff;box-shadow:0 8px 24px #8d49ff33}
+        .heroNowTicker{display:flex;align-items:center;gap:7px;margin-top:12px;color:#9ea6c3;font-size:9px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;overflow:hidden}.heroNowTicker b{color:#67e6b1}.heroNowTicker strong{color:#dce0f2;font-size:10px;overflow:hidden;text-overflow:ellipsis}.heroNowTicker small{color:#7d87a2;margin-left:auto}.heroNowPulse{width:7px;height:7px;border-radius:50%;background:#57e6a9;box-shadow:0 0 12px #57e6a9;animation:heroLivePulse 1.1s ease-in-out infinite}@keyframes heroLivePulse{50%{transform:scale(1.65);opacity:.45}}
+        .heroDynamicTitle{min-height:260px;margin-top:17px!important}.heroDynamicTitle em{display:inline-block;animation:heroWordIn .55s ease both}.heroDynamicTitle strong{display:block;max-width:500px;font-size:clamp(27px,2.7vw,44px);line-height:1.02;letter-spacing:-1.8px;color:#dfe2ff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;animation:heroTitleIn .65s cubic-bezier(.2,.8,.2,1) both}.heroDynamicTitle strong::after{content:" LIVE";font-size:.28em;letter-spacing:1px;color:#62edb2;vertical-align:middle;margin-left:6px}@keyframes heroWordIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes heroTitleIn{from{opacity:0;transform:translateY(14px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+        .ecosystem{height:600px}.ecosystemInner{isolation:isolate}.ecosystemGlow{width:470px;height:470px;background:radial-gradient(circle,rgba(92,120,255,.28),rgba(121,57,255,.16) 38%,transparent 70%);filter:blur(9px)}
+        .core{width:260px;height:260px;background:transparent;border:0;box-shadow:none;z-index:8;overflow:visible}.core::before{inset:-24px;border-color:#8d6cff55;z-index:5}.core::after{inset:-74px;border-color:#58caff2e;z-index:5}.coreContent{position:relative;z-index:20;display:grid;place-items:center;pointer-events:none;text-shadow:0 2px 15px #000}
+        .earth3d{position:absolute;inset:-4px;border-radius:50%;z-index:1;perspective:900px;transform-style:preserve-3d;filter:drop-shadow(0 0 30px #3f8cff55)}
+        .earthSphere{position:absolute;inset:0;border-radius:50%;overflow:hidden;transform-style:preserve-3d;background:radial-gradient(circle at 34% 26%,#5bd6ff 0,#1755b9 28%,#08245f 58%,#020711 100%);box-shadow:inset -28px -20px 45px #000b,inset 18px 10px 28px #6be6ff33,0 0 0 1px #75dcff77,0 0 35px #3c9dff55;animation:earthTilt 10s ease-in-out infinite}
+        .earthSphere::before{content:"";position:absolute;inset:-8%;border-radius:50%;background:linear-gradient(100deg,transparent 0 28%,#fff2 38%,transparent 47% 100%);animation:earthSpecular 8s ease-in-out infinite;z-index:6;pointer-events:none}
+        .earthSphere::after{content:"";position:absolute;inset:-18%;border-radius:50%;border:1px solid #69dfff44;transform:rotateX(68deg);box-shadow:0 0 22px #53cfff33;animation:earthOrbit 12s linear infinite;z-index:8}
+        .earthMap{position:absolute;top:5%;bottom:5%;width:205%;left:-52%;background-repeat:repeat-x;background-size:50% 100%;opacity:.78;filter:drop-shadow(0 0 4px #47e6b466);z-index:2;animation:earthRotate 11s linear infinite}
+        .earthMapA{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 300'%3E%3Cg fill='%2339d9a0'%3E%3Cpath d='M55 72l38-30 55 10 28 32-18 26-39-5-22 30-34-16zM174 126l28 12 9 42-19 30-22-16-8-36z'/%3E%3Cpath d='M270 58l49-20 54 25 20 31-34 22-40-8-30 14-28-28zM342 126l51-8 45 25 26 31-24 25-42-12-26 23-30-34z'/%3E%3Cpath d='M468 205l50-9 34 25-13 30-54 3-34-23z'/%3E%3C/g%3E%3C/svg%3E");background-position:0 0}
+        .earthMapB{left:48%;opacity:.3;filter:blur(.2px);animation-duration:11s;animation-delay:-5.5s}
+        .earthGrid3d{position:absolute;inset:0;border-radius:50%;background:repeating-linear-gradient(90deg,transparent 0 18px,#a7eaff2e 19px 20px,transparent 21px 38px),repeating-linear-gradient(0deg,transparent 0 18px,#a7eaff1f 19px 20px,transparent 21px 38px);mix-blend-mode:screen;transform:rotateY(-18deg) scaleX(.78);z-index:4;animation:gridDrift 7s linear infinite}
+        .earthAtmosphere3d{position:absolute;inset:-7%;border-radius:50%;border:2px solid #6edfff66;box-shadow:0 0 18px #5fd9ff66,0 0 55px #6a55ff33;z-index:9;pointer-events:none;animation:atmospherePulse 4s ease-in-out infinite}
+        .earthLight{position:absolute;width:7px;height:7px;border-radius:50%;background:#b8f6ff;box-shadow:0 0 10px #63ddff,0 0 22px #63ddff;z-index:7;animation:earthSignal 1.8s ease-in-out infinite}.e1{left:33%;top:42%}.e2{left:58%;top:31%;animation-delay:.35s}.e3{left:68%;top:57%;animation-delay:.7s}.e4{left:43%;top:67%;animation-delay:1.05s}
+        @keyframes earthRotate{from{transform:translateX(0)}to{transform:translateX(-50%)}}@keyframes earthTilt{50%{transform:rotateY(8deg) rotateX(-2deg)}}@keyframes earthSpecular{50%{transform:translateX(25px) rotate(3deg);opacity:.8}}@keyframes earthOrbit{to{transform:rotateX(68deg) rotateZ(360deg)}}@keyframes gridDrift{to{transform:rotateY(18deg) scaleX(.78) translateX(10px)}}@keyframes atmospherePulse{50%{opacity:.65;box-shadow:0 0 28px #5fd9ff88,0 0 65px #6a55ff44}}@keyframes earthSignal{50%{transform:scale(1.8);opacity:.35}}
+        .platformNode{z-index:12;min-width:92px}.platformIcon{position:relative;width:68px;height:68px;border-radius:50%;font-size:27px;background:linear-gradient(145deg,#1c2340,#070a17);border:1px solid #ffffff33;box-shadow:inset 9px 8px 15px #ffffff14,inset -12px -13px 20px #000c,0 15px 28px #0008,0 0 18px #6b53ff33;transform:translateZ(0);overflow:hidden}.platformGlyph{position:relative;z-index:3;filter:drop-shadow(0 2px 2px #0008)}.iconSheen{position:absolute;inset:-25%;background:linear-gradient(125deg,transparent 35%,#fff5 46%,transparent 55%);transform:translateX(-75%) rotate(15deg);animation:iconSheen 3.8s ease-in-out infinite;z-index:2}.platformIcon::after{content:"";position:absolute;inset:5px;border-radius:50%;border:1px solid #ffffff18;box-shadow:inset 0 0 14px #fff1}.platformNode strong{font-size:10px;text-shadow:0 2px 8px #000}.platformNode small{font-size:7px;color:#9ba7c4}
+        .youtube .platformIcon{background:radial-gradient(circle at 30% 25%,#ff6868,#d81730 42%,#620814 100%);box-shadow:inset 10px 8px 18px #fff3,inset -14px -16px 24px #0009,0 14px 32px #ff263b55,0 0 18px #ff334455}.instagram .platformIcon{background:radial-gradient(circle at 28% 22%,#ffd56a,#f13e72 46%,#6336c7 100%);box-shadow:inset 10px 8px 18px #fff3,inset -14px -16px 24px #0009,0 14px 32px #ff4d9a55}.tiktok .platformIcon{background:radial-gradient(circle at 30% 24%,#394052,#080a10 48%,#000 100%);box-shadow:inset 10px 8px 18px #fff2,inset -14px -16px 24px #000,0 14px 32px #000}.x .platformIcon{background:radial-gradient(circle at 30% 22%,#3a3a42,#080808 52%,#000)}.linkedin .platformIcon{background:radial-gradient(circle at 30% 22%,#48a8ff,#0869bd 50%,#043562 100%)}
+        @keyframes iconSheen{0%,45%{transform:translateX(-75%) rotate(15deg)}65%,100%{transform:translateX(75%) rotate(15deg)}}
+        .orbitLine{z-index:3;left:8%;top:20%;width:84%;height:60%;border-color:#8e66ff33;box-shadow:0 0 15px #8e66ff22}.orbitLine.two{width:73%;height:76%;left:14%;top:12%;border-color:#4fcaff2c}.orbitLine.three{position:absolute;left:17%;top:30%;width:66%;height:40%;border:1px dashed #ff72d833;border-radius:50%;transform:rotate(-32deg);z-index:3}
+        .thumbNode{z-index:14}
+        @media(max-width:1150px){.topbar{gap:10px;padding:10px 20px}.brand{min-width:165px}.nav button{padding:9px 8px;font-size:11px}.headerSearchWrap{min-width:180px}.headerLunar{display:none}.hero{grid-template-columns:1fr 1.2fr;padding:35px 25px}.heroDynamicTitle{min-height:220px}.activity{display:none}}
+        @media(max-width:760px){.topbar{height:auto;min-height:58px}.brand{min-width:0}.nav button:nth-child(3){max-width:none}.headerSearchWrap{order:4;flex-basis:100%;min-width:0}.headerLogin{padding:0 14px}.hero{display:block;min-height:auto;padding:30px 18px 12px}.heroDynamicTitle{min-height:0}.heroDynamicTitle strong{font-size:28px}.ecosystem{height:470px}.core{width:190px;height:190px}.platformIcon{width:54px;height:54px;font-size:22px}.earth3d{inset:-2px}.coreLogo{font-size:27px}}
       `}</style>
 
       <header className="topbar">
         <div className="brand">RALL<span>IVIO</span><small>CREATORS. BRANDS. A BRIGHTER TOMORROW.</small></div>
         <nav className="nav" aria-label="Primary navigation">
-          <button className="active">Discover</button>
-          <button onClick={() => document.getElementById("emerging")?.scrollIntoView({ behavior: "smooth" })}>Creators</button>
-          <button onClick={() => document.getElementById("opportunities")?.scrollIntoView({ behavior: "smooth" })}>Brands</button>
-          <button onClick={() => document.getElementById("opportunities")?.scrollIntoView({ behavior: "smooth" })}>Opportunities</button>
-          <button>Community</button>
-          <button>About</button>
+          <button className="active" type="button">Discover</button>
+          <button type="button" onClick={() => document.getElementById("emerging")?.scrollIntoView({ behavior: "smooth" })}>Creators</button>
+          <button type="button" onClick={() => document.getElementById("opportunities")?.scrollIntoView({ behavior: "smooth" })}>Brands &amp; Opportunities</button>
+          <button type="button" onClick={() => setNotice("Community intelligence is coming into the connected discovery field.")}>Community</button>
+          <button type="button" onClick={() => setNotice("RALLIVIO connects creators, brands and opportunities through verified signals.")}>About</button>
         </nav>
-        <input className="topSearch" aria-label="Search RALLIVIO" placeholder="Search creators, topics, brands, or videos..." />
-        <div className="topActions"><button className="circleButton" aria-label="Notifications">♧</button><button className="circleButton" aria-label="Theme">☼</button><div className="avatar">R</div></div>
+        <div className="headerSearchWrap"><span>⌕</span><input className="topSearch" aria-label="Search RALLIVIO" placeholder="Search creators, brands, videos, trends..." /></div>
+        <div className="topActions">
+          <button className="headerLive" type="button" onClick={() => document.getElementById("moving")?.scrollIntoView({ behavior: "smooth" })}><i/> LIVE</button>
+          <button className="headerLunar" type="button" aria-label="Language">EN⌄</button>
+          <button className="headerLogin" type="button" onClick={() => window.location.assign("/login")}>Login</button>
+        </div>
       </header>
 
       <section className="hero" aria-label="RALLIVIO Discover">
         <div className="heroCopy">
-          <div className="livePill"><span className="liveDot" /> THE CREATOR ECONOMY IS MOVING RIGHT NOW</div>
-          <h1>Discover<br /><em>A Brighter</em><br />Tomorrow.</h1>
-          <p className="heroLead">Real trends. Real creators. Real brands. Real opportunities.</p>
+          <div className="livePill"><span className="liveDot" /> LIVE · RALLIVIO IS TRACKING WHAT&apos;S MOVING NOW</div>
+          <div className="heroNowTicker" aria-live="polite">
+            <span className="heroNowPulse"/><b>{heroSignal?.metadata?.signal ?? "LIVE SIGNAL"}</b>
+            <span>·</span><strong>{heroSignal ? heroSignal.channel_title : "Verified discovery field"}</strong>
+            {heroSignal && <small>{ageLabel(heroSignal.published_at)}</small>}
+          </div>
+          <h1 className="heroDynamicTitle">
+            <span>See what&apos;s</span><br />
+            <em>{heroSignal ? signalFor(heroSignal).replace("now moving", "moving").replace("breaking out", "breaking") : "moving"}.</em><br />
+            <strong key={heroSignal?.id ?? "waiting"}>{heroSignal ? heroSignal.title : "Shape what&apos;s next."}</strong>
+          </h1><p className="heroLead">Real trends. Real creators. Real brands. Real opportunities — changing as verified signals move.</p>
+
           <div className="heroSearch"><input aria-label="What would you like to discover" placeholder="What would you like to discover today?" onKeyDown={(event) => { if (event.key === "Enter") document.getElementById("moving")?.scrollIntoView({ behavior: "smooth" }); }} /><button onClick={() => document.getElementById("moving")?.scrollIntoView({ behavior: "smooth" })}>→</button></div>
           <div className="topicPills">{topics.map((topic) => <button key={topic} className={activeTopic === topic ? "active" : ""} onClick={() => setActiveTopic(topic)}>{topic === "Trending" ? "🔥 " : ""}{topic}</button>)}</div>
           <div className="stats"><div className="stat"><strong>{items.length ? `${items.length}+` : "—"}</strong><span>Verified signals</span></div><div className="stat"><strong>{emerging.length || "—"}</strong><span>Emerging creators</span></div><div className="stat"><strong>1</strong><span>Connected platform</span></div><div className="stat"><strong>60s</strong><span>Discovery refresh</span></div></div>
@@ -181,11 +231,23 @@ export default function Home() {
 
         <div className="ecosystem">
           <div className="ecosystemInner" style={{ transform: `perspective(1200px) rotateY(${pointer.x * -2}deg) rotateX(${pointer.y * 1.5}deg)` }}>
-            <div className="ecosystemGlow" /><div className="orbitLine" /><div className="orbitLine two" />
+            <div className="ecosystemGlow" />
+            <div className="orbitLine" /><div className="orbitLine two" /><div className="orbitLine three" />
             {ranked.slice(0, 5).map((item, index) => <button key={item.id} className={`thumbNode t${index + 1}`} onClick={() => selectItem(item)} style={{ transform: `translate(${pointer.x * (index + 1) * 4}px, ${pointer.y * (index + 1) * 3}px)` }} aria-label={`Discover ${item.title}`}><img src={item.thumbnail} alt="" /><span>{item.channel_title}</span></button>)}
-            <div className="core"><div><div className="coreLogo">RALL<span>IVIO</span></div><div className="coreSub">A LIVING CREATOR DISCOVERY SYSTEM</div><div className="corePulse">{loading ? "Syncing verified signals" : `${items.length} verified signals in motion`}</div></div></div>
-            {platformNodes.map((platform) => <button key={platform.name} className={`platformNode ${platform.className} ${platform.position}`} onClick={() => selectPlatform(platform.name)} aria-label={`${platform.name} platform environment`}><span className="platformIcon">{platform.icon}</span><strong>{platform.name}</strong><small>{platform.name === activePlatform ? "Selected" : platform.state}</small></button>)}
-          </div>
+            <div className="core">
+              <div className="earth3d" aria-hidden="true">
+                <div className="earthSphere">
+                  <div className="earthMap earthMapA"/><div className="earthMap earthMapB"/><div className="earthGrid3d"/>
+                  <span className="earthLight e1"/><span className="earthLight e2"/><span className="earthLight e3"/><span className="earthLight e4"/>
+                </div>
+                <div className="earthAtmosphere3d"/>
+              </div>
+              <div className="coreContent">
+                <div className="coreLogo">RALL<span>IVIO</span></div><div className="coreSub">A LIVING CREATOR DISCOVERY SYSTEM</div>
+                <div className="corePulse">{loading ? "Syncing verified signals" : `${items.length} verified signals in motion`}</div>
+              </div>
+            </div>
+            {platformNodes.map((platform) => <button key={platform.name} className={`platformNode ${platform.className} ${platform.position}`} onClick={() => selectPlatform(platform.name)} aria-label={`${platform.name} platform environment`}><span className="platformIcon"><span className="platformGlyph">{platform.icon}</span><i className="iconSheen"/></span><strong>{platform.name}</strong><small>{platform.name === activePlatform ? "Selected" : platform.state}</small></button>)}</div>
         </div>
 
         <aside className="activity">
