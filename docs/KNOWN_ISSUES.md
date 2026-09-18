@@ -12,7 +12,9 @@
 | KI-003 | Vercel Authentication, Preview SSO, 302, bootstrap blocked | 3 | Resolved for QA |
 | KI-004 | Breaking Out, Just Dropped, signal mismatch, selected signal | 1 | Open |
 | KI-005 | useSearchParams, Suspense, /login prerender, CSR bailout | 2 | Resolved |
+| KI-006 | checkpoint branch moved, immutable recovery point | 4 | Resolved |
 | KI-007 | Earth hidden, leaf-like globe, Pulse controls, radar alignment, static topics/creators | 2 | Resolved |\n| KI-008 | simple-icons, siLinkedin, Discover build, import error | 3 | Resolved |
+| KI-009 | DiscoverGlobe, setTimeout, never, TypeScript, CI | 3 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -23,8 +25,8 @@
 |---|---:|
 | 1 — Documented | 1 |
 | 2 — Detected | 2 |
-| 3 — Auto-recovered | 2 |
-| 4 — Prevented | 0 |
+| 3 — Auto-recovered | 3 |
+| 4 — Prevented | 1 |
 
 > Update this table whenever an entry changes level.
 
@@ -243,4 +245,26 @@ Keep platform icon validation as a prebuild gate and explicitly enforce the Link
 `app/page.tsx`
 `scripts/check-platform-icons.mjs`
 `docs/RESILIENCE_SYSTEM.md`
+`docs/SESSION_LOG.md`
+
+
+## KI-009 — DiscoverGlobe timer fallback narrows to never in TypeScript
+First seen: 2026-09-19 · Status: Resolved · Ladder level: 3 → target 4
+Severity: HIGH
+
+### Symptom
+GitHub Actions run #412 reached verification but failed during typecheck with:
+`components/DiscoverGlobe.tsx(226,16): error TS2339: Property 'setTimeout' does not exist on type 'never'.`
+
+### Cause
+The DiscoverGlobe scheduling expression used an `"requestIdleCallback" in window` conditional. Under the project's TypeScript DOM typings, the property was known to exist, so the fallback branch was narrowed to `never`, making `window.setTimeout` invalid there.
+
+### Fix
+Changed feature detection to `typeof window.requestIdleCallback === "function"` and used `globalThis.setTimeout` for the fallback. Cleanup now uses the corresponding `typeof window.cancelIdleCallback === "function"` check and `globalThis.clearTimeout` fallback.
+
+### Prevention
+Use runtime function checks for browser API feature detection when TypeScript can statically know the property exists. Keep `npm run verify` as the regression gate.
+
+### Related
+`components/DiscoverGlobe.tsx`
 `docs/SESSION_LOG.md`
