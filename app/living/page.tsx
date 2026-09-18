@@ -10,6 +10,11 @@ type Item = {
   description: string; views: number; url: string; embeddable: boolean; topic: string; region?: string;
   metadata?: { subscriber_count?: number | null; signal?: string; momentum_score?: number };
 };
+type YouTubeDiscoveryItem = {
+  id: string; title: string; channelTitle: string; channelId: string; publishedAt: string; thumbnail: string;
+  description?: string; views: number; url: string; embeddable?: boolean; categoryId?: string;
+  channelSubscribers?: number; signal?: string; momentumScore?: number;
+};
 type Category = { name: string; icon: string; keywords: string[] };
 type Platform = { id: string; name: string; kind: string; connected: boolean; x: number; y: number };
 
@@ -134,7 +139,7 @@ export default function LivingDiscover() {
         const r = await fetch("/api/youtube/trending?region=IN&category=0&format=all&signal=all", { cache: "no-store" });
         const b = await r.json();
         if (!r.ok || !b.ok) throw new Error(b.state || "YOUTUBE_UNAVAILABLE");
-        const next: Item[] = Array.isArray(b.items) ? b.items.map((x: any) => ({
+        const next: Item[] = Array.isArray(b.items) ? b.items.map((x: YouTubeDiscoveryItem) => ({
           id: x.id,
           title: x.title,
           channel_title: x.channelTitle,
