@@ -1,5 +1,3 @@
-#!/usr/bin/env sh
-
 npm run build || {
   echo "✗ Build failed — not pushing. Fix locally first."
   exit 1
