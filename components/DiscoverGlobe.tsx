@@ -5,9 +5,9 @@
 
 import { useEffect, useRef } from "react";
 
-const EARTH_ALBEDO = "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg";
-const EARTH_NIGHT = "https://threejs.org/examples/textures/planets/earth_lights_2048.png";
-const EARTH_CLOUDS = "https://threejs.org/examples/textures/planets/earth_clouds_1024.png";
+const EARTH_ALBEDO = "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg";
+const EARTH_NIGHT = "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_lights_2048.png";
+const EARTH_CLOUDS = "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_clouds_1024.png";
 
 export default function DiscoverGlobe() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -32,6 +32,7 @@ export default function DiscoverGlobe() {
       if (disposed || reducedMotion.matches) return;
 
       try {
+        console.info("[globe] init");
         const THREE = await import("three");
         if (disposed) return;
 
@@ -193,6 +194,7 @@ export default function DiscoverGlobe() {
             const cloud = group.children.find((child) => child.userData.isCloudLayer) as import("three").Mesh | undefined;
             if (cloud) cloud.rotation.y += (Math.PI * 2 / 48) * delta;
             renderer.render(scene, camera);
+            if (renderer.info.render.frame <= 3 || renderer.info.render.frame % 60 === 0) console.log("[globe] frame", renderer.info.render.frame);
             lastFrame = now;
           }
           frame = window.requestAnimationFrame(renderFrame);
@@ -216,7 +218,8 @@ export default function DiscoverGlobe() {
         intersectionObserver.observe(host);
 
         if (visible.current) frame = window.requestAnimationFrame(renderFrame);
-      } catch {
+      } catch (error) {
+        console.error("[globe] initialization failed", error);
         fallback();
       }
     };
