@@ -43,16 +43,10 @@ function LoginContent() {
               <input type="hidden" name="provider" value="google" />
               <input type="hidden" name="next" value={next ?? "/living"} />
               <button type="submit" style={{ ...button, width: "100%", background: "#fff", color: "#171526", border: "1px solid #ddd" }}>
-                <span style={{ marginRight: 8, fontSize: 16 }}>G</span> Continue with Google
+                <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" style={{ marginRight: 9, verticalAlign: "middle" }}><path fill="#EA4335" d="M24 9.5c3.54 0 6.04 1.53 7.43 2.81l5.44-5.31C33.54 3.64 29.15 1.5 24 1.5 14.61 1.5 6.57 6.89 2.67 14.73l6.36 4.93C10.93 13.02 16.88 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.5 24.55c0-1.64-.15-3.22-.43-4.74H24v8.98h12.65c-.54 2.9-2.18 5.35-4.65 7l7.53 5.84C43.92 37.62 46.5 31.68 46.5 24.55Z"/><path fill="#FBBC05" d="M9.03 28.65A14.5 14.5 0 0 1 8.25 24c0-1.62.28-3.2.78-4.65l-6.36-4.93A23.96 23.96 0 0 0 0 24c0 3.87.93 7.53 2.67 10.73l6.36-4.93Z"/><path fill="#34A853" d="M24 46.5c6.62 0 12.18-2.18 16.24-5.92l-7.53-5.84c-2.08 1.4-4.73 2.23-8.71 2.23-7.12 0-13.07-3.52-14.97-10.16l-6.36 4.93C6.57 41.11 14.61 46.5 24 46.5Z"/></svg> Continue with Google
               </button>
             </form>
-            <form action={oauthLogin}>
-              <input type="hidden" name="provider" value="github" />
-              <input type="hidden" name="next" value={next ?? "/living"} />
-              <button type="submit" style={{ ...button, width: "100%", background: "#171922", border: "1px solid #ffffff20" }}>
-                <span style={{ marginRight: 8, fontSize: 15 }}>◉</span> Continue with GitHub
-              </button>
-            </form>
+
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0 16px", color: "#626071", fontSize: 9 }}>
             <span style={{ height: 1, flex: 1, background: "#ffffff10" }} /> OR <span style={{ height: 1, flex: 1, background: "#ffffff10" }} />
