@@ -350,3 +350,38 @@ The discovery pool has 25 rows and 25 stored signal labels, but no fresh signal 
 
 ### New-chat first action
 Read `docs/CANONICAL.md` → `docs/AI_START_HERE.md` → `docs/RALLIVIO_STATE.md` → current area specs → latest 3 session-log entries → `docs/KNOWN_ISSUES.md`, then inspect branch HEAD and Vercel exact-SHA deployment status before changing code.
+
+
+## 2026-09-19 — JSX build failure diagnosis, resilience update, and checkpoint record correction
+Branch: feature/creator-platform-subscription
+Status: Resolved in code; deployment verification pending
+
+### Confirmed diagnosis
+Vercel deployment `dpl_14bCnWKgzKtGGbJ6ZK5Wfrz1E9BP` for commit `4a2deeb35de2b32783d9db60256c8d616980a002` failed during `npm run build`. The actual first error was a SWC JSX parse error at `app/living/page.tsx:391`: an orphaned `/span>` line. Commit `8578ca555e97707f5ff01ea0b0ba36d6b08fb453` already removes that exact line, so no new application-code fix was necessary.
+
+### Evidence
+- Vercel deployment metadata reports `errorCode: lint_or_type_error`, `errorStep: buildStep`, and `npm run build` exited with 1.
+- The first build-log error identifies the actual class as a syntax error, not TypeScript or ESLint.
+- The current feature branch already contains the correction from commit `8578ca5...`; the current served source no longer contains the orphaned `/span>`.
+- A local production build was not executable through the current GitHub connector, so no claim of local-build success is made here.
+- The current Vercel connector's build-log retrieval capability is unavailable; this is documented as KI-011.
+
+### Resilience changes
+- Added local production build as the first build-evidence source in `docs/RESILIENCE_SYSTEM.md`.
+- Added `docs/RUNBOOK.md` with the symptom-first Vercel build diagnosis flow.
+- Added KI-010 for the JSX syntax failure and KI-011 for the Vercel build-log connector outage.
+- Added the checked-in `.husky/pre-push` build guard requested by the owner. Repository-wide Husky activation is not yet verified because the repository currently has no Husky package/setup in `package.json`; therefore the hook file is present but should not be represented as active for every clone until the activation mechanism is verified.
+
+### Checkpoint state correction
+The living state previously said v10 was the latest checkpoint. v11 exists and is immutable. This correction was appended to `docs/RALLIVIO_STATE.md` rather than silently rewriting history.
+
+### Next session should
+Verify the active branch's newest deployment by exact SHA and Vercel state, then field-test `/` → `/living`. Do not redo the five Discover UI changes unless deployed evidence shows the implementation is absent.
+
+### Documents touched
+- `docs/RESILIENCE_SYSTEM.md`
+- `docs/KNOWN_ISSUES.md`
+- `docs/RUNBOOK.md`
+- `docs/RALLIVIO_STATE.md`
+- `docs/SESSION_LOG.md`
+- `.husky/pre-push`
