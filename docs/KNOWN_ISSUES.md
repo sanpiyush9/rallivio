@@ -16,6 +16,8 @@
 | KI-007 | Earth hidden, leaf-like globe, Pulse controls, radar alignment, static topics/creators | 2 | Resolved |
 | KI-008 | simple-icons, siLinkedin, Discover build, import error | 3 | Resolved |
 | KI-009 | DiscoverGlobe, setTimeout, never, TypeScript, CI | 3 | Resolved |
+| KI-010 | JSX syntax, orphaned /span>, living page build | 1 | Resolved |
+| KI-011 | Vercel build-log connector, Tool get_deployment_build_logs not found | 2 | Open |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -24,8 +26,8 @@
 
 | Level | Count |
 |---|---:|
-| 1 — Documented | 1 |
-| 2 — Detected | 3 |
+| 1 — Documented | 2 |
+| 2 — Detected | 4 |
 | 3 — Auto-recovered | 4 |
 | 4 — Prevented | 1 |
 
@@ -269,3 +271,49 @@ Use runtime function checks for browser API feature detection when TypeScript ca
 ### Related
 `components/DiscoverGlobe.tsx`
 `docs/SESSION_LOG.md`
+
+
+## KI-010 — JSX syntax error reached the production build
+First seen: 2026-09-19 · Status: Resolved · Ladder level: 1 → target 4
+Severity: HIGH — blocks the deployment build
+
+### Symptom
+Vercel deployment `dpl_14bCnWKgzKtGGbJ6ZK5Wfrz1E9BP` failed during the build with:
+`./app/living/page.tsx:391:1 Unexpected token. Did you mean {'>'} or &gt;?`
+The offending line was `391 | /span>`.
+
+### Cause
+An orphaned `/span>` remained after `<DiscoverGlobe />` was inserted. The line had no matching opening element and was a parse-time JSX syntax error caught by SWC.
+
+### Fix
+Delete line 391 entirely. The correction already exists in commit `8578ca555e97707f5ff01ea0b0ba36d6b08fb453`, titled `Fix DiscoverGlobe JSX wrapper after live route integration`.
+
+### Prevention
+Level-4 target: a pre-push hook runs `npm run build` so a file that does not parse is rejected before push. The repository must ensure the hook is installed/enabled for developers.
+
+### Related
+`app/living/page.tsx`
+`docs/RUNBOOK.md` → Build fails on Vercel but no log access
+`docs/RESILIENCE_SYSTEM.md`
+
+## KI-011 — Vercel build-log connector unavailable
+First seen: 2026-09-18 · Status: Open · Ladder level: 2
+Severity: MEDIUM
+
+### Symptom
+The Vercel build-log retrieval capability returns:
+`INVALID_ARGUMENT — Tool get_deployment_build_logs not found`
+Deployment metadata calls succeed; build-log retrieval is unavailable.
+
+### Cause
+Partial connector outage: the build-log capability is absent from the current connector/tool registry. This is distinct from a complete Vercel project disconnect.
+
+### Fix
+No connector-side fix is available from the repository. Use the local production build first, then Vercel dashboard/connector logs when available, then GitHub Actions logs. Request reconnection only when all equivalent evidence paths are unavailable.
+
+### Prevention
+Local production build is now the first build-evidence source, so this connector outage does not by itself block diagnosis.
+
+### Related
+`docs/RESILIENCE_SYSTEM.md`
+`docs/RUNBOOK.md` → Build fails on Vercel but no log access
