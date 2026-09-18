@@ -161,7 +161,7 @@ export default function LivingDiscover() {
       <button className="brand" type="button" onClick={() => go("/")}>RALL<span>IVIO</span><small>CREATORS. BRANDS. A BRIGHTER TOMORROW.</small></button>
       <nav>{nav.map(([n, p]) => <button key={p} className={p === "/" ? "active" : ""} type="button" onClick={() => go(p)}>{n}</button>)}</nav>
       <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span>⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search anything: creators, brands, videos, trends…"/><button type="submit">↗</button></form>
-      <button className="round" type="button" onClick={() => setNotice("Signals are sourced from the verified discovery pool.")}>◌</button>
+      <button className="round signalButton" type="button" onClick={() => setNotice("Signals are sourced from the verified discovery pool.")}><i/>Live</button>
       <div className="themePickerWrap">
         <button className="round themeButton" type="button" aria-label="Choose theme" aria-expanded={showThemes} onClick={() => setShowThemes(v => !v)}>✦ <span>Theme</span></button>
         {showThemes && <div className="themeMenu" role="menu">
@@ -250,6 +250,16 @@ export default function LivingDiscover() {
 
 const css = `
 /* Living Field v2 — interaction, depth and product energy */
+/* Living Field v3 — unify the surface and make controls feel intentional */
+.signalButton{min-width:64px;display:flex;align-items:center;justify-content:center;gap:7px;text-transform:uppercase;letter-spacing:.7px}
+.signalButton i{width:6px;height:6px;border-radius:50%;background:#61e4ad;box-shadow:0 0 11px #61e4ad;animation:livePulse 1.2s infinite}
+.discoverySurface{color:#f3f2fa;background:linear-gradient(135deg,rgba(17,21,45,.96),rgba(9,12,28,.98));border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 90px rgba(0,0,0,.22)}
+.discoverySurface h2{color:#f7f6ff}.surfaceHead p{color:#8f92aa}.surfaceHead>button{color:var(--accent)}
+.card{background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025));border-color:rgba(255,255,255,.09);color:#f2f0f8;box-shadow:0 14px 35px rgba(0,0,0,.2)}
+.card:hover{border-color:color-mix(in srgb,var(--accent) 50%,transparent);box-shadow:0 24px 50px rgba(0,0,0,.3)}
+.card h3{color:#f4f2fa}.card p{color:#9da0b6}.card>small{color:#7f829c}.thumb>span{background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 5px 18px color-mix(in srgb,var(--accent) 22%,transparent)}
+.thumb button{background:#f7f6fb;color:#35205e;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+
 .rv{--surface:rgba(255,255,255,.055);--surfaceStrong:rgba(255,255,255,.09);--glassBorder:rgba(255,255,255,.14);position:relative}
 .rv:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:linear-gradient(115deg,transparent 0 42%,rgba(160,100,255,.045) 49%,transparent 57%),radial-gradient(circle at 72% 22%,rgba(90,190,255,.06),transparent 24%);mix-blend-mode:screen}
 .topbar,.hero,.signals,.discoverySurface,footer{position:relative;z-index:2}
