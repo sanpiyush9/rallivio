@@ -3,6 +3,33 @@
 > Newest entries at the top.
 > Read the most recent 3 before starting work.
 
+## 2026-09-19 — Discover hero/header and 3D ecosystem live-field pass
+Branch: feature/creator-platform-subscription
+Status: In progress — deployment building
+
+### Done
+- Reworked the Discover header into a cleaner single-row hierarchy: RALLIVIO brand, five primary destinations, search, LIVE, language and Login.
+- Removed the old notification/theme glyph controls from the header.
+- Replaced the static hero copy with a live hero rotation driven by the currently ranked verified discovery pool. The signal label, creator, age and headline title now change automatically.
+- Added a live ticker above the hero headline so the current source observation is visible without fabricating activity.
+- Replaced the flat core treatment with a layered CSS/SVG-style 3D Earth illusion: animated surface map, grid, atmospheric rim, orbit and signal lights. The RALLIVIO wordmark remains in a separate foreground layer so the globe cannot cover it.
+- Reworked social platform nodes into spherical, shaded, reflective objects with depth and hover lighting rather than flat square icon tiles.
+- Added a third orbital path around the ecosystem.
+- Confirmed the current Discover source does not contain a "Live Field" text label; no such label was added by this pass.
+
+### Truth boundary
+The dynamic hero rotates through the verified ranked pool already loaded by Discover. It does not invent headlines or metrics. The visual Earth/orbit motion is presentation only; it does not imply geographic precision.
+
+### Validation
+- Latest code commit: b5726420072dfca8f133a21676c3299f4e8e12eb.
+- Vercel created deployment dpl_9nNXFCHm2de37SMSZvS7ZLXEuh9r for the exact feature SHA; status was BUILDING at the time of this entry.
+- Branch checkpoint v11 remains untouched; this pass is after that checkpoint.
+
+### Next
+- Wait for Vercel deployment to become READY and inspect the live Discover surface.
+- If the Earth still reads as flat, replace the CSS sphere with a dedicated WebGL/Three.js globe rather than adding more overlay layers.
+- Do not broaden this pass into unrelated Living Field/creator/auth work.
+
 ## 2026-09-18 — Living Field precision pass: globe, pulse stream, radar and discovery surfaces
 Branch: feature/creator-platform-subscription
 Status: In progress
