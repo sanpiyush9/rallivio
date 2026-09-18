@@ -9,7 +9,7 @@
 |---|---|---:|---|
 | KI-001 | dist, output directory, deployment fails after successful build | 3 | Resolved |
 | KI-002 | eslint, nextVitals, not iterable, lint not enforced | 2 | Resolved |
-| KI-003 | Vercel Authentication, Preview SSO, 302, bootstrap blocked | 3 | Resolved for QA |
+| KI-003 | Vercel Authentication, Preview SSO, 302, bootstrap blocked | 3 | Resolved |
 | KI-004 | Breaking Out, Just Dropped, signal mismatch, selected signal | 1 | Open |
 | KI-005 | useSearchParams, Suspense, /login prerender, CSR bailout | 2 | Resolved |
 | KI-006 | checkpoint branch moved, immutable recovery point | 4 | Resolved |
@@ -25,7 +25,7 @@
 | Level | Count |
 |---|---:|
 | 1 — Documented | 1 |
-| 2 — Detected | 1 |
+| 2 — Detected | 3 |
 | 3 — Auto-recovered | 4 |
 | 4 — Prevented | 1 |
 
