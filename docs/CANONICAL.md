@@ -1,6 +1,6 @@
 # CANONICAL INDEX
 
-**Last updated:** 2026-09-15
+**Last updated:** 2026-09-18
 
 > **Every AI session reads this file FIRST.**
 >
@@ -26,6 +26,7 @@
 | Data model | `docs/specs/data-model-v1.md` | — | not yet written |
 | Signal engine | `docs/specs/signals-v1.md` | — | not yet written |
 | Leaderboard (Phase 0) | `docs/specs/leaderboard-v1.md` | — | not yet written |
+| Living Discovery Environment | `docs/specs/living-discovery-environment-v1.md` | 1.0 | 2026-09-16 |
 | Creator onboarding | — | — | not yet written |
 | Brand matching | — | — | not yet written |
 
