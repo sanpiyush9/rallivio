@@ -12,6 +12,7 @@
 | KI-003 | Vercel Authentication, Preview SSO, 302, bootstrap blocked | 3 | Resolved for QA |
 | KI-004 | Breaking Out, Just Dropped, signal mismatch, selected signal | 1 | Open |
 | KI-005 | useSearchParams, Suspense, /login prerender, CSR bailout | 2 | Resolved |
+| KI-007 | Earth hidden, leaf-like globe, Pulse controls, radar alignment, static topics/creators | 2 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -189,3 +190,30 @@ Before every checkpoint operation, enumerate checkpoint branches, select the nex
 `docs/AI_START_HERE.md`
 `docs/RALLIVIO_STATE.md`
 `docs/RESILIENCE_SYSTEM.md`
+
+## KI-007 — Living Field lower-surface visual/data presentation defects
+First seen: 2026-09-18 · Status: Resolved · Ladder level: 2 → target 3
+Severity: MEDIUM
+
+### Symptom
+Live field QA showed the Earth treatment was obscured/too abstract, the Pulse action control was weak, selected videos did not appear inline below the stream, the Pulse stream was limited to a small rotating window, the Discovery Radar sweep was offset, and Trending Topics/Creator Spotlight looked too static.
+
+### Cause
+Confirmed in app/living/page.tsx:
+- Earth used separate CSS land spans rather than one coherent globe surface.
+- The Pulse header button selector targeted a direct child of .pulseSectionHead, but the button is nested inside .pulseHeadActions.
+- Pulse cards were rendered as a six-card grid window.
+- Radar sweep positioning did not center the sweep and ring as one unit.
+- Topic sparks used a fixed five-segment treatment and Spotlight only exposed three visible creators.
+
+### Fix
+Replaced the leaf-like Earth spans with a clipped SVG globe; added source-coverage and refresh information; expanded Pulse into a horizontally scrolling verified-pool stream with auto-scroll and loop-back; added a visible View all signals control; added inline selected-video playback with full title and source metrics; mapped known YouTube category IDs before keyword fallback; centered the Radar; made topic graphs momentum-driven and animated; and made Creator Spotlight scrollable.
+
+### Prevention
+Living Field QA must verify globe visibility, visible Pulse controls, inline selected playback, continuous rightward movement, centered Radar sweep, animated momentum graph, and access to more verified creators. Run npm run verify before deployment.
+
+### Related
+app/living/page.tsx
+docs/RALLIVIO_STATE.md
+docs/SESSION_LOG.md
+
