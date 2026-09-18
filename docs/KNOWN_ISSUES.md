@@ -167,3 +167,25 @@ For Next.js App Router pages, always place page-level `useSearchParams` consumer
 ### Related
 `app/login/page.tsx`
 `docs/SESSION_LOG.md`
+
+
+## KI-006 — Existing checkpoint branch was moved instead of creating a new checkpoint
+First seen: 2026-09-18 · Status: Resolved with archive preservation · Ladder level: 4 → target 4
+Severity: HIGH
+
+### Symptom
+An existing `checkpoint/living-front-v10` branch was moved to a newer commit when the owner requested a checkpoint, instead of creating a new checkpoint version.
+
+### Cause
+The checkpoint workflow did not enforce the precondition that checkpoint refs are immutable and that a new checkpoint request must select the next unused version.
+
+### Fix
+The original v10 SHA `785b8c305708bf9d495601cf74b81728941c82f5` was preserved in `archive/checkpoint-living-front-v10-original`. The v10 branch now points at `82a1a391b9505da02d62be7e52625f4e2a2a470a`; no further movement is permitted.
+
+### Prevention
+Before every checkpoint operation, enumerate checkpoint branches, select the next unused version, create a new branch from the current feature HEAD, verify the new branch SHA, and never update an existing checkpoint ref.
+
+### Related
+`docs/AI_START_HERE.md`
+`docs/RALLIVIO_STATE.md`
+`docs/RESILIENCE_SYSTEM.md`
