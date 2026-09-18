@@ -179,17 +179,18 @@ export default function DiscoverGlobe() {
         resizeObserver = new ResizeObserver(resize);
         resizeObserver.observe(host);
 
+        let lastFrame = 0;
         const renderFrame = (now: number) => {
           if (disposed || !renderer) return;
           if (!visible.current) return;
-          if (!renderFrame.last) renderFrame.last = now;
-          if (now - renderFrame.last >= 33.33) {
-            const delta = Math.min((now - renderFrame.last) / 1000, 0.1);
+          if (!lastFrame) lastFrame = now;
+          if (now - lastFrame >= 33.33) {
+            const delta = Math.min((now - lastFrame) / 1000, 0.1);
             group.rotation.y += (Math.PI * 2 / 60) * delta;
             const cloud = group.children.find((child) => child.userData.isCloudLayer) as import("three").Mesh | undefined;
             if (cloud) cloud.rotation.y += (Math.PI * 2 / 48) * delta;
             renderer.render(scene, camera);
-            renderFrame.last = now;
+            lastFrame = now;
           }
           frame = window.requestAnimationFrame(renderFrame);
         };
