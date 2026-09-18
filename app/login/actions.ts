@@ -8,12 +8,22 @@ function safeNextPath(value: string | null | undefined) {
   return value && value.startsWith("/") && !value.startsWith("//") ? value : "/living";
 }
 
+function getRequestOrigin(requestHeaders: Headers) {
+  const forwardedHost = requestHeaders.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = forwardedHost || requestHeaders.get("host");
+  const forwardedProto = requestHeaders.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocol = forwardedProto || (host?.includes("localhost") ? "http" : "https");
+
+  return host ? `${protocol}://${host}` : "http://localhost:3000";
+}
+
 export async function oauthLogin(formData: FormData) {
   const provider = String(formData.get("provider") ?? "");
   const next = safeNextPath(String(formData.get("next") ?? ""));
   if (provider !== "google") redirect("/login?error=Unsupported%20sign-in%20provider.");
 
-  const origin = (await headers()).get("origin") ?? "http://localhost:3000";
+  const requestHeaders = await headers();
+  const origin = getRequestOrigin(requestHeaders);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
