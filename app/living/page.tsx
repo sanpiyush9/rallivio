@@ -237,6 +237,9 @@ export default function LivingDiscover() {
     return () => window.clearInterval(id);
   }, [items.length]);
 
+  const sourceLive = Boolean(apiUsageLatestAt && Date.now() - apiUsageLatestAt < 2 * 60 * 60 * 1000);
+  const fieldState = !apiUsageLatestAt ? "not started" : sourceLive ? "active" : "idle";
+
   const ranked = useMemo(
     () => items
       .filter(item => Boolean(item.metadata?.signal))
@@ -408,7 +411,7 @@ export default function LivingDiscover() {
           <button className="more" type="button" onClick={() => setShowAllCategories(v => !v)}>{showAllCategories ? "Less ↑" : `+${categories.length - 10} more`}</button>
         </div>
         <div className="liveStrip" aria-label="Live discovery activity">
-          <div className="liveStripHead"><span><i/> LIVE FIELD</span><small>{loading ? "syncing" : `${verifiedSignalCount} verified signals`}</small></div>
+          <div className="liveStripHead"><span><i/> LIVE FIELD</span><small>{fieldState}{verifiedSignalCount ? ` · ${verifiedSignalCount} verified signals` : ""}</small></div>
           <div className="liveStripItems">
             {ranked.slice(0, 3).map((x, i) => (
               <button key={x.id} type="button" onClick={() => setModal(x)}>
@@ -417,7 +420,7 @@ export default function LivingDiscover() {
                 <em>{i === 0 ? "●" : "↗"}</em>
               </button>
             ))}
-            {!ranked.length && <div className="liveStripEmpty">Waiting for the field to sync…</div>}
+            {!ranked.length && <div className="liveStripEmpty">{!apiUsageLatestAt ? "No acquisition has run yet." : "No verified signals yet."}</div>}
           </div>
         </div>
       </div>
@@ -447,7 +450,7 @@ export default function LivingDiscover() {
     <section className="pulseStrip" aria-label="Global creator pulse">
       <div className="pulseStripLabel">
         <small>GLOBAL CREATOR PULSE</small>
-        <strong><i/> Live</strong>
+        <strong><i/> {sourceLive ? "Live" : "Idle"}</strong>
       </div>
       <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(risingCreators)}</b><small>Rising Creators</small></div>
       <div className="pulseMetric"><span>♨</span><b>{loading ? "—" : fmt(verifiedSignalCount)}</b><small>Verified Signals</small></div>
@@ -467,14 +470,14 @@ export default function LivingDiscover() {
           </svg>
           <i/><i/><i/><i/><i/><i/>
         </div>
-        <div><b>Global Activity</b><small>Verified source coverage · {new Set(items.map(x => x.region).filter(Boolean)).size ? Array.from(new Set(items.map(x => x.region).filter(Boolean))).join(", ") : "—"}<br/>{loading ? "Refreshing source observations…" : `${fmt(poolCount)} videos · ${fmt(creatorPool.length)} verified creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
+        <div><b>Global Activity</b><small>Verified source coverage · {new Set(items.map(x => x.region).filter(Boolean)).size ? Array.from(new Set(items.map(x => x.region).filter(Boolean))).join(", ") : "—"}<br/>{!apiUsageLatestAt ? "No source observations yet." : `${fmt(poolCount)} videos · ${fmt(creatorPool.length)} verified creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
       </div>
     </section>
 
     <section className="pulseSection">
       <div className="pulseSectionHead">
         <div className="pulseTitle"><span className="pulseWave">⌁</span><div><h2>RALLIVIO PULSE</h2><p>Real signals. Real movement. Rotating continuously from the verified discovery pool.</p></div></div>
-        <div className="pulseHeadActions"><span className="pulseLive"><i/> {loading ? "Syncing" : "Updating"}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</span><button className="viewSignalsButton" type="button" onClick={() => document.getElementById("pulse-stream")?.scrollIntoView({ behavior: "smooth", block: "center" })}>View all signals&nbsp; →</button></div>
+        <div className="pulseHeadActions"><span className="pulseLive"><i/> {sourceLive ? "Live" : "Idle"}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</span><button className="viewSignalsButton" type="button" onClick={() => document.getElementById("pulse-stream")?.scrollIntoView({ behavior: "smooth", block: "center" })}>View all signals&nbsp; →</button></div>
       </div>
       <div className="pulseTabs">
         {signalGroups.map((g, i) => (
