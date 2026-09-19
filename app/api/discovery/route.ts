@@ -90,19 +90,6 @@ export async function GET(request: Request) {
     }
     const rankings = (await feedResponse.json()) as RankingRow[];
 
-    // Exact count is a separate HEAD request: zero signal rows are transferred.
-    const countParams = applyRankingFilters(new URLSearchParams({ select: "video_id" }), request);
-    // Keep the headline verified-signal metric global even when a signal tab
-    // is selected; the tab itself is represented by the filtered item set.
-    countParams.delete("signal_labels");
-    const countResponse = await supabase(`feed_rankings?${countParams}`, {
-      method: "HEAD",
-      headers: { Prefer: "count=exact", Range: "0-0" },
-    });
-    const verifiedSignalCount = Number(
-      countResponse.headers.get("content-range")?.split("/")[1] ?? rankings.length,
-    );
-
     const overviewResponse = await supabase("rpc/get_discovery_overview", {
       method: "POST",
       body: "{}",
@@ -121,30 +108,11 @@ export async function GET(request: Request) {
       topicCounts?: Record<string, number>;
     };
 
-    const signalNames = [
-      "Now Moving", "Breaking Out", "On the Rise",
-      "Under the Radar", "Just Dropped", "Live",
-    ];
-    const signalCountsEntries = await Promise.all(signalNames.map(async (name) => {
-      const params = applyRankingFilters(
-        new URLSearchParams({ select: "video_id" }),
-        request,
-      );
-      params.delete("signal_labels");
-      params.set("signal_labels", `cs.${JSON.stringify([name])}`);
-      const response = await supabase(`feed_rankings?${params}`, {
-        method: "HEAD",
-        headers: { Prefer: "count=exact", Range: "0-0" },
-      });
-      return [name, Number(response.headers.get("content-range")?.split("/")[1] ?? 0)] as const;
-    }));
-    const signalCounts = Object.fromEntries(signalCountsEntries);
-
-    const poolCountResponse = await supabase("youtube_discovery_pool?select=id", {
-      method: "HEAD",
-      headers: { Prefer: "count=exact", Range: "0-0" },
-    });
-    const poolCount = Number(poolCountResponse.headers.get("content-range")?.split("/")[1] ?? 0);
+    // One database aggregate supplies every headline count. Never derive
+    // global numbers from the current page-sized sample.
+    const verifiedSignalCount = Number(overview.verifiedSignals ?? 0);
+    const signalCounts = overview.signalCounts ?? {};
+    const poolCount = Number(overview.poolCount ?? 0);
 
     const usageResponse = await supabase(
       "api_usage?select=created_at,endpoint&order=created_at.desc&limit=1",
