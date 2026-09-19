@@ -200,6 +200,21 @@ A visual QA pass is not complete until the tested URL, matched route, source fil
 The live 3D globe now uses the Three.js Earth assets from upstream raw GitHub URLs. The requested local `/public/textures` copies were not silently represented as complete because the current GitHub connector exposes UTF-8 text-file writes but not binary repository-file uploads through the available file-update path. When binary asset tooling becomes available, localize the three Earth assets and update `components/DiscoverGlobe.tsx`; until then this remains a documented follow-up.
 
 
+## 2026-09-20 — Local verification is the first runner
+
+A CI or deployment runner being unavailable is not the same as being unable to verify the code. Before declaring a build blocked, run the repository's verification locally on the exact feature HEAD:
+
+1. `git checkout feature/creator-platform-subscription`
+2. `git pull`
+3. `npm install`
+4. `npm run verify`
+
+This provides direct evidence for TypeScript, lint, tests, Next.js production build, canonical checks and documentation checks without consuming GitHub Actions minutes or Vercel build quota. If the local verification passes, record the exact SHA and treat repository build verification as complete; deployment readiness still requires a successful deployment and served-route verification.
+
+The local workflow should remain reproducible: `npm install` must be followed by committing `package-lock.json` when dependencies are changed or the lockfile is first introduced. Until a lockfile exists, do not claim `npm ci` is available for this repository.
+
+The pre-push hook intentionally runs only `npx tsc --noEmit` to keep the developer feedback loop fast. Full `npm run verify` remains the CI/release gate.
+
 ## 2026-09-19 — Build-evidence fallback order strengthened
 
 ### Build-evidence sources, in order
