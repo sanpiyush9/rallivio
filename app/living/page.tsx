@@ -15,7 +15,7 @@ type Item = {
   id: string; title: string; channel_title: string; published_at: string; thumbnail: string;
   description: string; views: number; likes: number; comments: number; engagement: number; velocity: number;
   live: boolean; url: string; embeddable: boolean; topic: string; region?: string;
-  metadata?: { subscriber_count?: number | null; signal?: string; momentum_score?: number };
+  metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number };
   stats_refreshed_at?: string;
 };
 type DiscoveryPoolItem = {
@@ -33,7 +33,7 @@ type DiscoveryPoolItem = {
   live_broadcast_content?: string | null;
   topic?: string;
   region?: string;
-  metadata?: { subscriber_count?: number | null; signal?: string; momentum_score?: number };
+  metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number };
   stats_refreshed_at?: string | null;
 };
 
@@ -148,6 +148,8 @@ export default function LivingDiscover() {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [apiUsageLatestAt, setApiUsageLatestAt] = useState<number | null>(null);
   const [verifiedSignalCount, setVerifiedSignalCount] = useState(0);
+  const [signalCounts, setSignalCounts] = useState<Record<string, number>>({});
+  const [activeSignal, setActiveSignal] = useState<string | null>(null);
   const [poolCount, setPoolCount] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
@@ -171,10 +173,10 @@ export default function LivingDiscover() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const r = await fetch("/api/discovery?limit=60", { cache: "default" });
+  const loadDiscovery = async (signal: string | null = null) => {
+    try {
+      const query = signal ? `?limit=60&signal=${encodeURIComponent(signal)}` : "?limit=60";
+      const r = await fetch(`/api/discovery${query}`, { cache: "default" });
         const b = await r.json();
         if (!r.ok || !b.ok) throw new Error(b.state || "YOUTUBE_UNAVAILABLE");
         setItems(Array.isArray(b.items) ? b.items.map((x: DiscoveryPoolItem) => {
@@ -205,15 +207,18 @@ export default function LivingDiscover() {
         setLastUpdatedAt(b.refreshedAt ? Date.parse(b.refreshedAt) : null);
         setApiUsageLatestAt(b.apiUsageLatestAt ? Date.parse(b.apiUsageLatestAt) : null);
         setVerifiedSignalCount(Number(b.verifiedSignalCount || 0));
+        setSignalCounts(b.signalCounts && typeof b.signalCounts === "object" ? b.signalCounts : {});
         setPoolCount(Number(b.poolCount || 0));
         setNotice("");
-      } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
-      finally { setLoading(false); }
-    };
-    void load();
-    const id = window.setInterval(() => void load(), 60000);
+    } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    void loadDiscovery(null);
+    const id = window.setInterval(() => void loadDiscovery(activeSignal), 60000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [activeSignal]);
 
   useEffect(() => { if (!notice) return; const id = window.setTimeout(() => setNotice(""), 4200); return () => window.clearTimeout(id); }, [notice]);
 
@@ -279,7 +284,11 @@ export default function LivingDiscover() {
     return s ? base.filter(x => `${x.title} ${x.channel_title} ${x.description} ${x.topic}`.toLowerCase().includes(s)) : base;
   }, [ranked, filter, q]);
   const visibleCategories = showAllCategories ? categories : categories.slice(0, 10);
-  const signalGroups = useMemo(() => signalTypes.map(name => ({ name, items: ranked.filter(x => signalMatches(x, name)) })), [ranked]);
+  const signalGroups = useMemo(() => signalTypes.map(name => ({
+    name,
+    count: Number(signalCounts[name] || 0),
+    items: activeSignal === name ? ranked : [],
+  })), [signalCounts, activeSignal, ranked]);
   const categoryPulse = useMemo(() => categories.slice(1).map(c => {
     const matches = ranked.filter(x => categoryFor(x) === c.name);
     const momentum = matches.length ? Math.round(matches.reduce((sum, x) => sum + (x.metadata?.momentum_score || 0), 0) / matches.length) : 0;
@@ -344,7 +353,7 @@ export default function LivingDiscover() {
   const command = (s: string) => {
     const l = s.trim().toLowerCase(); if (!l) return;
     const c = categories.find(x => x.name.toLowerCase() === l || x.name.toLowerCase().includes(l) || l.includes(x.name.toLowerCase()));
-    if (c) { setFilter(c.name); setQ(""); pulseField(`RALLIVIO tuned the field to ${c.name}.`); return; }
+    if (c) { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null); pulseField(`RALLIVIO tuned the field to ${c.name}.`); return; }
     const p = platforms.find(x => l.includes(x.name.toLowerCase()));
     if (p) { activatePlatform(p); return; }
     if (l.includes("creator") || l.includes("profile")) { go("/creators"); return; }
@@ -352,7 +361,7 @@ export default function LivingDiscover() {
     if (l.includes("opportun")) { go("/opportunities"); return; }
     setFilter("Trending"); setQ(s); pulseField(`Searching the verified discovery pool for “${s}”.`);
   };
-  const activateCore = () => { setActivePlatform("YouTube"); setFilter("Trending"); setQ(""); pulseField("RALLIVIO re-centered. The living field is listening."); };
+  const activateCore = () => { setActivePlatform("YouTube"); setActiveSignal(null); setFilter("Trending"); setQ(""); void loadDiscovery(null); pulseField("RALLIVIO re-centered. The living field is listening."); };
 
   return <main className={`rv theme-${theme}`}>
     <button className="themeScrim" type="button" aria-label="Close theme picker" onClick={() => setShowThemes(false)} style={{ display: showThemes ? "block" : "none" }} />
@@ -407,7 +416,7 @@ export default function LivingDiscover() {
         <p>RALLIVIO turns the creator internet into a living field — people, culture, signals and opportunities moving together in one place.</p>
         <form className="heroSearch" onSubmit={e => { e.preventDefault(); command(q); }}><span className="searchMark">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="What do you want to discover?" aria-label="Universal discovery search"/><button type="submit" aria-label="Search">→</button></form>
         <div className="categoryRail" aria-label="Discovery categories">
-          {visibleCategories.map(c => <button key={c.name} className={filter === c.name ? "active" : ""} type="button" onClick={() => { setFilter(c.name); setQ(""); pulseField(`Field tuned to ${c.name}.`); }}>{c.name}</button>)}
+          {visibleCategories.map(c => <button key={c.name} className={filter === c.name ? "active" : ""} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null); pulseField(`Field tuned to ${c.name}.`); }}>{c.name}</button>)}
           <button className="more" type="button" onClick={() => setShowAllCategories(v => !v)}>{showAllCategories ? "Less ↑" : `+${categories.length - 10} more`}</button>
         </div>
         <div className="liveStrip" aria-label="Live discovery activity">
@@ -481,11 +490,14 @@ export default function LivingDiscover() {
       </div>
       <div className="pulseTabs">
         {signalGroups.map((g, i) => (
-          <button key={g.name} type="button" className={g.items.length ? (i === 0 ? "active" : "") : "empty"} onClick={() => {
-            if (g.items[0]) selectPulse(g.items[(pulseOffset + i) % g.items.length]);
-            else setNotice("No verified " + g.name + " observations are available right now.");
+          <button key={g.name} type="button" className={activeSignal === g.name ? "active" : (g.count ? "hasData" : "empty")} onClick={() => {
+            setActiveSignal(g.name);
+            setFilter("Trending");
+            setQ("");
+            void loadDiscovery(g.name);
+            window.requestAnimationFrame(() => document.getElementById("pulse-stream")?.scrollIntoView({ behavior: "smooth", block: "center" }));
           }}>
-            <span className="pulseTabIcon" aria-hidden="true">{i + 1}</span><b>{g.name}</b><small>{g.items.length}</small>
+            <span className="pulseTabIcon" aria-hidden="true">{i + 1}</span><b>{g.name}</b><small>{fmt(g.count)}</small>
           </button>
         ))}
       </div>
