@@ -19,5 +19,15 @@ jobs:
           cache: npm
       - name: Install
         run: npm install --no-audit --no-fund
-      - name: Verify
-        run: npm run verify
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Tests
+        run: npm run test
+      - name: Build
+        run: npm run build
+      - name: Canonical check
+        run: npm run canonical-check
+      - name: Documentation check
+        run: npm run check:docs
