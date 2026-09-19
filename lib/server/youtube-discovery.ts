@@ -468,7 +468,7 @@ export async function refresh() {
     // YouTube in 2026. It is designed for repeated statistics refreshes and
     // keeps observation quota separate from discovery/acquisition.
     const p = new URLSearchParams({
-      part: "id,snippet,statistics,contentDetails",
+      part: "statistics",
       id: batch.map((x) => x.id).join(","),
     });
     const data = (await yt(`videos:batchGetStats?${p}`)) as any;
