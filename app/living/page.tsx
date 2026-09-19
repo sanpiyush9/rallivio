@@ -465,7 +465,7 @@ export default function LivingDiscover() {
           </svg>
           <i/><i/><i/><i/><i/><i/>
         </div>
-        <div><b>Global Activity</b><small>Verified source coverage · {new Set(items.map(x => x.region).filter(Boolean)).size ? Array.from(new Set(items.map(x => x.region).filter(Boolean))).join(", ") : "—"}<br/>{loading ? "Refreshing source observations…" : `${fmt(ranked.length)} videos · ${fmt(creatorPool.length)} creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
+        <div><b>Global Activity</b><small>Verified source coverage · {new Set(items.map(x => x.region).filter(Boolean)).size ? Array.from(new Set(items.map(x => x.region).filter(Boolean))).join(", ") : "—"}<br/>{loading ? "Refreshing source observations…" : `${fmt(items.length)} videos · ${fmt(creatorPool.length)} verified creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
       </div>
     </section>
 
