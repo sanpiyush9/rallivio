@@ -6,7 +6,7 @@ const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const YT = process.env.YOUTUBE_API_KEY;
 const SECRET = process.env.CRON_SECRET;
 
-export const REGIONS = ["IN","US","GB","CA","AU","DE","BR","JP","KR","SG"];
+export const REGIONS = ["IN","US","GB","CA","AU","DE","BR","JP","KR","SG","FR","ES","IT","MX","AR","CO","CL","PE","ZA","NG","KE","EG","AE","SA","TR","NL","SE","NO","DK","FI","PL","PT","ID","MY","TH","PH","VN","NZ","IE","CH","AT","BE","GR","CZ","RO","HU","IL","PK","BD","LK"];
 
 export const CATEGORIES = [
   "1","2","10","15","17","19","20","22","23","24","25","26","27","28","29",
@@ -282,7 +282,7 @@ export async function acquire() {
     }
   }
 
-  const baseRows = [...seen.values()].slice(0, 2500);
+  const baseRows = [...seen.values()].slice(0, 7500);
 
   const channelIds = [
     ...new Set(
@@ -409,58 +409,104 @@ export async function acquire() {
 export async function refresh() {
   config();
 
-  const pool: any[] = [];
-  for (let offset = 0; offset < 2500; offset += 1000) {
-    const poolResponse = await sb(
-      `youtube_discovery_pool?select=*&order=views.desc&limit=1000&offset=${offset}`,
-    );
-    if (!poolResponse.ok) {
-      throw new Error(`Pool read failed: ${poolResponse.status} ${await poolResponse.text()}`);
+  const now = new Date();
+  const isoNow = now.toISOString();
+  const hotLimit = 5000;
+  const warmPerPass = 3340;
+  const coldPerPass = 4170;
+
+  async function loadTier(tier: "hot" | "warm" | "cold", limit: number, staleHours: number) {
+    const cutoff = new Date(now.getTime() - staleHours * 36e5).toISOString();
+    const rows: any[] = [];
+    let offset = 0;
+
+    while (rows.length < limit) {
+      const pageLimit = Math.min(1000, limit - rows.length);
+      const filter =
+        tier === "hot"
+          ? `tier=eq.hot&last_observed_at=lt.${encodeURIComponent(cutoff)}`
+          : `tier=eq.${tier}&last_observed_at=lt.${encodeURIComponent(cutoff)}`;
+
+      const response = await sb(
+        `youtube_discovery_pool?select=*&${filter}&order=last_observed_at.asc.nullsfirst,updated_at.asc&limit=${pageLimit}&offset=${offset}`,
+      );
+      if (!response.ok) {
+        throw new Error(`Tier pool read failed: ${response.status} ${await response.text()}`);
+      }
+
+      const page = (await response.json()) as any[];
+      rows.push(...page);
+      if (page.length < pageLimit) break;
+      offset += page.length;
     }
 
-    const page = (await poolResponse.json()) as any[];
-    pool.push(...page);
-    if (page.length < 1000) break;
+    return rows;
   }
 
-  const poolById = new Map(pool.map((row) => [String(row.id), row]));
-  const now = new Date().toISOString();
+  const hot = await loadTier("hot", hotLimit, 1);
+  const warm = await loadTier("warm", warmPerPass, 6);
+  const cold = await loadTier("cold", coldPerPass, 24);
+  const pool = [...hot, ...warm, ...cold];
+
+  if (!pool.length) {
+    return {
+      refreshed: 0,
+      youtubeCalls: 0,
+      tiers: { hot: 0, warm: 0, cold: 0 },
+    };
+  }
+
   const batches = Array.from(
     { length: Math.ceil(pool.length / 50) },
     (_, i) => pool.slice(i * 50, i * 50 + 50),
   );
 
-  await runConcurrent(batches, 8, async (batch, index) => {
+  await runConcurrent(batches, 12, async (batch, index) => {
     if (!batch.length) return null;
 
+    // videos.batchGetStats is a dedicated 1-unit quota method introduced by
+    // YouTube in 2026. It is designed for repeated statistics refreshes and
+    // keeps observation quota separate from discovery/acquisition.
     const p = new URLSearchParams({
-      part: "snippet,statistics,status",
+      part: "id,snippet,statistics,contentDetails",
       id: batch.map((x) => x.id).join(","),
     });
-    const data = (await yt(`videos?${p}`)) as any;
-
-    await usage("videos.list:statistics", {
+    const data = (await yt(`videos:batchGetStats?${p}`)) as any;
+    await usage("videos.batchGetStats", {
       phase: "refresh",
       batch: index,
       videoCount: batch.length,
     });
 
     const items = data.items ?? [];
+    const existingById = new Map(batch.map((x) => [String(x.id), x]));
+
     const poolRows = items
       .map((v: any) => {
-        const existing = poolById.get(String(v.id));
+        const existing = existingById.get(String(v.id));
         if (!existing) return null;
+
+        const nextViews = num(v.statistics?.viewCount);
+        const previousViews = num(existing.views);
+        const growth = previousViews > 0
+          ? (nextViews - previousViews) / previousViews
+          : nextViews > 0 ? 1 : 0;
 
         return {
           ...existing,
-          views: num(v.statistics?.viewCount),
+          views: nextViews,
           likes: num(v.statistics?.likeCount),
           comments: num(v.statistics?.commentCount),
-          fetched_at: now,
-          last_seen_at: now,
-          stats_refreshed_at: now,
-          verified_at: now,
-          updated_at: now,
+          fetched_at: isoNow,
+          last_seen_at: isoNow,
+          last_observed_at: isoNow,
+          stats_refreshed_at: isoNow,
+          verified_at: isoNow,
+          last_movement_at:
+            growth >= 0.02
+              ? isoNow
+              : existing.last_movement_at ?? null,
+          updated_at: isoNow,
         };
       })
       .filter(Boolean);
@@ -479,7 +525,7 @@ export async function refresh() {
 
     const snapshots = items.map((v: any) => ({
       video_id: v.id,
-      captured_at: now,
+      captured_at: isoNow,
       views: num(v.statistics?.viewCount),
       likes: num(v.statistics?.likeCount),
       comments: num(v.statistics?.commentCount),
@@ -492,13 +538,17 @@ export async function refresh() {
     });
 
     if (!snapshotWrite.ok) {
-      throw new Error(`Snapshot write failed: ${snapshotWrite.status}`);
+      throw new Error(`Snapshot write failed: ${snapshotWrite.status} ${await snapshotWrite.text()}`);
     }
 
     return null;
   });
 
-  return { refreshed: pool.length, youtubeCalls: batches.length };
+  return {
+    refreshed: pool.length,
+    youtubeCalls: batches.length,
+    tiers: { hot: hot.length, warm: warm.length, cold: cold.length },
+  };
 }
 
 export async function signals() {
@@ -605,9 +655,21 @@ export async function signals() {
     console.warn("Signal cleanup failed after successful publish", cleanup.status);
   }
 
+  let tierSummary: unknown = null;
+  const rebalance = await sb("rpc/rebalance_youtube_observation_tiers", {
+    method: "POST",
+    body: "{}",
+  });
+  if (rebalance.ok) {
+    tierSummary = await rebalance.json();
+  } else {
+    console.warn("Observation tier rebalance failed", rebalance.status);
+  }
+
   return {
     signals: rows.length,
     eligibleVideos: ready.length,
     suppressedVideos: pool.length - ready.length,
+    tiers: tierSummary,
   };
 }
