@@ -513,3 +513,33 @@ The Living Discover page previously used total pool rows as the "verified signal
 
 ### Important acceptance state
 The data pipeline is no longer at the old 25-video seed. The Preview data layer now has a broad multi-region, multi-topic pool and fresh measured signals. The final UI deployment is still required to verify the exact-count presentation changes on the browser route.
+
+## 2026-09-19 — Truth-state, sharing metadata, and shareable detail routes
+Branch: feature/creator-platform-subscription
+
+### Ordered field request
+The acquisition gate was checked first. Current database evidence now shows the pipeline has data: 310 `api_usage` rows, 2,518 persisted discovery videos, 8,561 snapshots, and 2,518 discovery signals. Therefore the subsequent requested items were allowed to proceed.
+
+### Item 2 — truth-state labels
+Living Field activity language is now derived from `apiUsageLatestAt`. The page does not label the field as "syncing" merely because the browser is loading. The global pulse is "Live" only when source usage is within a two-hour freshness window; otherwise it is "Idle". Empty data explicitly says "No acquisition has run yet." and source coverage says "No source observations yet.".
+
+### Item 3 — sharing metadata
+`app/layout.tsx` now exposes the requested RALLIVIO title/description, Open Graph metadata, and Twitter large-image metadata. A dynamic `app/api/og/route.tsx` generates an OG image from persisted discovery content rather than a fabricated trend.
+
+### Item 4 — shareable discovery units
+Added server-rendered dynamic routes:
+- `/topic/[slug]`
+- `/creator/[handle]`
+- `/video/[id]`
+Each has page-specific metadata and a source-backed OG image route. The video page includes the official YouTube embed and RALLIVIO evidence values.
+
+### Smaller
+- Decorative category glyphs were removed from the category rail.
+- Search input and expand/source controls received explicit accessible labels where applicable.
+- The existing worker's `Live` signal remains gated directly on YouTube's `liveBroadcastContent === "live"` flag.
+
+### Safety incident
+A GitHub create-file connector call briefly created the OG-image commit on `main` instead of the explicitly supplied feature branch. `main` was immediately restored to pre-incident commit `59b9d8e4211211b4edd3a3a00506a1b3b930959f`. No checkpoint branch was moved. The implementation remains on `feature/creator-platform-subscription`; `checkpoint/living-front-v12` remains unchanged.
+
+### Validation
+The current feature branch is ahead of `checkpoint/living-front-v12` by the isolated requested changes. Vercel has produced READY previews for the truth-state and metadata commits; the newest detail-page/OG commit is awaiting its feature Preview deployment. Do not call these newest UI changes live until deployment SHA/state and route tests agree.
