@@ -40,16 +40,16 @@ function classifyRallivioTopic(video: any, category: string) {
   const text = `${video.snippet?.title ?? ""} ${video.snippet?.description ?? ""} ${video.snippet?.channelTitle ?? ""}`.toLowerCase();
 
   const keywordTopics: Array<[string, RegExp]> = [
-    ["Food", /\\b(food|recipe|cooking|cook|restaurant|cuisine|baking|chef|meal|street food|restaurant review)\\b/i],
-    ["Fitness", /\\b(fitness|workout|gym|exercise|yoga|weight loss|bodybuilding|training)\\b/i],
-    ["Podcasts", /\\b(podcast|podcasts|interview show|episode)\\b/i],
-    ["Finance", /\\b(finance|investing|investment|stocks|stock market|trading|crypto|mutual fund|banking)\\b/i],
-    ["Business", /\\b(business|startup|entrepreneur|marketing|sales|company|founder|small business)\\b/i],
-    ["Science", /\\b(science|physics|chemistry|biology|space|astronomy|research|experiment)\\b/i],
-    ["Beauty", /\\b(beauty|makeup|skincare|cosmetics|haircare|hair style)\\b/i],
-    ["Fashion", /\\b(fashion|outfit|clothing|style|streetwear|fashion haul)\\b/i],
-    ["DIY & Home", /\\b(diy|do it yourself|home decor|home improvement|craft|woodworking|interior design|how to)\\b/i],
-    ["Technology", /\\b(programming|software|coding|developer|technology|tech|ai|artificial intelligence|machine learning|gadget|smartphone|computer)\\b/i],
+    ["Food", /\b(food|recipe|cooking|cook|restaurant|cuisine|baking|chef|meal|street food|restaurant review)\b/i],
+    ["Fitness", /\b(fitness|workout|gym|exercise|yoga|weight loss|bodybuilding|training)\b/i],
+    ["Podcasts", /\b(podcast|podcasts|interview show|episode)\b/i],
+    ["Finance", /\b(finance|investing|investment|stocks|stock market|trading|crypto|mutual fund|banking)\b/i],
+    ["Business", /\b(business|startup|entrepreneur|marketing|sales|company|founder|small business)\b/i],
+    ["Science", /\b(science|physics|chemistry|biology|space|astronomy|research|experiment)\b/i],
+    ["Beauty", /\b(beauty|makeup|skincare|cosmetics|haircare|hair style)\b/i],
+    ["Fashion", /\b(fashion|outfit|clothing|style|streetwear|fashion haul)\b/i],
+    ["DIY & Home", /\b(diy|do it yourself|home decor|home improvement|craft|woodworking|interior design|how to)\b/i],
+    ["Technology", /\b(programming|software|coding|developer|technology|tech|ai|artificial intelligence|machine learning|gadget|smartphone|computer)\b/i],
   ];
 
   for (const [topic, pattern] of keywordTopics) {
@@ -639,8 +639,7 @@ export async function signals() {
 
   const classifyFormat = (video: any) => {
     if (video.live_broadcast_content === "live") return "live";
-    if (video.live_broadcast_content === "upcoming") return "upcoming";
-    return parseDurationSeconds(video.duration) <= 180 ? "short" : "long";
+    return parseDurationSeconds(video.duration) < 60 ? "short" : "video";
   };
 
   const percentileMap = (
