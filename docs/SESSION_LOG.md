@@ -632,3 +632,13 @@ Wait for the new Preview deployment to become READY, then use the live scheduler
 - Fixed acquisition refresh semantics: rediscovery no longer clears `stats_refreshed_at` or injects acquisition-time signal/momentum metadata into existing rows; tier refresh now includes NULL observation timestamps.
 - Added a daily rotating newest-upload + live sweep using YouTube `search.list`, covering 100 region/category cells per daily acquisition and rotating through the full matrix. This is designed to grow the pool beyond the current most-popular-only sample.
 - Deployment is currently blocked by the Vercel team's build-rate limit; the latest READY branch deployment remains older than these commits. Database-side signal counts/truth gate are live now; UI/API source changes are committed to `feature/creator-platform-subscription` and require the next successful preview deployment.
+
+
+## 2026-09-20 — Self-healing deployment guard restored
+
+- Reviewed the RALLIVIO self-healing/runbook guidance before touching deployment configuration.
+- Confirmed the active branch had reintroduced sub-daily Vercel cron schedules even though KI-012 documents the current Hobby deployment policy as once-daily cron only.
+- Restored vercel.json to once-daily Vercel schedules: acquire 02:00, refresh 08:00, signals 08:30.
+- Added scripts/check-vercel-crons.mjs and wired it into prebuild so a future sub-daily Vercel cron regression fails deterministically before deployment.
+- The higher-frequency signal cycle remains handled by the Supabase database scheduler; Vercel is no longer relied upon for that cadence.
+- A GitHub verification workflow was restored as the documented build-evidence fallback because Vercel build-log retrieval is unavailable. No protected branch was touched.
