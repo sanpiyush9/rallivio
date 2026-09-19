@@ -555,14 +555,13 @@ export async function signals() {
   config();
 
   const pool: any[] = [];
-  for (let offset = 0; offset < 2500; offset += 1000) {
+  for (let offset = 0; ; offset += 1000) {
     const poolResponse = await sb(
-      `youtube_discovery_pool?select=id,channel_id,views,likes,comments,published_at,live_broadcast_content,metadata,region,topic&order=views.desc&limit=1000&offset=${offset}`,
+      `youtube_discovery_pool?select=id,channel_id,views,likes,comments,published_at,live_broadcast_content,duration,metadata,region,topic,format&order=views.desc&limit=1000&offset=${offset}`,
     );
     if (!poolResponse.ok) {
       throw new Error(`Pool read failed: ${poolResponse.status} ${await poolResponse.text()}`);
     }
-
     const page = (await poolResponse.json()) as any[];
     pool.push(...page);
     if (page.length < 1000) break;
@@ -572,9 +571,6 @@ export async function signals() {
     return { signals: 0, eligibleVideos: 0, suppressedVideos: 0 };
   }
 
-  // Read the latest observations in bounded RPC batches. This avoids relying on
-  // PostgREST's global 1,000-row response cap, which previously made every
-  // video appear to have fewer than two observations.
   const snapshotRows: any[] = [];
   const poolIds = pool.map((x) => String(x.id));
   for (let start = 0; start < poolIds.length; start += 200) {
@@ -588,67 +584,224 @@ export async function signals() {
         `Snapshot RPC failed: ${snapshotResponse.status} ${await snapshotResponse.text()}`,
       );
     }
-
-    const batch = (await snapshotResponse.json()) as any[];
-    snapshotRows.push(...batch);
+    snapshotRows.push(...((await snapshotResponse.json()) as any[]));
   }
 
   const grouped = new Map<string, any[]>();
   for (const item of snapshotRows) {
-    const list = grouped.get(item.video_id) ?? [];
+    const list = grouped.get(String(item.video_id)) ?? [];
     if (list.length < 5) list.push(item);
-    grouped.set(item.video_id, list);
+    grouped.set(String(item.video_id), list);
   }
 
-  const ready = pool.filter(
-    (x) => (grouped.get(String(x.id))?.length ?? 0) >= 2,
-  );
+  const parseDurationSeconds = (value: string | null | undefined) => {
+    if (!value) return 0;
+    const match = value.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+    if (!match) return 0;
+    return Number(match[1] || 0) * 3600 + Number(match[2] || 0) * 60 + Number(match[3] || 0);
+  };
 
-  const now = new Date().toISOString();
-  const rows = ready.map((x) => {
-    const q = score(
-      {
-        id: x.id,
-        snippet: {
-          publishedAt: x.published_at,
-          liveBroadcastContent: x.live_broadcast_content,
+  const classifyFormat = (video: any) => {
+    if (video.live_broadcast_content === "live") return "live";
+    if (video.live_broadcast_content === "upcoming") return "upcoming";
+    return parseDurationSeconds(video.duration) <= 180 ? "short" : "long";
+  };
+
+  const percentileMap = (
+    entries: Array<{ id: string; value: number }>,
+    descending = true,
+  ) => {
+    const sorted = [...entries].sort((a, b) => {
+      const delta = descending ? b.value - a.value : a.value - b.value;
+      return delta || a.id.localeCompare(b.id);
+    });
+    const out = new Map<string, number>();
+    if (sorted.length === 1) {
+      out.set(sorted[0].id, 1);
+      return out;
+    }
+    sorted.forEach((entry, index) => out.set(entry.id, index / (sorted.length - 1)));
+    return out;
+  };
+
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const prepared = pool
+    .map((x) => {
+      const observations = [...(grouped.get(String(x.id)) ?? [])].sort(
+        (a, b) => Date.parse(a.captured_at) - Date.parse(b.captured_at),
+      );
+      if (observations.length < 2) return null;
+
+      const current = observations[observations.length - 1];
+      const scored = score(
+        {
+          id: x.id,
+          snippet: {
+            publishedAt: x.published_at,
+            liveBroadcastContent: x.live_broadcast_content,
+          },
+          statistics: {
+            viewCount: current.views,
+            likeCount: current.likes,
+            commentCount: current.comments,
+          },
         },
-        statistics: {
-          viewCount: x.views,
-          likeCount: x.likes,
-          commentCount: x.comments,
-        },
-      },
-      [...(grouped.get(String(x.id)) ?? [])].reverse(),
-    );
+        observations,
+      );
+
+      const recent = observations.slice(-4);
+      let consecutivePositiveSnapshots = 0;
+      for (let i = recent.length - 1; i > 0; i -= 1) {
+        if (num(recent[i].views) > num(recent[i - 1].views)) consecutivePositiveSnapshots += 1;
+        else break;
+      }
+
+      const subscriberCount = num(x.metadata?.subscriber_count);
+      const audienceRelativeScore =
+        Math.log10(1 + num(current.views) / Math.max(subscriberCount + 1000, 1000));
+
+      const latestSnapshotAgeHours = Math.max(
+        0,
+        (now.getTime() - Date.parse(current.captured_at)) / 36e5,
+      );
+
+      const format = classifyFormat(x);
+      const cell = `${String(x.topic ?? "Other")}::${String(x.region ?? "WORLDWIDE")}::${format}`;
+
+      return {
+        x,
+        observations,
+        current,
+        scored,
+        consecutivePositiveSnapshots,
+        audienceRelativeScore,
+        latestSnapshotAgeHours,
+        format,
+        cell,
+      };
+    })
+    .filter(Boolean) as Array<any>;
+
+  const cells = new Map<string, any[]>();
+  for (const item of prepared) {
+    const list = cells.get(item.cell) ?? [];
+    list.push(item);
+    cells.set(item.cell, list);
+  }
+
+  for (const cellItems of cells.values()) {
+    const velocityPct = percentileMap(cellItems.map((item) => ({
+      id: String(item.x.id),
+      value: Number(item.scored.evidence.velocity ?? 0),
+    })));
+    const accelerationPct = percentileMap(cellItems.map((item) => ({
+      id: String(item.x.id),
+      value: Number(item.scored.evidence.acceleration ?? 0),
+    })));
+    const audiencePct = percentileMap(cellItems.map((item) => ({
+      id: String(item.x.id),
+      value: Number(item.audienceRelativeScore),
+    })));
+
+    for (const item of cellItems) {
+      item.velocityPct = velocityPct.get(String(item.x.id)) ?? 1;
+      item.accelerationPct = accelerationPct.get(String(item.x.id)) ?? 1;
+      item.audiencePct = audiencePct.get(String(item.x.id)) ?? 1;
+    }
+  }
+
+  const movementFreshHours = 6;
+  const riseFreshHours = 12;
+  const radarFreshHours = 12;
+  const droppedFreshHours = 48;
+  const liveFreshHours = 1;
+
+  const rows = prepared.map((item) => {
+    const x = item.x;
+    const labels: string[] = [];
+
+    if (item.velocityPct <= 0.25 && item.latestSnapshotAgeHours <= movementFreshHours) {
+      labels.push("Now Moving");
+    }
+    if (item.accelerationPct <= 0.10 && item.latestSnapshotAgeHours <= movementFreshHours) {
+      labels.push("Breaking Out");
+    }
+    if (
+      item.consecutivePositiveSnapshots >= 3 &&
+      item.latestSnapshotAgeHours <= riseFreshHours
+    ) {
+      labels.push("On the Rise");
+    }
+    if (item.audiencePct <= 0.10 && item.latestSnapshotAgeHours <= radarFreshHours) {
+      labels.push("Under the Radar");
+    }
+    if (
+      Date.parse(x.published_at) >= now.getTime() - 48 * 36e5 &&
+      item.latestSnapshotAgeHours <= droppedFreshHours
+    ) {
+      labels.push("Just Dropped");
+    }
+    if (
+      x.live_broadcast_content === "live" &&
+      item.latestSnapshotAgeHours <= liveFreshHours
+    ) {
+      labels.push("Live");
+    }
+
+    const priority = [
+      "Live",
+      "Breaking Out",
+      "Now Moving",
+      "On the Rise",
+      "Under the Radar",
+      "Just Dropped",
+    ];
+    const primary = priority.find((label) => labels.includes(label)) ?? "Observed";
 
     return {
       channel_id: String(x.channel_id),
       video_id: String(x.id),
-      signal_type: q.signal,
-      momentum_score: q.momentum,
-      evidence: q.evidence,
-      cell_key: `${String(x.region ?? "WORLDWIDE")}:${String(x.topic ?? "Other")}:all`,
-      observed_at: now,
-      expires_at: new Date(Date.now() + 36 * 36e5).toISOString(),
+      signal_type: primary,
+      signal_labels: labels,
+      momentum_score: item.scored.momentum,
+      evidence: {
+        ...item.scored.evidence,
+        velocity_percentile: Number((1 - item.velocityPct).toFixed(4)),
+        acceleration_percentile: Number((1 - item.accelerationPct).toFixed(4)),
+        audience_relative_percentile: Number((1 - item.audiencePct).toFixed(4)),
+        audience_relative_score: Number(item.audienceRelativeScore.toFixed(4)),
+        consecutive_positive_snapshots: item.consecutivePositiveSnapshots,
+        latest_snapshot_age_hours: Number(item.latestSnapshotAgeHours.toFixed(2)),
+        freshness_windows_hours: {
+          movement: movementFreshHours,
+          rise: riseFreshHours,
+          radar: radarFreshHours,
+          dropped: droppedFreshHours,
+          live: liveFreshHours,
+        },
+        format: item.format,
+      },
+      cell_key: `${String(x.topic ?? "Other")}:${String(x.region ?? "WORLDWIDE")}:${item.format}`,
+      observed_at: nowIso,
+      expires_at: new Date(now.getTime() + 6 * 36e5).toISOString(),
     };
   });
 
-  for (let i = 0; i < rows.length; i += 500) {
+  const publishable = rows.filter((row) => row.signal_labels.length > 0);
+
+  for (let i = 0; i < publishable.length; i += 500) {
     const write = await sb("discovery_signals", {
       method: "POST",
       headers: { Prefer: "return=minimal" },
-      body: JSON.stringify(rows.slice(i, i + 500)),
+      body: JSON.stringify(publishable.slice(i, i + 500)),
     });
-
     if (!write.ok) {
       throw new Error(`Signal write failed: ${write.status} ${await write.text()}`);
     }
   }
 
-  // Publish the new batch before removing the previous batch so a transient
-  // write failure can never leave the public signal feed empty.
-  const cleanup = await sb(`discovery_signals?observed_at=lt.${encodeURIComponent(now)}`, {
+  const cleanup = await sb(`discovery_signals?observed_at=lt.${encodeURIComponent(nowIso)}`, {
     method: "DELETE",
   });
   if (!cleanup.ok) {
@@ -667,9 +820,13 @@ export async function signals() {
   }
 
   return {
-    signals: rows.length,
-    eligibleVideos: ready.length,
-    suppressedVideos: pool.length - ready.length,
+    signals: publishable.length,
+    eligibleVideos: prepared.length,
+    suppressedVideos: pool.length - publishable.length,
+    labelDistribution: publishable.reduce<Record<string, number>>((acc, row) => {
+      for (const label of row.signal_labels) acc[label] = (acc[label] ?? 0) + 1;
+      return acc;
+    }, {}),
     tiers: tierSummary,
   };
 }
