@@ -590,3 +590,34 @@ Status: Implementation applied; scheduler proof still pending
 
 ### Next action
 Wait for the new Preview deployment to become READY, then use the live scheduler/worker to verify the next stale-HOT refresh and confirm `stats_refreshed_at` advances for the selected HOT cohort. Do not start Item 3 before that proof is complete.
+
+
+## 2026-09-19 — Discovery truth/data normalization fixes
+
+### User-reported live defects addressed
+- Signal metadata was leaking acquisition-time popularity scores onto single-observation rows.
+- Signal distribution was stale/over-concentrated because the feed was reading an old materialized snapshot and the signal acceleration history calculation was reversed.
+- YouTube category names were leaking into the RALLIVIO topic dimension.
+- `format` was hard-coded to `all`.
+
+### Fixes applied
+- API now uses a hard observation gate: a signal/momentum value is only eligible when `stats_refreshed_at` exists and the signal was computed at or after that refresh.
+- Added shared truth-gate helper plus Vitest coverage for null refresh, pre-refresh signal, and valid signal cases.
+- Signal scoring now passes chronological snapshots into `score()`, fixing the reversed-history acceleration calculation.
+- Added explicit RALLIVIO topic taxonomy mapping with keyword/category mapping and backfilled the live pool.
+- Added explicit Travel and Education mappings after coverage audit.
+- Backfilled `format`: live when `live_broadcast_content='live'`; short when duration <60s; otherwise video.
+- Invalid signal rows were removed and acquisition-time signal/momentum metadata was cleared for unrefreshed rows.
+- Feed materialized view now excludes rows without a second observation and signals computed before that observation.
+
+### Live verification
+- Live pool remains 7,840 rows.
+- Zero unrefreshed rows carry a non-null signal/momentum value after backfill.
+- Live topic coverage now includes all 21 RALLIVIO UI topics; Education and Travel were added during the coverage audit.
+- Live formats are only `short` and `video` in the current pool; no `all` rows remain. There are currently zero live-broadcast rows, so `live` cannot truthfully appear until acquisition supplies live content.
+- `/api/discovery?limit=60` currently returns 60 verified signal items with zero single-observation violations. The observed sample has 9 Breaking Out, 30 Now Moving, 3 On the Rise, 5 Under the Radar, and 13 Just Dropped. `signals` is populated on all 60 returned items.
+- The current 60-item sample has no Live signal because the live pool count is currently zero. This is a data-availability limitation, not a fabricated fallback.
+
+### Remaining verification
+- The latest committed Education mapping and final test/docs commits still need their Vercel deployment to become the active branch preview before the final re-fetch is considered the definitive post-head verification.
+- Item 3 remains blocked until the current discovery verification is closed.
