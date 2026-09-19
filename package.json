@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "prebuild": "node scripts/check-platform-icons.mjs",
+    "prebuild": "node scripts/check-platform-icons.mjs && node scripts/check-vercel-crons.mjs",
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
