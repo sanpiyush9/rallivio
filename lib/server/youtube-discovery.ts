@@ -313,7 +313,10 @@ export async function acquire() {
     }
   }
 
-  const baseRows = [...seen.values()].slice(0, 7500);
+  // Keep the full unique acquisition set. Discovery growth is handled by the
+  // database pool; refresh capacity, not an arbitrary row cap, controls how
+  // quickly observations become signal-ready.
+  const baseRows = [...seen.values()];
 
   const channelIds = [
     ...new Set(
@@ -351,8 +354,7 @@ export async function acquire() {
   }
 
   const rows = baseRows.map(({ video, region, category }) => {
-    const topic = CATEGORY_TOPIC[category] ?? "Other";
-    const scored = score(video, []);
+    const topic = classifyRallivioTopic(video, category);
     const channelId = video.snippet?.channelId ?? "";
     const subscriberCount = subscribers.get(channelId) ?? null;
 
@@ -392,13 +394,12 @@ export async function acquire() {
       expires_at: new Date(Date.now() + 36 * 36e5).toISOString(),
       metadata: {
         subscriber_count: subscriberCount,
-        signal: scored.signal,
-        momentum_score: scored.momentum,
         category_id: category,
       },
       topic_tags: [topic],
       acquired_at: now,
-      stats_refreshed_at: null,
+      // Intentionally omitted: stats_refreshed_at must survive rediscovery.
+      // A repeated acquisition is not a new observation.
       language: video.snippet?.defaultLanguage ?? null,
       language_confidence: video.snippet?.defaultLanguage ? 1 : null,
       relevance_score: 1,
@@ -406,12 +407,13 @@ export async function acquire() {
     };
   });
 
+  const acquisitionRows = rows.map(({ stats_refreshed_at: _statsRefreshedAt, ...row }) => row);
   const write = await sb("youtube_discovery_pool?on_conflict=id", {
     method: "POST",
     headers: {
       Prefer: "resolution=merge-duplicates,return=minimal",
     },
-    body: JSON.stringify(rows),
+    body: JSON.stringify(acquisitionRows),
   });
 
   if (!write.ok) {
@@ -462,8 +464,8 @@ export async function refresh() {
       const pageLimit = Math.min(1000, limit - rows.length);
       const filter =
         tier === "hot"
-          ? `tier=eq.hot&stats_refreshed_at=lt.${encodeURIComponent(cutoff)}`
-          : `tier=eq.${tier}&stats_refreshed_at=lt.${encodeURIComponent(cutoff)}`;
+          ? `tier=eq.hot&or=(stats_refreshed_at.is.null,stats_refreshed_at.lt.${encodeURIComponent(cutoff)})`
+          : `tier=eq.${tier}&or=(stats_refreshed_at.is.null,stats_refreshed_at.lt.${encodeURIComponent(cutoff)})`;
 
       const response = await sb(
         `youtube_discovery_pool?select=*&${filter}&order=last_observed_at.asc.nullsfirst,updated_at.asc&limit=${pageLimit}&offset=${offset}`,
@@ -860,6 +862,16 @@ export async function signals() {
   if (!rebalance.ok) {
     throw new Error(
       `Tier rebalance failed: ${rebalance.status} ${await rebalance.text()}`,
+    );
+  }
+
+  const feedRefresh = await sb("rpc/refresh_discovery_feed_rankings", {
+    method: "POST",
+    body: "{}",
+  });
+  if (!feedRefresh.ok) {
+    throw new Error(
+      `Feed ranking refresh failed: ${feedRefresh.status} ${await feedRefresh.text()}`,
     );
   }
 
