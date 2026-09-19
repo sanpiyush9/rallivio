@@ -392,13 +392,14 @@ export async function refresh() {
   config();
 
   const poolResponse = await sb(
-    "youtube_discovery_pool?select=id&order=views.desc&limit=2500",
+    "youtube_discovery_pool?select=*&order=views.desc&limit=2500",
   );
   if (!poolResponse.ok) {
     throw new Error(`Pool read failed: ${poolResponse.status}`);
   }
 
   const pool = (await poolResponse.json()) as any[];
+  const poolById = new Map(pool.map((row) => [String(row.id), row]));
   const now = new Date().toISOString();
   const batches = Array.from(
     { length: Math.ceil(pool.length / 50) },
@@ -421,17 +422,24 @@ export async function refresh() {
     });
 
     const items = data.items ?? [];
-    const poolRows = items.map((v: any) => ({
-      id: v.id,
-      views: num(v.statistics?.viewCount),
-      likes: num(v.statistics?.likeCount),
-      comments: num(v.statistics?.commentCount),
-      fetched_at: now,
-      last_seen_at: now,
-      stats_refreshed_at: now,
-      verified_at: now,
-      updated_at: now,
-    }));
+    const poolRows = items
+      .map((v: any) => {
+        const existing = poolById.get(String(v.id));
+        if (!existing) return null;
+
+        return {
+          ...existing,
+          views: num(v.statistics?.viewCount),
+          likes: num(v.statistics?.likeCount),
+          comments: num(v.statistics?.commentCount),
+          fetched_at: now,
+          last_seen_at: now,
+          stats_refreshed_at: now,
+          verified_at: now,
+          updated_at: now,
+        };
+      })
+      .filter(Boolean);
 
     const write = await sb("youtube_discovery_pool?on_conflict=id", {
       method: "POST",
