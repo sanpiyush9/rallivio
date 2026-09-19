@@ -1,6 +1,6 @@
 # CANONICAL INDEX
 
-**Last updated:** 2026-09-18
+**Last updated:** 2026-09-20
 
 > **Every AI session reads this file FIRST.**
 >
@@ -27,6 +27,7 @@
 | Signal engine | `docs/specs/signals-v1.md` | — | not yet written |
 | Leaderboard (Phase 0) | `docs/specs/leaderboard-v1.md` | — | not yet written |
 | Living Discovery Environment | `docs/specs/living-discovery-environment-v1.md` | 1.0 | 2026-09-16 |
+| Neural Grid / discovery intelligence | `docs/RALLIVIO_NEURAL_GRID.md` | 1.0 | 2026-09-20 |
 | Creator onboarding | — | — | not yet written |
 | Brand matching | — | — | not yet written |
 
