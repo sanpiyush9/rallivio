@@ -58,6 +58,9 @@ create table if not exists public.discovery_region_intelligence (
 );
 
 alter table public.discovery_signal_events
+  alter column video_id drop not null;
+
+alter table public.discovery_signal_events
   add column if not exists event_type text not null default 'VideoSignalChanged',
   add column if not exists entity_type text not null default 'video',
   add column if not exists entity_id text;
