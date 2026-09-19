@@ -33,8 +33,8 @@
 | Level | Count |
 |---|---:|
 | 1 — Documented | 2 |
-| 2 — Detected | 7 |
-| 3 — Auto-recovered | 7 |
+| 2 — Detected | 6 |
+| 3 — Auto-recovered | 8 |
 | 4 — Prevented | 1 |
 
 > Update this table whenever an entry changes level.
