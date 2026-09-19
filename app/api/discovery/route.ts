@@ -118,6 +118,7 @@ export async function GET(request: Request) {
       activeTopics?: number;
       regions?: string[];
       signalCounts?: Record<string, number>;
+      topicCounts?: Record<string, number>;
     };
 
     const signalNames = [
@@ -165,6 +166,7 @@ export async function GET(request: Request) {
           activeTopics: Number(overview.activeTopics ?? 0),
           regions: Array.isArray(overview.regions) ? overview.regions : [],
           signalCounts: overview.signalCounts ?? signalCounts,
+          topicCounts: overview.topicCounts ?? {},
           items: [],
         },
         { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" } },
@@ -228,6 +230,7 @@ export async function GET(request: Request) {
         activeTopics: Number(overview.activeTopics ?? 0),
         regions: Array.isArray(overview.regions) ? overview.regions : [],
         signalCounts: overview.signalCounts ?? signalCounts,
+        topicCounts: overview.topicCounts ?? {},
         items: enriched,
         nextCursor: rankings.length === limit ? rankings[rankings.length - 1]?.global_rank ?? null : null,
       },
