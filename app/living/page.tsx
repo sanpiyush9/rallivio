@@ -174,7 +174,7 @@ export default function LivingDiscover() {
   useEffect(() => {
     const load = async () => {
       try {
-        const r = await fetch("/api/discovery", { cache: "no-store" });
+        const r = await fetch("/api/discovery?limit=60", { cache: "default" });
         const b = await r.json();
         if (!r.ok || !b.ok) throw new Error(b.state || "YOUTUBE_UNAVAILABLE");
         setItems(Array.isArray(b.items) ? b.items.map((x: DiscoveryPoolItem) => {
