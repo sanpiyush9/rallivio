@@ -172,8 +172,13 @@ export async function GET(request: Request) {
         delete metadata.signals;
         delete metadata.momentum_score;
 
-        metadata.signal = signalFreshEnough ? ranking.signal_type : null;
-        metadata.signals = signalFreshEnough ? ranking.signal_labels : [];
+        const requestedSignal = new URL(request.url).searchParams.get("signal")?.trim() || null;
+        const matchingSignals = signalFreshEnough ? ranking.signal_labels : [];
+        metadata.primary_signal = signalFreshEnough ? ranking.signal_type : null;
+        metadata.signal = signalFreshEnough
+          ? (requestedSignal && matchingSignals.includes(requestedSignal) ? requestedSignal : ranking.signal_type)
+          : null;
+        metadata.signals = matchingSignals;
         metadata.momentum_score = signalFreshEnough ? ranking.momentum_score : null;
 
         return { ...item, metadata };
