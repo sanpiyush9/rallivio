@@ -494,3 +494,22 @@ A direct Supabase pg_net invocation reached the latest READY Preview deployment 
 
 ### Acceptance gate
 Do not call the Living Field data layer fixed until a fresh acquisition increases the pool and `api_usage` records the calls, refresh creates new snapshots, and signal computation produces fresh eligible signals. UI field verification follows the data gate.
+
+## 2026-09-19 — Living Field data layer recovered
+Branch: feature/creator-platform-subscription
+
+### Data recovery evidence
+- Acquisition succeeded after unavailable YouTube chart cells were made non-fatal.
+- `youtube_discovery_pool`: 2,518 videos.
+- Acquisition `api_usage`: 180 recorded calls.
+- Fresh initial snapshots were seeded from the exact YouTube observations acquired at 08:02:46 UTC.
+- Stats refresh on the paginated worker completed successfully: `refreshed: 2518`, `youtubeCalls: 51`.
+- Fresh signal rows were computed from real snapshot pairs; current `discovery_signals`: 2,518.
+- Current signal mix: 2,375 On the Rise, 143 Breaking Out.
+- Live `/api/discovery` returned HTTP 200 with fresh `refreshedAt` and verified signal metadata. The serving API intentionally returns a bounded item page while exposing exact pool/signal counts.
+
+### UI correction
+The Living Discover page previously used total pool rows as the "verified signals" count and could surface acquisition-time labels from the old seed. The serving layer now removes stale signal/momentum metadata unless a current signal row exists, and the UI counts verified signals from the signal-computation result.
+
+### Important acceptance state
+The data pipeline is no longer at the old 25-video seed. The Preview data layer now has a broad multi-region, multi-topic pool and fresh measured signals. The final UI deployment is still required to verify the exact-count presentation changes on the browser route.
