@@ -103,6 +103,23 @@ export async function GET(request: Request) {
       countResponse.headers.get("content-range")?.split("/")[1] ?? rankings.length,
     );
 
+    const overviewResponse = await supabase("rpc/get_discovery_overview", {
+      method: "POST",
+      body: "{}",
+    });
+    if (!overviewResponse.ok) {
+      throw new Error(`Discovery overview failed: ${overviewResponse.status} ${await overviewResponse.text()}`);
+    }
+    const overview = await overviewResponse.json() as {
+      poolCount?: number;
+      trackedCreators?: number;
+      verifiedSignals?: number;
+      risingCreators?: number;
+      activeTopics?: number;
+      regions?: string[];
+      signalCounts?: Record<string, number>;
+    };
+
     const signalNames = [
       "Now Moving", "Breaking Out", "On the Rise",
       "Under the Radar", "Just Dropped", "Live",
@@ -141,7 +158,14 @@ export async function GET(request: Request) {
           ok: true, source: "RALLIVIO_DISCOVERY_POOL", refreshedAt: null,
           apiUsageLatestAt: usageRows[0]?.created_at ?? null,
           apiUsageLatestEndpoint: usageRows[0]?.endpoint ?? null,
-          poolCount, verifiedSignalCount, signalCounts, items: [],
+          poolCount: Number(overview.poolCount ?? poolCount),
+          verifiedSignalCount: Number(overview.verifiedSignals ?? verifiedSignalCount),
+          trackedCreators: Number(overview.trackedCreators ?? 0),
+          risingCreators: Number(overview.risingCreators ?? 0),
+          activeTopics: Number(overview.activeTopics ?? 0),
+          regions: Array.isArray(overview.regions) ? overview.regions : [],
+          signalCounts: overview.signalCounts ?? signalCounts,
+          items: [],
         },
         { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" } },
       );
@@ -197,7 +221,14 @@ export async function GET(request: Request) {
         ok: true, source: "RALLIVIO_DISCOVERY_POOL", refreshedAt,
         apiUsageLatestAt: usageRows[0]?.created_at ?? null,
         apiUsageLatestEndpoint: usageRows[0]?.endpoint ?? null,
-        poolCount, verifiedSignalCount, signalCounts, items: enriched,
+        poolCount: Number(overview.poolCount ?? poolCount),
+        verifiedSignalCount: Number(overview.verifiedSignals ?? verifiedSignalCount),
+        trackedCreators: Number(overview.trackedCreators ?? 0),
+        risingCreators: Number(overview.risingCreators ?? 0),
+        activeTopics: Number(overview.activeTopics ?? 0),
+        regions: Array.isArray(overview.regions) ? overview.regions : [],
+        signalCounts: overview.signalCounts ?? signalCounts,
+        items: enriched,
         nextCursor: rankings.length === limit ? rankings[rankings.length - 1]?.global_rank ?? null : null,
       },
       { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" } },
