@@ -91,16 +91,18 @@ export async function GET() {
 
     const enriched = items.map((item) => {
       const signal = signalByVideo.get(item.id);
-      return signal
-        ? {
-            ...item,
-            metadata: {
-              ...item.metadata,
-              signal: signal.signal_type,
-              momentum_score: signal.momentum_score,
-            },
-          }
-        : item;
+      const metadata = { ...item.metadata };
+      // Acquisition metadata is not a verified signal. Only the signal
+      // computation job is allowed to publish signal/momentum state.
+      delete metadata.signal;
+      delete metadata.momentum_score;
+
+      if (signal) {
+        metadata.signal = signal.signal_type;
+        metadata.momentum_score = signal.momentum_score;
+      }
+
+      return { ...item, metadata };
     });
 
     const refreshedAt =
