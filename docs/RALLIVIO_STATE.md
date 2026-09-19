@@ -436,3 +436,12 @@ This is recorded as a state change rather than silently rewriting the historical
 - **Repository reconciliation:** `supabase/migrations/20260919200000_reconcile_percentile_observation_tiers.sql`.
 - **Worker change:** `lib/server/youtube-discovery.ts` now calls `rebalance_youtube_observation_tiers` after successful signal publication.
 - **Pending proof:** a later stale-HOT refresh must be observed selecting HOT rows and advancing their `stats_refreshed_at`. Item 3 remains blocked until this verification.
+
+
+## 2026-09-19 — Discovery truth/data normalization
+- Signal output is now observation-gated; single-observation videos cannot surface signal or momentum metadata.
+- Signal history scoring uses chronological snapshots.
+- RALLIVIO topic taxonomy is normalized and backfilled; all 21 UI topics currently have non-zero live coverage.
+- Format is normalized to `short` (<60s), `live` (actual live broadcast), or `video`.
+- Current live pool has 0 actual live-broadcast rows, so Live signal coverage is not claimed until source data exists.
+- Current API sample: 60 verified items; no null-refresh signal violations; multi-label arrays populated; no `format=all`.
