@@ -445,3 +445,12 @@ This is recorded as a state change rather than silently rewriting the historical
 - Format is normalized to `short` (<60s), `live` (actual live broadcast), or `video`.
 - Current live pool has 0 actual live-broadcast rows, so Live signal coverage is not claimed until source data exists.
 - Current API sample: 60 verified items; no null-refresh signal violations; multi-label arrays populated; no `format=all`.
+
+## Discovery scale state — 2026-09-20
+
+- Live discovery pool: 7,840 videos.
+- Live observation truth: 7,840/7,840 rows have repeated snapshots and a non-null `stats_refreshed_at` derived from the latest repeated snapshot.
+- Live signal feed: 4,682 current rows after the truth-gated feed refresh.
+- Multi-label counts: Now Moving 2,266; Breaking Out 1,191; On the Rise 385; Under the Radar 1,191; Just Dropped 1,850; Live 0 (no active live-source rows in the current pool).
+- Source architecture now combines most-popular regional/category acquisition with a daily 100-cell newest-upload/live search sweep. YouTube's default `search.list` allocation is 100 calls/day, so million-scale coverage requires sustained accumulation and/or an approved quota extension; quota sharding is not an acceptable workaround.
+- API/UI source changes for multi-label signal filtering and tab-specific loading are committed on `feature/creator-platform-subscription`; Vercel is currently build-rate-limited, so those source changes await the next successful deployment.
