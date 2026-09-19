@@ -239,14 +239,34 @@ export async function acquire() {
       videoCategoryId: category,
       maxResults: "50",
     });
-    const data = (await yt(`videos?${p}`)) as any;
-    await usage("videos.list:mostPopular", {
-      phase: "acquire",
-      region,
-      category,
-      topic: CATEGORY_TOPIC[category] ?? "Other",
-    });
-    return { region, category, items: data.items ?? [] };
+    try {
+      const data = (await yt(`videos?${p}`)) as any;
+      await usage("videos.list:mostPopular", {
+        phase: "acquire",
+        region,
+        category,
+        topic: CATEGORY_TOPIC[category] ?? "Other",
+      });
+      return { region, category, items: data.items ?? [] };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const unavailableChart =
+        /YouTube API (400|404)/.test(message) &&
+        /(videoChartNotFound|Requested entity was not found|notFound)/i.test(message);
+
+      if (!unavailableChart) throw error;
+
+      console.warn("Skipping unavailable YouTube acquisition cell", {
+        region,
+        category,
+        message,
+      });
+
+      // A rejected/unsupported chart cell is not a fatal worker failure.
+      // Keep the acquisition pass moving so one regional/category gap cannot
+      // prevent the remaining valid cells from refreshing the pool.
+      return { region, category, items: [] };
+    }
   });
 
   const seen = new Map<string, any>();
