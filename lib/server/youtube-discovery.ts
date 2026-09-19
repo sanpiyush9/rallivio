@@ -816,6 +816,16 @@ export async function signals() {
     console.warn("Signal cleanup failed after successful publish", cleanup.status);
   }
 
+  const rebalance = await sb("rpc/rebalance_youtube_observation_tiers", {
+    method: "POST",
+    body: "{}",
+  });
+  if (!rebalance.ok) {
+    throw new Error(
+      `Tier rebalance failed: ${rebalance.status} ${await rebalance.text()}`,
+    );
+  }
+
   return {
     signals: publishable.length,
     eligibleVideos: prepared.length,
