@@ -425,3 +425,14 @@ Status: Documentation correction
 The previous living-state record stated that v10 was the latest checkpoint. That is stale. `checkpoint/living-front-v11` now exists and is the latest protected checkpoint. v11 is immutable and must never be overwritten, moved, or reused. Future checkpoint creation must enumerate existing checkpoint branches and use the next unused version.
 
 This is recorded as a state change rather than silently rewriting the historical checkpoint note.
+
+
+## 2026-09-19 — Scale-work live-state reconciliation
+- **Current implementation status:** Item 1 signal distribution remains verified; Item 2 percentile tier logic is now reconciled into repository migration history and wired to run after each successful signal pass.
+- **Live pool size:** 7,840 rows at the latest audit.
+- **Live tier target:** HOT 392 (5%), WARM 1,568 (20%), COLD 5,880 (75%), ARCHIVE 0.
+- **Tier rule:** top 10% acceleration within topic, globally capped at 5% HOT; WARM is allocated through the 25% cumulative activity band; archive requires 30 days without movement.
+- **Refresh rule:** stale selection uses `stats_refreshed_at`, with HOT 1h, WARM 6h, COLD 24h thresholds.
+- **Repository reconciliation:** `supabase/migrations/20260919200000_reconcile_percentile_observation_tiers.sql`.
+- **Worker change:** `lib/server/youtube-discovery.ts` now calls `rebalance_youtube_observation_tiers` after successful signal publication.
+- **Pending proof:** a later stale-HOT refresh must be observed selecting HOT rows and advancing their `stats_refreshed_at`. Item 3 remains blocked until this verification.
