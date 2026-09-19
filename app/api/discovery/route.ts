@@ -58,7 +58,10 @@ function applyRankingFilters(params: URLSearchParams, request: Request) {
   const signal = search.get("signal")?.trim().slice(0, 40);
   if (region) params.set("region", `eq.${region}`);
   if (topic) params.set("topic", `eq.${topic}`);
-  if (signal) params.set("signal_type", `eq.${signal}`);
+  // signal_labels is the canonical multi-label signal field. A video can
+  // legitimately belong to more than one discovery state, so filtering on
+  // signal_type would hide valid videos from the signal tabs.
+  if (signal) params.set("signal_labels", `cs.${JSON.stringify([signal])}`);
   return params;
 }
 
@@ -97,6 +100,24 @@ export async function GET(request: Request) {
       countResponse.headers.get("content-range")?.split("/")[1] ?? rankings.length,
     );
 
+    const signalNames = [
+      "Now Moving", "Breaking Out", "On the Rise",
+      "Under the Radar", "Just Dropped", "Live",
+    ];
+    const signalCountsEntries = await Promise.all(signalNames.map(async (name) => {
+      const params = applyRankingFilters(
+        new URLSearchParams({ select: "video_id" }),
+        request,
+      );
+      params.set("signal_labels", `cs.${JSON.stringify([name])}`);
+      const response = await supabase(`feed_rankings?${params}`, {
+        method: "HEAD",
+        headers: { Prefer: "count=exact", Range: "0-0" },
+      });
+      return [name, Number(response.headers.get("content-range")?.split("/")[1] ?? 0)] as const;
+    }));
+    const signalCounts = Object.fromEntries(signalCountsEntries);
+
     const poolCountResponse = await supabase("youtube_discovery_pool?select=id", {
       method: "HEAD",
       headers: { Prefer: "count=exact", Range: "0-0" },
@@ -116,7 +137,7 @@ export async function GET(request: Request) {
           ok: true, source: "RALLIVIO_DISCOVERY_POOL", refreshedAt: null,
           apiUsageLatestAt: usageRows[0]?.created_at ?? null,
           apiUsageLatestEndpoint: usageRows[0]?.endpoint ?? null,
-          poolCount, verifiedSignalCount, items: [],
+          poolCount, verifiedSignalCount, signalCounts, items: [],
         },
         { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" } },
       );
@@ -172,7 +193,7 @@ export async function GET(request: Request) {
         ok: true, source: "RALLIVIO_DISCOVERY_POOL", refreshedAt,
         apiUsageLatestAt: usageRows[0]?.created_at ?? null,
         apiUsageLatestEndpoint: usageRows[0]?.endpoint ?? null,
-        poolCount, verifiedSignalCount, items: enriched,
+        poolCount, verifiedSignalCount, signalCounts, items: enriched,
         nextCursor: rankings.length === limit ? rankings[rankings.length - 1]?.global_rank ?? null : null,
       },
       { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" } },
