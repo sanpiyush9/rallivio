@@ -1,3 +1,21 @@
+## 2026-09-19 — Operational recovery: accidental main-branch write
+Branch: feature/creator-platform-subscription
+Status: Recovered
+
+### Incident
+One GitHub file update omitted the explicit feature-branch argument and created commit `012c70f0170d3dd1562a3c05eb7dfb37d0f13810` on `main`. Vercel consequently created Production deployment `dpl_A58X8Uns3RmtSLTVB4j2gkPTGsZ1` from that commit.
+
+### Recovery
+- Restored `main`'s `lib/server/youtube-discovery.ts` to the pre-incident content from `e6c55547622654a9a1a56e6d4140ceafd89ca30e` in normal commit `59b9d8e4211211b4edd3a3a00506a1b3b930959f`.
+- The intended expanded worker remains on `feature/creator-platform-subscription`.
+- No checkpoint branch was modified or moved.
+
+### Prevention
+All subsequent GitHub writes must include `branch: feature/creator-platform-subscription`, and the resulting commit ref must be verified before any deployment conclusion.
+
+### Next session should
+Verify the recovery Production deployment is READY and corresponds to the restoration commit, then continue feature-branch CI/deployment verification.
+
 ## 2026-09-19 — Real discovery acquisition and Preview scheduler recovery
 Branch: feature/creator-platform-subscription
 Status: Implementation applied; verification and live data population in progress
