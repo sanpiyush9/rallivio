@@ -474,8 +474,8 @@ export default function LivingDiscover() {
       </div>
       <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(risingCreators)}</b><small>Rising Creators</small></div>
       <div className="pulseMetric"><span>♨</span><b>{loading ? "—" : fmt(verifiedSignalCount)}</b><small>Verified Signals</small></div>
-      <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(categoryPulse.length)}</b><small>Active Topics</small></div>
-      <div className="pulseMetric"><span>♧</span><b>{loading ? "—" : fmt(creatorPool.length)}</b><small>Tracked Creators</small></div>
+      <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(activeTopicCount)}</b><small>Active Topics</small></div>
+      <div className="pulseMetric"><span>♧</span><b>{loading ? "—" : fmt(trackedCreators)}</b><small>Tracked Creators</small></div>
       <div className="pulseWorld">
         <div className="worldMap" aria-hidden="true">
           <svg viewBox="0 0 180 64">
@@ -551,7 +551,7 @@ export default function LivingDiscover() {
         <div className={`radarVisual liveRadar ${apiUsageLatestAt ? "" : "radarIdle"}`}>{apiUsageLatestAt ? <><div className="radarSweep"/><div className="radarRings"><i/><i/><i/><i/><b/></div><div className="radarGlow one"/><div className="radarGlow two"/><div className="radarGlow three"/></> : <span className="radarEmpty">No acquisition activity yet.</span>}</div>
         <div className="radarList">
           {radarCategories.length ? radarCategories.map((c, i) => {
-            const pct = ranked.length ? Math.round((c.count / ranked.length) * 100) : 0;
+            const pct = verifiedSignalCount ? Math.round((c.count / verifiedSignalCount) * 100) : 0;
             return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank">{i + 1}</span><b>{c.name}</b><strong>{c.count ? pct + "%" : "—"}</strong></button>;
           }) : <div className="radarEmpty">No data yet.</div>}
         </div>
