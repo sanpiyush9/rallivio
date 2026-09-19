@@ -8,12 +8,14 @@ The architecture follows the project requirement that source facts are persisted
 
 ## Implemented foundation
 
-### Discovery
+### Discovery and multi-source boundary
 
-- YouTube remains an official API source.
+- YouTube remains the primary official API source.
 - Acquisition combines most-popular regional/category cells with a bounded daily newest-upload/live sweep.
 - Source identity is retained.
 - Request-time discovery reads persisted RALLIVIO state.
+- `lib/server/source-adapters.ts` defines the normalized source contract for additional providers.
+- `discovery_source_registry` persists enabled/disabled source state. YouTube is connected; approved RSS is an opt-in boundary.
 
 ### Adaptive observation
 
@@ -59,6 +61,11 @@ It now supports:
 - observed time
 
 This is intentionally database-backed in the current Supabase deployment. It is an event-bus contract, not a claim that a distributed Kafka-style broker is already deployed.
+
+### Deterministic change-point foundation
+
+- Creator, topic and region intelligence persist `change_point_score` and `change_state` derived from stored velocity, acceleration and anomaly evidence.
+- This is deterministic change-point detection, not a trained ML model.
 
 ### Creator/topic/region intelligence
 
@@ -128,12 +135,12 @@ Scale is achieved through:
 
 - Phase 1 global persisted metrics: implemented.
 - Phase 2 adaptive observation with explicit UNKNOWN state: implemented.
-- Phase 3 analytical-storage migration boundary: architecture-ready; current production node remains Supabase/Postgres.
+- Phase 3 analytical-storage migration boundary: implemented as an explicit application/analytical contract; current node remains Supabase/Postgres.
 - Phase 4 durable signal event bus: implemented in Postgres.
 - Phase 5 creator/topic/region intelligence: implemented.
-- Phase 6 multi-source acquisition framework: source identity and acquisition boundary exist; additional external sources are not connected yet.
-- Phase 7 deterministic anomaly/change-point foundation: implemented through percentile/activity/anomaly state; trained ML models are not yet claimed.
-- Phase 8 AI explanation contract: architecture defined; no external LLM provider is called by the signal engine.
+- Phase 6 multi-source acquisition framework: normalized adapter + source registry implemented; YouTube connected and approved RSS is an opt-in boundary.
+- Phase 7 deterministic anomaly/change-point foundation: implemented and persisted; trained ML remains optional.
+- Phase 8 AI explanation contract: implemented with evidence-bound deterministic explanations; external LLM integration remains optional.
 
 ## Verification rule
 
