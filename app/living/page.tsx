@@ -523,7 +523,7 @@ export default function LivingDiscover() {
           </svg>
           <i/><i/><i/><i/><i/><i/>
         </div>
-        <div><b>Global Activity</b><small>Verified source coverage · {new Set(items.map(x => x.region).filter(Boolean)).size ? globalRegions.length ? globalRegions.join(", ") : "—"}<br/>{!apiUsageLatestAt ? "No source observations yet." : `${fmt(poolCount)} videos · ${fmt(trackedCreators)} tracked creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
+        <div><b>Global Activity</b><small>Verified source coverage · {globalRegions.length ? globalRegions.join(", ") : "—"}<br/>{!apiUsageLatestAt ? "No source observations yet." : `${fmt(poolCount)} videos · ${fmt(trackedCreators)} tracked creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
       </div>
     </section>
 
