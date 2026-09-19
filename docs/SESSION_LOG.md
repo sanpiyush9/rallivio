@@ -468,3 +468,29 @@ KI-012, docs/RESILIENCE_SYSTEM.md, docs/KNOWN_ISSUES.md, vercel.json
 
 ## 2026-09-19 — Preview CRON_SECRET branch scope corrected
 Environment-only recovery step: CRON_SECRET was scoped to feature/youtube-real-discovery while the active discovery implementation is on feature/creator-platform-subscription. The Vercel Preview variable was reassigned to the active feature branch. A new branch deployment is required for the updated environment variable to be injected; no secret value is recorded here.
+
+## 2026-09-19 — Living Discover stale-data field test and acquisition recovery
+Branch: feature/creator-platform-subscription
+
+### Owner field-test
+The Preview UI still showed the old 25-video seed and the Discovery Radar reported "No acquisition activity yet." The requested Living Field structure was present, but its factual state had not advanced.
+
+### Confirmed database state
+- `youtube_discovery_pool`: 25 rows
+- `video_stats_snapshots`: 25 rows
+- `discovery_signals`: 25 stale rows
+- `api_usage`: 0 rows
+- latest snapshot/signal: 2026-09-15 18:37 UTC
+- Supabase Cron jobs exist and are active, but `cron.job_run_details` had no runs for the three Preview jobs.
+
+### Runtime evidence
+A direct Supabase pg_net invocation reached the latest READY Preview deployment and passed scheduler authentication, but `/api/cron/acquire` returned HTTP 502. Vercel runtime logs confirmed the same failure: YouTube Data API HTTP 404, "Requested entity was not found."
+
+### Code recovery
+- Acquisition now treats unavailable/not-found regional/category chart cells as skippable and continues the rest of the acquisition pass.
+- Discovery serving strips acquisition-time signal/momentum metadata unless a current `discovery_signals` row exists.
+- Living Discover now counts verified signals from the signal-computation result rather than treating the entire pool as verified signals.
+- Global Activity distinguishes total persisted videos from verified creators.
+
+### Acceptance gate
+Do not call the Living Field data layer fixed until a fresh acquisition increases the pool and `api_usage` records the calls, refresh creates new snapshots, and signal computation produces fresh eligible signals. UI field verification follows the data gate.
