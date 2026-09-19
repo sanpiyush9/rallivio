@@ -675,3 +675,8 @@ Wait for the new Preview deployment to become READY, then use the live scheduler
 - Added accurate YouTube search quota telemetry and a scale-status endpoint backed by Supabase counts.
 - No synthetic videos, synthetic observations, or synthetic signals were added.
 - The next measurement is the actual unique-pool delta produced by the scaled acquisition pass and the number of videos that subsequently obtain repeated observations.
+
+
+## 2026-09-20 — Scale scheduler activated
+
+Implemented the continuous 100K scale operating cadence: daily long-tail acquisition, 30-minute observation refresh, and 10-minute database signal/intelligence recomputation. The acquisition cadence was deliberately reduced from every 6 hours to once daily to keep official YouTube quota usage bounded while preserving real-data growth.
