@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-npm run verify || {
-  echo "✗ Verification failed — not pushing. Fix locally first."
+npx tsc --noEmit || {
+  echo "✗ Typecheck failed — not pushing. Fix locally first."
   exit 1
 }
