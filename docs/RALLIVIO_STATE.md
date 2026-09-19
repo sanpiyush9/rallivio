@@ -454,3 +454,20 @@ This is recorded as a state change rather than silently rewriting the historical
 - Multi-label counts: Now Moving 2,266; Breaking Out 1,191; On the Rise 385; Under the Radar 1,191; Just Dropped 1,850; Live 0 (no active live-source rows in the current pool).
 - Source architecture now combines most-popular regional/category acquisition with a daily 100-cell newest-upload/live search sweep. YouTube's default `search.list` allocation is 100 calls/day, so million-scale coverage requires sustained accumulation and/or an approved quota extension; quota sharding is not an acceptable workaround.
 - API/UI source changes for multi-label signal filtering and tab-specific loading are committed on `feature/creator-platform-subscription`; Vercel is currently build-rate-limited, so those source changes await the next successful deployment.
+
+
+## 18. Neural Grid foundation — 2026-09-20
+
+Current requirement → evolve the discovery backend into an adaptive observation and intelligence engine while keeping the existing RALLIVIO UI/data contract.
+
+Implementation → added explicit UNKNOWN observation state, adaptive 15-minute sampling for unknown candidates, durable entity-aware intelligence events, creator intelligence, topic × region × format intelligence, regional intelligence, deterministic anomaly/percentile state, and `/api/intelligence` read endpoints.
+
+Database → migration 20260920250000_rallivio_neural_grid_foundation is applied to Supabase. Migration 20260920251000_preserve_unknown_observation_tier is applied and the tier rebalance RPC now preserves UNKNOWN until a second observation exists.
+
+Verified database cycle → the cycle successfully recomputed 4,529 signals, 6,864 creator intelligence rows, 714 topic/region/format intelligence rows and 25 regional intelligence rows at 2026-09-19T19:48:07Z. The current pool remains 7,840 rows and the tier distribution remained 389 HOT, 1,672 WARM, 5,779 COLD, 0 UNKNOWN, 0 ARCHIVE because the existing seed population already has repeated observations.
+
+Build gate → .husky/pre-push now runs npm run verify; GitHub verification exposes typecheck, lint, tests, build, canonical and documentation checks as separate workflow steps. No new Vercel deployment is claimed because the team build-rate limit remains active.
+
+Phase boundary → the analytical-storage abstraction is intentionally not represented as a deployed ClickHouse cluster. Supabase/Postgres remains the current application/first analytical node. Additional acquisition sources and trained ML/LLM providers are not claimed as connected.
+
+Date: 2026-09-20
