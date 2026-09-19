@@ -1,3 +1,21 @@
+## 2026-09-19 — Discovery feed performance and signal recovery
+Branch: feature/creator-platform-subscription
+Status: Implementation applied; verification/deployment in progress
+
+### Changes
+- Bounded `/api/discovery` to 20–100 records, default 60, while retaining the exact total pool count.
+- Added short public caching with stale-while-revalidate so the homepage does not repeatedly transfer the full discovery pool.
+- Changed the Living page to request only the lightweight 60-item discovery feed.
+- Added a bounded Supabase RPC for recent per-video snapshot history and changed signal computation to use it in 200-video batches.
+- Corrected signal history ordering before momentum/acceleration scoring.
+- Changed signal publishing to write the new batch before cleaning up older batches, preventing a transient write failure from leaving the public signal table empty.
+
+### Confirmed data
+At implementation time the pool contained 2,518 videos and 2,518 videos had at least two persisted observations, while the signal worker had reported zero eligible videos. The new RPC is intended to remove that false suppression.
+
+### Next session should
+Confirm CI and Vercel are READY for the latest feature SHA, invoke the signal worker once, verify `discovery_signals` is populated and `/api/discovery?limit=60` returns real verified signals, then visually recheck /living load time and Pulse rendering.
+
 ## 2026-09-19 — Operational recovery: accidental main-branch write
 Branch: feature/creator-platform-subscription
 Status: Recovered
