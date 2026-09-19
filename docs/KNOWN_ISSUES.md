@@ -19,6 +19,7 @@
 | KI-010 | JSX syntax, orphaned /span>, living page build | 1 | Resolved |
 | KI-011 | Vercel build-log connector, Tool get_deployment_build_logs not found | 2 | Open |
 | KI-012 | Vercel cron validation, no deployment record, Hobby, sub-daily cron | 2 | Resolved |
+| KI-013 | stale Preview data, no acquisition activity, 25-row seed, request-time YouTube acquisition | 3 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -28,8 +29,8 @@
 | Level | Count |
 |---|---:|
 | 1 — Documented | 2 |
-| 2 — Detected | 4 |
-| 3 — Auto-recovered | 4 |
+| 2 — Detected | 5 |
+| 3 — Auto-recovered | 5 |
 | 4 — Prevented | 1 |
 
 > Update this table whenever an entry changes level.
@@ -346,3 +347,33 @@ Daily Hobby schedules restore deployability but reduce refresh frequency. Hourly
 vercel.json
 docs/RESILIENCE_SYSTEM.md
 docs/SESSION_LOG.md
+
+
+## KI-013 — Preview discovery worker had no recurring scheduler
+First seen: 2026-09-19 · Status: Resolved · Ladder level: 3 → target 4
+Severity: HIGH
+
+### Symptom
+The feature Preview served persisted discovery data, but the dashboard remained at the old 25-video seed and reported no recent acquisition activity. The Preview showed stale observations rather than a broad current discovery pool.
+
+### Cause
+Confirmed:
+- Vercel Cron invokes the production deployment, not a Preview deployment.
+- The Hobby plan only supports once-daily Vercel Cron execution.
+- The feature Preview therefore had no recurring worker scheduler.
+- `app/api/discovery/route.ts` also contained a transitional request-time YouTube `search.list` acquisition path, so the architecture had two competing acquisition paths.
+
+### Fix
+- Made `app/api/discovery/route.ts` read-only against the persisted Supabase pool.
+- Expanded the background acquisition worker to use YouTube `videos.list?chart=mostPopular` across 10 regions and 15 broad categories, with channel statistics enrichment.
+- Added a secure Preview scheduler using Supabase Cron + pg_net and a Vault-backed scheduler token. It runs acquisition every 6 hours, refresh hourly, and signal calculation 15 minutes after refresh.
+- Kept the existing `CRON_SECRET` path for Vercel/authorized operational calls.
+
+### Prevention
+Keep acquisition/refresh/signals out of request-time serving. Monitor `api_usage`, `video_stats_snapshots`, and Supabase Cron job history. Target Level 4 by adding an automated health check that alerts when acquisition falls behind its expected cadence.
+
+### Related
+`lib/server/youtube-discovery.ts`
+`app/api/discovery/route.ts`
+`supabase/migrations/20260919043000_add_rallivio_preview_scheduler.sql`
+`docs/SESSION_LOG.md`
