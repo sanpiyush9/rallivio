@@ -92,6 +92,9 @@ export async function GET(request: Request) {
 
     // Exact count is a separate HEAD request: zero signal rows are transferred.
     const countParams = applyRankingFilters(new URLSearchParams({ select: "video_id" }), request);
+    // Keep the headline verified-signal metric global even when a signal tab
+    // is selected; the tab itself is represented by the filtered item set.
+    countParams.delete("signal_labels");
     const countResponse = await supabase(`feed_rankings?${countParams}`, {
       method: "HEAD",
       headers: { Prefer: "count=exact", Range: "0-0" },
@@ -109,6 +112,7 @@ export async function GET(request: Request) {
         new URLSearchParams({ select: "video_id" }),
         request,
       );
+      params.delete("signal_labels");
       params.set("signal_labels", `cs.${JSON.stringify([name])}`);
       const response = await supabase(`feed_rankings?${params}`, {
         method: "HEAD",
