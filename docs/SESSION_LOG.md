@@ -1,3 +1,33 @@
+## 2026-09-19 — Real discovery acquisition and Preview scheduler recovery
+Branch: feature/creator-platform-subscription
+Status: Implementation applied; verification and live data population in progress
+
+### Confirmed state
+The feature Preview was serving the persisted 25-row discovery seed. Vercel Cron was not a usable Preview scheduler because Vercel Cron invokes the production deployment and the active Hobby plan only supports once-daily Cron execution. The request-time discovery route also still contained a transitional YouTube search path.
+
+### Changes
+- `lib/server/youtube-discovery.ts` now acquires across 10 regions and 15 broad YouTube categories using `videos.list?chart=mostPopular`, with bounded concurrency and channel subscriber enrichment.
+- `app/api/discovery/route.ts` is now strictly Supabase read-only at request time; it no longer calls YouTube.
+- Added `supabase/migrations/20260919043000_add_rallivio_preview_scheduler.sql` with pg_cron/pg_net, a Vault-backed scheduler token, and recurring Preview acquisition/refresh/signal jobs.
+- Supabase Cron schedules the stable feature-branch Preview URL: acquisition every 6 hours, refresh hourly at :15, signals hourly at :30.
+- Existing `CRON_SECRET` authentication remains supported for direct authorized operations.
+
+### Truth boundary
+Acquisition still uses only official YouTube Data API data. Verified signals remain suppressed until a video has at least two persisted observations. No fabricated creators, videos, metrics, or freshness were added.
+
+### External evidence
+Current Vercel documentation states Cron is a scheduled HTTP invocation of the production deployment and Hobby is once per day; branch-specific Preview URLs remain stable across pushes. Supabase Cron supports recurring HTTP requests through pg_cron + pg_net, with Vault recommended for auth tokens.
+
+### Next session should
+Run `npm run verify` on the latest feature HEAD, confirm the new deployment is READY, then verify Supabase Cron job history and `api_usage`/pool/snapshot counts. Confirm the Preview begins showing a materially broader pool and current acquisition timestamp before further UI changes.
+
+### Documents touched
+- lib/server/youtube-discovery.ts
+- app/api/discovery/route.ts
+- supabase/migrations/20260919043000_add_rallivio_preview_scheduler.sql
+- docs/KNOWN_ISSUES.md
+- docs/SESSION_LOG.md
+
 ## 2026-09-19 — Supabase Preview environment scope corrected
 Environment-only recovery step: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are now scoped to feature/creator-platform-subscription alongside CRON_SECRET and YOUTUBE_API_KEY. A fresh Preview deployment is required so the running serverless functions receive the updated environment. No secret values are recorded here.
 
