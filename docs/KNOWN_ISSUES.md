@@ -24,6 +24,7 @@
 | KI-015 | YouTube chart 404, acquisition cell, 502 | 3 | Resolved |
 | KI-016 | Supabase REST 1,000-row cap, refresh, snapshot pagination | 2 | Resolved |
 | KI-017 | signals 0, eligible 0, snapshot history, signal worker | 3 | Resolved |
+| KI-018 | signal tab label vs primary signal display | 1 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -32,7 +33,7 @@
 
 | Level | Count |
 |---|---:|
-| 1 — Documented | 2 |
+| 1 — Documented | 3 |
 | 2 — Detected | 5 |
 | 3 — Auto-recovered | 8 |
 | 4 — Prevented | 2 |
@@ -467,10 +468,24 @@ Keep signal computation inside bounded database operations rather than relying o
 `supabase/migrations/20260919102000_get_recent_video_snapshots.sql`
 `docs/RESILIENCE_SYSTEM.md`
 
-## KI-017 — Signal tab label vs primary signal display
+## KI-018 — Signal tab label vs primary signal display
+First seen: 2026-09-19 · Status: Resolved · Ladder level: 1 → target 3
+Severity: MEDIUM
 
-**Status:** Resolved in code
+### Symptom
+A card returned by a selected **Breaking Out** signal tab could display **Just Dropped** because the card rendered the primary signal while the selected tab represented a matching multi-label signal.
 
-The signal tabs use the canonical multi-label `signal_labels` field. The card previously rendered only `signal_type`, so a card returned by a selected **Breaking Out** tab could display **Just Dropped**. The discovery API now preserves `primary_signal` while rendering the requested matching label as `metadata.signal` when a signal filter is active. This keeps the selected tab and card label consistent without changing the underlying primary state.
+### Cause
+The signal tabs use the canonical multi-label `signal_labels` field, while the card previously rendered only `signal_type`. The selected filter and displayed label therefore came from different signal representations.
 
-**Validation:** Supabase signal cycle completed successfully after the fix; deployment field verification remains pending while Vercel is build-rate-limited.
+### Fix
+The discovery API now preserves `primary_signal` while rendering the requested matching label as `metadata.signal` when a signal filter is active. This keeps the selected tab and card label consistent without changing the underlying primary state.
+
+### Prevention
+Keep filter labels and card labels on the same canonical signal contract, and add automated coverage for every multi-label signal selection.
+
+### Related
+`app/api/discovery/route.ts`
+`app/living/page.tsx`
+`docs/SESSION_LOG.md`
+
