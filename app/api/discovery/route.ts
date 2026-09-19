@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { hasValidSignalObservation } from "@/lib/server/discovery-truth";
 
 type DiscoveryRow = {
   id: string; title: string; channel_title: string; channel_id: string;
@@ -142,10 +143,10 @@ export async function GET(request: Request) {
         // Truth gate: a momentum signal is valid only after at least one
         // refresh has produced a second observation. Never surface the
         // acquisition-time popularity score as momentum.
-        const hasMovementObservation = Boolean(item.stats_refreshed_at);
-        const signalFreshEnough =
-          hasMovementObservation &&
-          Date.parse(ranking.observed_at) >= Date.parse(item.stats_refreshed_at as string);
+        const signalFreshEnough = hasValidSignalObservation(
+          item.stats_refreshed_at,
+          ranking.observed_at,
+        );
 
         const metadata = { ...item.metadata };
         delete metadata.signal;
