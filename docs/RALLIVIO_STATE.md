@@ -483,3 +483,12 @@ Date: 2026-09-20
 - **Truth boundary:** acquisition creates a persisted initial stats snapshot; signal publication remains observation-gated and cannot use a signal merely because a video was acquired.
 - **Current limitation:** reaching 100K is an accumulation process constrained by official source quotas and the number of unique videos discovered. No synthetic backfill, quota sharding, scraping, or invented signal rows are permitted.
 - **Next execution step:** run the scaled acquisition on the next successful deployment/scheduled acquisition window, then measure unique pool growth and repeated-observation coverage before increasing the search budget.
+
+
+## 2026-09-20 — Scale scheduler activated
+
+- The real-data 100K scale phase is now wired for continuous background execution on the existing Supabase scheduler.
+- Acquisition runs once daily at 02:00 UTC with the quota-aware 80-call long-tail search budget; the previous 6-hour acquisition cadence was reduced because repeating an 80-call search sweep four times/day would exceed the standard YouTube quota.
+- Observation refresh runs every 30 minutes with a 500-video claim batch, prioritizing HOT/WARM and oldest due observations. This keeps repeated snapshots flowing without consuming the entire daily YouTube quota.
+- Database signal/intelligence cycle remains every 10 minutes and consumes persisted observations rather than calling YouTube.
+- The scale path therefore has a bounded daily source budget and an independent observation cadence; it can accumulate real unique videos over time without fabricating signal data.
