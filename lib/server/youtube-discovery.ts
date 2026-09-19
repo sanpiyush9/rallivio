@@ -12,23 +12,52 @@ export const CATEGORIES = [
   "1","2","10","15","17","19","20","22","23","24","25","26","27","28","29",
 ];
 
+export const RALLIVIO_TOPICS = [
+  "AI & Tech", "Travel", "Food", "Gaming", "Fitness", "Podcasts", "Lifestyle",
+  "Music", "Fashion", "Education", "Business", "Finance", "Sports", "Comedy",
+  "Science", "Automotive", "Beauty", "Entertainment", "DIY & Home", "News", "Pets",
+] as const;
+
 const CATEGORY_TOPIC: Record<string, string> = {
-  "1": "Film & Animation",
+  "1": "Entertainment",
   "2": "Automotive",
   "10": "Music",
-  "15": "Pets & Animals",
+  "15": "Pets",
   "17": "Sports",
-  "19": "Travel & Events",
+  "19": "Travel",
   "20": "Gaming",
-  "22": "People & Blogs",
+  "22": "Lifestyle",
   "23": "Comedy",
   "24": "Entertainment",
-  "25": "News & Politics",
-  "26": "Howto & Style",
+  "25": "News",
+  "26": "DIY & Home",
   "27": "Education",
   "28": "AI & Tech",
-  "29": "Nonprofits & Activism",
+  "29": "News",
 };
+
+function classifyRallivioTopic(video: any, category: string) {
+  const text = `${video.snippet?.title ?? ""} ${video.snippet?.description ?? ""} ${video.snippet?.channelTitle ?? ""}`.toLowerCase();
+
+  const keywordTopics: Array<[string, RegExp]> = [
+    ["Food", /\\b(food|recipe|cooking|cook|restaurant|cuisine|baking|chef|meal|street food|restaurant review)\\b/i],
+    ["Fitness", /\\b(fitness|workout|gym|exercise|yoga|weight loss|bodybuilding|training)\\b/i],
+    ["Podcasts", /\\b(podcast|podcasts|interview show|episode)\\b/i],
+    ["Finance", /\\b(finance|investing|investment|stocks|stock market|trading|crypto|mutual fund|banking)\\b/i],
+    ["Business", /\\b(business|startup|entrepreneur|marketing|sales|company|founder|small business)\\b/i],
+    ["Science", /\\b(science|physics|chemistry|biology|space|astronomy|research|experiment)\\b/i],
+    ["Beauty", /\\b(beauty|makeup|skincare|cosmetics|haircare|hair style)\\b/i],
+    ["Fashion", /\\b(fashion|outfit|clothing|style|streetwear|fashion haul)\\b/i],
+    ["DIY & Home", /\\b(diy|do it yourself|home decor|home improvement|craft|woodworking|interior design|how to)\\b/i],
+    ["Technology", /\\b(programming|software|coding|developer|technology|tech|ai|artificial intelligence|machine learning|gadget|smartphone|computer)\\b/i],
+  ];
+
+  for (const [topic, pattern] of keywordTopics) {
+    if (pattern.test(text)) return topic === "Technology" ? "AI & Tech" : topic;
+  }
+
+  return CATEGORY_TOPIC[category] ?? "Entertainment";
+}
 
 const num = (v: any) => {
   const n = Number(v ?? 0);
@@ -345,7 +374,14 @@ export async function acquire() {
       embeddable: video.status?.embeddable !== false,
       live_broadcast_content: video.snippet?.liveBroadcastContent ?? null,
       topic,
-      format: "all",
+      format:
+        video.snippet?.liveBroadcastContent === "live"
+          ? "live"
+          : (() => {
+              const match = String(video.contentDetails?.duration ?? "").match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+              const seconds = Number(match?.[1] ?? 0) * 3600 + Number(match?.[2] ?? 0) * 60 + Number(match?.[3] ?? 0);
+              return seconds < 60 ? "short" : "video";
+            })(),
       region,
       source: "youtube",
       verified_at: now,
@@ -647,7 +683,7 @@ export async function signals() {
             commentCount: current.comments,
           },
         },
-        [...observations].reverse(),
+        observations,
       );
 
       const recent = observations.slice(-4);
