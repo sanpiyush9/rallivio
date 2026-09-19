@@ -471,3 +471,15 @@ Build gate → .husky/pre-push now runs npm run verify; GitHub verification expo
 Phase boundary → the analytical-storage abstraction is intentionally not represented as a deployed ClickHouse cluster. Supabase/Postgres remains the current application/first analytical node. Additional acquisition sources and trained ML/LLM providers are not claimed as connected.
 
 Date: 2026-09-20
+
+
+## 2026-09-20 — 100K discovery scale phase started
+
+- **Target:** grow the real discovery pool from the current 7,840 videos toward **100,000+ observed videos** without fabricating observations or signals.
+- **Acquisition change:** the rotating YouTube long-tail search sweep is now budgeted by `YOUTUBE_SEARCH_SWEEP_CALLS`, defaulting to 80 search calls/day. With YouTube's standard 100-unit `search.list` cost, this keeps the search portion at about 8,000 quota units/day before other API calls; the budget remains configurable only when an approved quota allocation supports it.
+- **Rotation:** recent-upload cells receive 80% of the search budget and live cells 20%, rotating through the global region/category matrix rather than repeatedly querying one fixed subset.
+- **Quota telemetry:** `api_usage.units` now records the real 100-unit cost for `search.list` calls instead of treating every endpoint as one unit.
+- **Scale observability:** `public.get_discovery_scale_status(100000)` and `/api/discovery/scale` expose actual pool, observed-video, snapshot, signal, event, creator, topic-state and region-state counts plus target progress.
+- **Truth boundary:** acquisition creates a persisted initial stats snapshot; signal publication remains observation-gated and cannot use a signal merely because a video was acquired.
+- **Current limitation:** reaching 100K is an accumulation process constrained by official source quotas and the number of unique videos discovered. No synthetic backfill, quota sharding, scraping, or invented signal rows are permitted.
+- **Next execution step:** run the scaled acquisition on the next successful deployment/scheduled acquisition window, then measure unique pool growth and repeated-observation coverage before increasing the search budget.
