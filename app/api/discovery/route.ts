@@ -59,7 +59,9 @@ export async function GET() {
       limit: "500",
     });
 
-    const response = await supabase(`youtube_discovery_pool?${params}`);
+    const response = await supabase(`youtube_discovery_pool?${params}`, {
+      headers: { Prefer: "count=exact" },
+    });
     if (!response.ok) {
       return NextResponse.json(
         { ok: false, state: "DATA_UNAVAILABLE" },
@@ -68,6 +70,7 @@ export async function GET() {
     }
 
     const items = (await response.json()) as DiscoveryRow[];
+    const poolCount = Number(response.headers.get("content-range")?.split("/")[1] ?? items.length);
 
     const usageResponse = await supabase(
       "api_usage?select=created_at,endpoint&order=created_at.desc&limit=1",
@@ -77,7 +80,8 @@ export async function GET() {
       : [];
 
     const signalResponse = await supabase(
-      "discovery_signals?select=video_id,signal_type,momentum_score&order=momentum_score.desc&limit=2500",
+      "discovery_signals?select=video_id,signal_type,momentum_score&order=momentum_score.desc&limit=1000",
+      { headers: { Prefer: "count=exact" } },
     );
     const signals = signalResponse.ok
       ? ((await signalResponse.json()) as {
@@ -87,6 +91,9 @@ export async function GET() {
         }[])
       : [];
 
+    const signalCount = Number(
+      signalResponse.headers.get("content-range")?.split("/")[1] ?? signals.length,
+    );
     const signalByVideo = new Map(signals.map((item) => [item.video_id, item]));
 
     const enriched = items.map((item) => {
@@ -119,8 +126,8 @@ export async function GET() {
         refreshedAt,
         apiUsageLatestAt: usageRows[0]?.created_at ?? null,
         apiUsageLatestEndpoint: usageRows[0]?.endpoint ?? null,
-        poolCount: items.length,
-        verifiedSignalCount: signals.length,
+        poolCount,
+        verifiedSignalCount: signalCount,
         items: enriched,
       },
       { headers: { "Cache-Control": "no-store" } },
