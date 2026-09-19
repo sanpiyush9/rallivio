@@ -11,7 +11,7 @@ type DiscoveryRow = {
 
 type RankingRow = {
   video_id: string; channel_id: string; region: string | null; topic: string | null;
-  category_id: string | null; signal_type: string; momentum_score: number | null;
+  category_id: string | null; format: string | null; signal_type: string; signal_labels: string[]; momentum_score: number | null;
   observed_at: string; expires_at: string | null; global_rank: number;
 };
 
