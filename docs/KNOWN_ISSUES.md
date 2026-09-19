@@ -466,3 +466,11 @@ Keep signal computation inside bounded database operations rather than relying o
 `app/api/discovery/route.ts`
 `supabase/migrations/20260919102000_get_recent_video_snapshots.sql`
 `docs/RESILIENCE_SYSTEM.md`
+
+## KI-017 — Signal tab label vs primary signal display
+
+**Status:** Resolved in code
+
+The signal tabs use the canonical multi-label `signal_labels` field. The card previously rendered only `signal_type`, so a card returned by a selected **Breaking Out** tab could display **Just Dropped**. The discovery API now preserves `primary_signal` while rendering the requested matching label as `metadata.signal` when a signal filter is active. This keeps the selected tab and card label consistent without changing the underlying primary state.
+
+**Validation:** Supabase signal cycle completed successfully after the fix; deployment field verification remains pending while Vercel is build-rate-limited.
