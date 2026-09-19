@@ -20,6 +20,7 @@
 | KI-011 | Vercel build-log connector, Tool get_deployment_build_logs not found | 2 | Open |
 | KI-012 | Vercel cron validation, no deployment record, Hobby, sub-daily cron | 2 | Resolved |
 | KI-013 | stale Preview data, no acquisition activity, 25-row seed, request-time YouTube acquisition | 3 | Resolved |
+| KI-014 | accidental main branch write, production deployment from feature commit | 3 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -30,7 +31,7 @@
 |---|---:|
 | 1 — Documented | 2 |
 | 2 — Detected | 5 |
-| 3 — Auto-recovered | 5 |
+| 3 — Auto-recovered | 6 |
 | 4 — Prevented | 1 |
 
 > Update this table whenever an entry changes level.
@@ -376,4 +377,25 @@ Keep acquisition/refresh/signals out of request-time serving. Monitor `api_usage
 `lib/server/youtube-discovery.ts`
 `app/api/discovery/route.ts`
 `supabase/migrations/20260919043000_add_rallivio_preview_scheduler.sql`
+`docs/SESSION_LOG.md`
+
+
+## KI-014 — Accidental main-branch write during GitHub file update
+First seen: 2026-09-19 · Status: Resolved · Ladder level: 3 → target 4
+Severity: HIGH
+
+### Symptom
+A GitHub file update for the feature branch omitted the explicit branch argument. The resulting commit `012c70f0170d3dd1562a3c05eb7dfb37d0f13810` landed on `main`, and Vercel created a Production deployment from that commit.
+
+### Cause
+The GitHub connector call was constructed without the required `branch: feature/creator-platform-subscription` field. This was a tool-invocation error, not an application or Vercel failure.
+
+### Fix
+Restored `main`'s discovery worker file to the pre-incident content from commit `e6c55547622654a9a1a56e6d4140ceafd89ca30e` in a normal forward commit. The feature branch retained the intended expanded worker. No checkpoint branch was modified.
+
+### Prevention
+For every GitHub write, explicitly pass the active feature branch and immediately verify the resulting commit ref before proceeding. Never assume a connector default branch is the intended target. Deployment verification must include branch, expected SHA, deployed SHA, state, and deployment ID.
+
+### Related
+`docs/AI_START_HERE.md`
 `docs/SESSION_LOG.md`
