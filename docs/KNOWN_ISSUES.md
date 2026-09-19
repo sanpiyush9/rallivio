@@ -18,7 +18,7 @@
 | KI-009 | DiscoverGlobe, setTimeout, never, TypeScript, CI | 3 | Resolved |
 | KI-010 | JSX syntax, orphaned /span>, living page build | 1 | Resolved |
 | KI-011 | Vercel build-log connector, Tool get_deployment_build_logs not found | 2 | Open |
-| KI-012 | Vercel cron validation, no deployment record, Hobby, sub-daily cron | 4 | Resolved |
+| KI-012 | Vercel cron validation, no deployment record, Hobby, sub-daily cron | 2 | Resolved |
 | KI-013 | stale Preview data, no acquisition activity, 25-row seed, request-time YouTube acquisition | 3 | Resolved |
 | KI-014 | accidental main branch write, production deployment from feature commit | 3 | Resolved |
 | KI-015 | YouTube chart 404, acquisition cell, 502 | 3 | Resolved |
