@@ -425,7 +425,7 @@ Verify `api_usage`, pool growth, snapshot freshness, and signal counts after eac
 `app/living/page.tsx`
 
 ## KI-016 — Supabase REST caps large reads at 1,000 rows
-First seen: 2026-09-19 · Status: Resolved in worker; API now reports exact counts
+First seen: 2026-09-19 · Status: Resolved · Ladder level: 2 → target 4
 Severity: MEDIUM
 
 ### Symptom
