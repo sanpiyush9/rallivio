@@ -647,7 +647,7 @@ export async function signals() {
             commentCount: current.comments,
           },
         },
-        observations,
+        [...observations].reverse(),
       );
 
       const recent = observations.slice(-4);
