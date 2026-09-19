@@ -552,7 +552,7 @@ export default function LivingDiscover() {
         <div className="radarList">
           {radarCategories.length ? radarCategories.map((c, i) => {
             const pct = ranked.length ? Math.round((c.count / ranked.length) * 100) : 0;
-            return <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank">{i + 1}</span><b>{c.name}</b><strong>{c.count ? pct + "%" : "—"}</strong></button>;
+            return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank">{i + 1}</span><b>{c.name}</b><strong>{c.count ? pct + "%" : "—"}</strong></button>;
           }) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
@@ -560,7 +560,7 @@ export default function LivingDiscover() {
         <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>{categoryPulse.length ? "Live movement across verified observations" : "No measured topic movement yet"}</p></div><span className="scanState">{categoryPulse.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
         <div className="topicList">
           {topicRows.length ? topicRows.map((c, i) => (
-            <button key={c.name} type="button" onClick={() => { setFilter(c.name); setQ(""); }}>
+            <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); }}>
               <span className="topicRank">{i + 1}</span><b>{c.name}</b>
               <i className={"spark spark-" + (i + 1)} aria-label={`${c.name} momentum ${c.momentum || 0}`}>
                 {Array.from({ length: 7 }, (_, j) => <em key={j} style={{ height: `${4 + ((c.momentum || 0) + j * 7 + topicOffset * 3) % 14}px` }}/>)}
