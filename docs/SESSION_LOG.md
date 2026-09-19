@@ -413,3 +413,7 @@ The Hobby-compatible schedules restore deployment but reduce acquisition/refresh
 
 ### Related
 KI-012, docs/RESILIENCE_SYSTEM.md, docs/KNOWN_ISSUES.md, vercel.json
+
+
+## 2026-09-19 — Preview CRON_SECRET branch scope corrected
+Environment-only recovery step: CRON_SECRET was scoped to feature/youtube-real-discovery while the active discovery implementation is on feature/creator-platform-subscription. The Vercel Preview variable was reassigned to the active feature branch. A new branch deployment is required for the updated environment variable to be injected; no secret value is recorded here.
