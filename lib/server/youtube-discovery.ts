@@ -184,6 +184,11 @@ async function runConcurrent<T, R>(
   return results;
 }
 
+function circularCells<T>(cells: T[], start: number, count: number) {
+  if (!cells.length || count <= 0) return [] as T[];
+  return Array.from({ length: Math.min(count, cells.length) }, (_, i) => cells[(start + i) % cells.length]);
+}
+
 function score(video: any, history: any[]) {
   const views = num(video.statistics?.viewCount);
   const likes = num(video.statistics?.likeCount);
@@ -300,6 +305,82 @@ export async function acquire() {
     }
   });
 
+
+  // The mostPopular chart finds already-popular videos. Add a daily newest-upload
+  // sweep plus an active-live sweep so the pool also sees fresh creators before
+  // they become popular. search.list is capped at 100 calls/day by default, so
+  // the 100-cell sweep runs once per daily acquisition and rotates through the
+  // full region/category matrix over successive days.
+  const allSearchCells = REGIONS.flatMap((region) =>
+    CATEGORIES.map((category) => ({ region, category })),
+  );
+  const dayIndex = Math.floor(Date.now() / 86400000);
+  const recentSearchCells = circularCells(allSearchCells, dayIndex * 70, 70);
+  const liveSearchCells = circularCells(allSearchCells, dayIndex * 30 + 367, 30);
+  const searchJobs = [
+    ...recentSearchCells.map((cell) => ({ ...cell, mode: "recent" as const })),
+    ...liveSearchCells.map((cell) => ({ ...cell, mode: "live" as const })),
+  ];
+
+  const searchResults = await runConcurrent(searchJobs, 10, async ({ region, category, mode }) => {
+    const p = new URLSearchParams({
+      part: "snippet",
+      type: "video",
+      maxResults: "50",
+      order: "date",
+      regionCode: region,
+      videoCategoryId: category,
+    });
+    if (mode === "recent") {
+      p.set("publishedAfter", new Date(Date.now() - 24 * 36e5).toISOString());
+    } else {
+      p.set("eventType", "live");
+    }
+
+    try {
+      const data = (await yt("search?" + p.toString())) as any;
+      await usage("search.list", { phase: "acquire", region, category, mode });
+      return { region, category, mode, items: data.items ?? [] };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (/quota|exceeded|403/i.test(message)) {
+        console.warn("Skipping YouTube search sweep cell", { region, category, mode, message });
+        return { region, category, mode, items: [] };
+      }
+      throw error;
+    }
+  });
+
+  const searchVideoSources = new Map<string, { region: string; category: string }>();
+  for (const result of searchResults) {
+    for (const item of result.items) {
+      const id = item.id?.videoId;
+      if (id && !searchVideoSources.has(id)) {
+        searchVideoSources.set(id, { region: result.region, category: result.category });
+      }
+    }
+  }
+
+  const searchVideoIds = [...searchVideoSources.keys()];
+  const searchHydrateBatches = Array.from(
+    { length: Math.ceil(searchVideoIds.length / 50) },
+    (_, i) => searchVideoIds.slice(i * 50, i * 50 + 50),
+  );
+  const searchHydrated = await runConcurrent(searchHydrateBatches, 10, async (batch, index) => {
+    if (!batch.length) return [];
+    const p = new URLSearchParams({
+      part: "snippet,contentDetails,statistics,status",
+      id: batch.join(","),
+    });
+    const data = (await yt("videos?" + p.toString())) as any;
+    await usage("videos.list:searchHydrate", {
+      phase: "acquire",
+      batch: index,
+      videoCount: batch.length,
+    });
+    return data.items ?? [];
+  });
+
   const seen = new Map<string, any>();
   for (const result of results) {
     for (const video of result.items) {
@@ -310,6 +391,12 @@ export async function acquire() {
           category: result.category,
         });
       }
+    }
+  }
+  for (const video of searchHydrated.flat()) {
+    if (video.id && !seen.has(video.id)) {
+      const source = searchVideoSources.get(video.id);
+      if (source) seen.set(video.id, { video, region: source.region, category: source.category });
     }
   }
 
@@ -440,7 +527,13 @@ export async function acquire() {
 
   return {
     inserted: rows.length,
-    youtubeCalls: jobs.length + Math.ceil(channelIds.length / 50),
+    youtubeCalls:
+      jobs.length +
+      searchJobs.length +
+      searchHydrateBatches.length +
+      Math.ceil(channelIds.length / 50),
+    searchCalls: searchJobs.length,
+    searchVideos: searchVideoIds.length,
     regions: REGIONS.length,
     categories: CATEGORIES.length,
   };
