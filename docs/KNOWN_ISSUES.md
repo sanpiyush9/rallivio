@@ -420,3 +420,23 @@ Verify `api_usage`, pool growth, snapshot freshness, and signal counts after eac
 `lib/server/youtube-discovery.ts`
 `app/api/discovery/route.ts`
 `app/living/page.tsx`
+
+## KI-016 — Supabase REST caps large reads at 1,000 rows
+First seen: 2026-09-19 · Status: Resolved in worker; API now reports exact counts
+Severity: MEDIUM
+
+### Symptom
+The refresh worker requested 2,500 pool rows but only received 1,000 from Supabase REST, so the first successful refresh reported `refreshed: 1000` despite a 2,518-video pool.
+
+### Cause
+The Supabase REST endpoint returned its configured 1,000-row page size despite the larger requested limit.
+
+### Fix
+Refresh and signal workers now paginate the pool in 1,000-row pages. The serving API keeps the user payload bounded but uses exact-count headers so the UI can distinguish total pool size from the number of rows returned for the page.
+
+### Verification
+A subsequent refresh completed with `refreshed: 2518` and `youtubeCalls: 51`.
+
+### Related
+`lib/server/youtube-discovery.ts`
+`app/api/discovery/route.ts`
