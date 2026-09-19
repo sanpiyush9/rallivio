@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
           <div style={{ fontSize: "54px", fontWeight: 800, lineHeight: 1.08 }}>{title.slice(0, 90)}</div>
           <div style={{ fontSize: "28px", color: "#c8cae0" }}>{creatorName} · {compactViews}</div>
         </div>
-        <div style={{ display: "flex", fontSize: "20px", color: "#77e6b0" }}>See what's moving · RALLIVIO</div>
+        <div style={{ display: "flex", fontSize: "20px", color: "#77e6b0" }}>See what&apos;s moving · RALLIVIO</div>
       </div>
     ),
     { width: 1200, height: 630 },
