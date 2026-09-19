@@ -360,7 +360,7 @@ export default function LivingDiscover() {
     <header className="topbar">
       <button className="brand" type="button" onClick={() => go("/")}>RALL<span>IVIO</span><small>CREATORS. BRANDS. A BRIGHTER TOMORROW.</small></button>
       <nav>{nav.map(([n, p]) => <button key={p} className={p === "/" ? "active" : ""} type="button" onClick={() => go(p)}>{n}</button>)}</nav>
-      <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span>⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search anything: creators, brands, videos, trends…"/><button type="submit">↗</button></form>
+      <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span aria-hidden="true">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search anything: creators, brands, videos, trends…" aria-label="Search creators, brands, videos, and trends"/><button type="submit" aria-label="Open search">↗</button></form>
       <div className="topActions">
         <button className="round signalButton" type="button" onClick={() => setNotice("Signals are sourced from the verified discovery pool.")}><i/>LIVE</button>
       <div className="themePickerWrap">
@@ -407,7 +407,7 @@ export default function LivingDiscover() {
         <p>RALLIVIO turns the creator internet into a living field — people, culture, signals and opportunities moving together in one place.</p>
         <form className="heroSearch" onSubmit={e => { e.preventDefault(); command(q); }}><span className="searchMark">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="What do you want to discover?" aria-label="Universal discovery search"/><button type="submit" aria-label="Search">→</button></form>
         <div className="categoryRail" aria-label="Discovery categories">
-          {visibleCategories.map(c => <button key={c.name} className={filter === c.name ? "active" : ""} type="button" onClick={() => { setFilter(c.name); setQ(""); pulseField(`Field tuned to ${c.name}.`); }}><span>{c.icon}</span>{c.name}</button>)}
+          {visibleCategories.map(c => <button key={c.name} className={filter === c.name ? "active" : ""} type="button" onClick={() => { setFilter(c.name); setQ(""); pulseField(`Field tuned to ${c.name}.`); }}>{c.name}</button>)}
           <button className="more" type="button" onClick={() => setShowAllCategories(v => !v)}>{showAllCategories ? "Less ↑" : `+${categories.length - 10} more`}</button>
         </div>
         <div className="liveStrip" aria-label="Live discovery activity">
@@ -485,7 +485,7 @@ export default function LivingDiscover() {
             if (g.items[0]) selectPulse(g.items[(pulseOffset + i) % g.items.length]);
             else setNotice("No verified " + g.name + " observations are available right now.");
           }}>
-            <span className="pulseTabIcon">{["🔥","ϟ","↗","◉","★","◉"][i]}</span><b>{g.name}</b><small>{g.items.length}</small>
+            <span className="pulseTabIcon" aria-hidden="true">{i + 1}</span><b>{g.name}</b><small>{g.items.length}</small>
           </button>
         ))}
       </div>
@@ -499,7 +499,7 @@ export default function LivingDiscover() {
                 <h3 title={x.title}>{x.title}</h3>
                 <p className="pulseCreator">◉ {x.channel_title}</p>
                 <small>{fmt(x.views)} views · {x.engagement.toFixed(1)}% engagement</small>
-                <div className="pulseCardMeta"><span>♡ {fmt(x.likes)}</span><span>◌ {fmt(x.comments)}</span><strong>↗ {x.metadata?.momentum_score != null ? Math.round(x.metadata.momentum_score) + " momentum" : "Verified"}</strong></div>
+                <div className="pulseCardMeta"><span>Likes {fmt(x.likes)}</span><span>Comments {fmt(x.comments)}</span><strong>{x.metadata?.momentum_score != null ? Math.round(x.metadata.momentum_score) + " momentum" : "Verified"}</strong></div>
               </article>
             ))}
             {!loading && !pulseCards.length && <div className="pulseEmpty">No verified observations are available yet.</div>}
@@ -516,7 +516,7 @@ export default function LivingDiscover() {
           <h3>{selectedPulse.title}</h3>
           <p>{selectedPulse.channel_title} · {fmt(selectedPulse.views)} views · {age(selectedPulse.published_at)}</p>
           <div><span>{fmt(selectedPulse.likes)} likes</span><span>{fmt(selectedPulse.comments)} comments</span><span>{selectedPulse.engagement.toFixed(1)}% engagement</span><strong>{selectedPulse.metadata?.momentum_score != null ? `RALLIVIO Momentum Score ${Math.round(selectedPulse.metadata.momentum_score)}` : "RALLIVIO signal verified"}</strong></div>
-          <button className="sourceButton" type="button" onClick={() => window.open(selectedPulse.url, "_blank", "noopener,noreferrer")}>Watch on YouTube ↗</button>
+          <button className="sourceButton" type="button" aria-label="Watch selected video on YouTube" onClick={() => window.open(selectedPulse.url, "_blank", "noopener,noreferrer")}>Watch on YouTube ↗</button>
         </div>
       </section>}
       <div className="pulseTicker"><i/> Continuous verified pool · refreshes from source observations · right arrow keeps the stream moving</div>
