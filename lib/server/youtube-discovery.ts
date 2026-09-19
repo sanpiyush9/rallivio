@@ -522,15 +522,26 @@ export async function signals() {
     return { signals: 0, eligibleVideos: 0, suppressedVideos: 0 };
   }
 
-  const snapshotResponse = await sb(
-    "video_stats_snapshots?select=video_id,captured_at,views,likes,comments&order=captured_at.desc&limit=10000",
-  );
-  if (!snapshotResponse.ok) {
-    throw new Error(`Snapshot read failed: ${snapshotResponse.status} ${await snapshotResponse.text()}`);
+  // PostgREST may cap a single response at 1,000 rows. A single 1,000-row
+  // page can contain only the newest observation for each video, which would
+  // incorrectly suppress every signal. Page through the full snapshot history
+  // so every video can prove at least two observations.
+  const snapshotRows: any[] = [];
+  for (let offset = 0; offset < 15000; offset += 1000) {
+    const snapshotResponse = await sb(
+      `video_stats_snapshots?select=video_id,captured_at,views,likes,comments&order=captured_at.desc&limit=1000&offset=${offset}`,
+    );
+    if (!snapshotResponse.ok) {
+      throw new Error(`Snapshot read failed: ${snapshotResponse.status} ${await snapshotResponse.text()}`);
+    }
+
+    const page = (await snapshotResponse.json()) as any[];
+    snapshotRows.push(...page);
+    if (page.length < 1000) break;
   }
 
   const grouped = new Map<string, any[]>();
-  for (const item of (await snapshotResponse.json()) as any[]) {
+  for (const item of snapshotRows) {
     const list = grouped.get(item.video_id) ?? [];
     if (list.length < 5) list.push(item);
     grouped.set(item.video_id, list);
