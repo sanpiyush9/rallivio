@@ -18,7 +18,7 @@
 | KI-009 | DiscoverGlobe, setTimeout, never, TypeScript, CI | 3 | Resolved |
 | KI-010 | JSX syntax, orphaned /span>, living page build | 1 | Resolved |
 | KI-011 | Vercel build-log connector, Tool get_deployment_build_logs not found | 2 | Open |
-| KI-012 | Vercel cron validation, no deployment record, Hobby, sub-daily cron | 2 | Resolved |
+| KI-012 | Vercel cron validation, no deployment record, Hobby, sub-daily cron | 4 | Resolved |
 | KI-013 | stale Preview data, no acquisition activity, 25-row seed, request-time YouTube acquisition | 3 | Resolved |
 | KI-014 | accidental main branch write, production deployment from feature commit | 3 | Resolved |
 | KI-015 | YouTube chart 404, acquisition cell, 502 | 3 | Resolved |
@@ -33,9 +33,9 @@
 | Level | Count |
 |---|---:|
 | 1 — Documented | 2 |
-| 2 — Detected | 6 |
+| 2 — Detected | 5 |
 | 3 — Auto-recovered | 8 |
-| 4 — Prevented | 1 |
+| 4 — Prevented | 2 |
 
 > Update this table whenever an entry changes level.
 
@@ -339,7 +339,7 @@ Confirmed: the Hobby deployment rejected sub-daily cron expressions during Verce
 Changed vercel.json to once-daily schedules: acquire 0 2 * * *, refresh 0 8 * * *, signals 30 8 * * *. Commit a751048c8d99e1558925aabb6e3ece80a70f85ca. No application logic changed. The corrected commit received a real Vercel deployment target and entered pending state.
 
 ### Prevention
-Before diagnosing a missing deployment, inspect the exact commit's Vercel status target and follow it. Then inspect vercel.json and compare cron frequency with the active hosting plan. Target Level 4: add a repository verification guard for the declared deployment plan/profile so incompatible cron schedules fail before push.
+Before diagnosing a missing deployment, inspect the exact commit's Vercel status target and follow it. Then inspect vercel.json and compare cron frequency with the active hosting plan. Prevention: added `scripts/check-vercel-crons.mjs` to the `prebuild` gate. It rejects sub-daily Vercel cron expressions under the current Hobby deployment policy before a build can be accepted. The active schedules were restored to once-daily values; the Supabase signal cycle remains the higher-frequency signal scheduler.
 
 ### Recovery rule
 Do not create repeated trigger commits. Classify the failure first, make the smallest deterministic configuration fix, then verify deployment creation → READY → exact deployed SHA → served route.
