@@ -315,8 +315,31 @@ export async function acquire() {
     CATEGORIES.map((category) => ({ region, category })),
   );
   const dayIndex = Math.floor(Date.now() / 86400000);
-  const recentSearchCells = circularCells(allSearchCells, dayIndex * 70, 70);
-  const liveSearchCells = circularCells(allSearchCells, dayIndex * 30 + 367, 30);
+
+  // Search is the long-tail growth lever, but search.list is quota-expensive
+  // (100 quota units/call). Keep the default sweep below the standard
+  // 10,000-unit daily YouTube quota while leaving the budget configurable for
+  // an approved higher quota. The rotating cursor means we accumulate new
+  // creators instead of repeatedly asking the same cells for the same videos.
+  const configuredSearchBudget = Number(process.env.YOUTUBE_SEARCH_SWEEP_CALLS ?? 80);
+  const searchBudget = Math.max(
+    1,
+    Math.min(
+      Number.isFinite(configuredSearchBudget) ? configuredSearchBudget : 80,
+      allSearchCells.length,
+    ),
+  );
+  const liveBudget = Math.min(
+    Math.max(1, Math.floor(searchBudget * 0.2)),
+    searchBudget,
+  );
+  const recentBudget = searchBudget - liveBudget;
+  const recentSearchCells = circularCells(allSearchCells, dayIndex * recentBudget, recentBudget);
+  const liveSearchCells = circularCells(
+    allSearchCells,
+    dayIndex * liveBudget + 367,
+    liveBudget,
+  );
   const searchJobs = [
     ...recentSearchCells.map((cell) => ({ ...cell, mode: "recent" as const })),
     ...liveSearchCells.map((cell) => ({ ...cell, mode: "live" as const })),
