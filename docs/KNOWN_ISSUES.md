@@ -21,7 +21,7 @@
 | KI-012 | Vercel cron validation, no deployment record, Hobby, sub-daily cron | 2 | Resolved |
 | KI-013 | stale Preview data, no acquisition activity, 25-row seed, request-time YouTube acquisition | 3 | Resolved |
 | KI-014 | accidental main branch write, production deployment from feature commit | 3 | Resolved |
-| KI-015 | YouTube chart 404, acquisition cell, 502 | 2 | Resolved |
+| KI-015 | YouTube chart 404, acquisition cell, 502 | 3 | Resolved |
 | KI-016 | Supabase REST 1,000-row cap, refresh, snapshot pagination | 2 | Resolved |
 | KI-017 | signals 0, eligible 0, snapshot history, signal worker | 3 | Resolved |
 
@@ -404,7 +404,7 @@ For every GitHub write, explicitly pass the active feature branch and immediatel
 `docs/SESSION_LOG.md`
 
 ## KI-015 — Preview acquisition reached the worker but YouTube chart requests returned 404
-First seen: 2026-09-19 · Status: Fix deployed pending data verification · Ladder level: 2 → target 4
+First seen: 2026-09-19 · Status: Resolved · Ladder level: 3 → target 4
 Severity: HIGH — blocks fresh discovery data
 
 ### Symptom
