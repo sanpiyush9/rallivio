@@ -657,3 +657,13 @@ Wait for the new Preview deployment to become READY, then use the live scheduler
 - Phase 6 additional external sources, Phase 7 trained ML, and Phase 8 external LLM explanations remain explicitly unconnected; deterministic foundations and contracts are in place.
 - Vercel is still blocked by the team build-rate limit. No claim of live UI/API deployment was made.
 - Next gate: wait for/obtain a GitHub verification run, inspect the first failing stage if any, then only after verification consider the next Vercel deployment attempt.
+
+## 2026-09-20 — Complete pending Neural Grid and signal consistency work
+
+- Added normalized multi-source adapter boundary and persistent source registry.
+- Added deterministic creator/topic/region change-point score/state persistence and triggers.
+- Added evidence-bound intelligence explanation contract and API.
+- Applied and verified the corresponding Supabase migrations.
+- Executed the discovery signal cycle successfully: 7,840 pool rows, 4,514 signals, 6,864 creators, 714 topic intelligence rows, 25 regions, and feed refresh completed.
+- Fixed the signal-tab/card mismatch by preserving primary signal state while displaying the selected matching multi-label signal.
+- Vercel deployment remains externally blocked by the current build-rate limit; no live deployment claim is made until exact-SHA READY verification is available.
