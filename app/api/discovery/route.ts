@@ -72,7 +72,7 @@ export async function GET(request: Request) {
 
     const feedParams = applyRankingFilters(
       new URLSearchParams({
-        select: "video_id,channel_id,region,topic,category_id,signal_type,momentum_score,observed_at,expires_at,global_rank",
+        select: "video_id,channel_id,region,topic,category_id,format,signal_type,signal_labels,momentum_score,observed_at,expires_at,global_rank",
         order: "global_rank.asc",
         limit: String(limit),
       }),
@@ -123,7 +123,7 @@ export async function GET(request: Request) {
 
     const ids = rankings.map((item) => item.video_id);
     const poolPath =
-      "youtube_discovery_pool?select=id,title,channel_title,channel_id,published_at,thumbnail,description,views,likes,comments,duration,url,embeddable,live_broadcast_content,topic,format,region,metadata,acquired_at,stats_refreshed_at&id=in.(" +
+      "youtube_discovery_pool?select=id,title,channel_title,channel_id,published_at,thumbnail,description,views,likes,comments,duration,url,embeddable,live_broadcast_content,topic,format,region,metadata,acquired_at,stats_refreshed_at,language&id=in.(" +
       ids.join(",") +
       ")";
     const poolResponse = await supabase(poolPath);
@@ -142,6 +142,7 @@ export async function GET(request: Request) {
         delete metadata.signal;
         delete metadata.momentum_score;
         metadata.signal = ranking.signal_type;
+        metadata.signals = ranking.signal_labels;
         metadata.momentum_score = ranking.momentum_score ?? 0;
         return { ...item, metadata };
       })
