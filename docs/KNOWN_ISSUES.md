@@ -21,6 +21,9 @@
 | KI-012 | Vercel cron validation, no deployment record, Hobby, sub-daily cron | 2 | Resolved |
 | KI-013 | stale Preview data, no acquisition activity, 25-row seed, request-time YouTube acquisition | 3 | Resolved |
 | KI-014 | accidental main branch write, production deployment from feature commit | 3 | Resolved |
+| KI-015 | YouTube chart 404, acquisition cell, 502 | 2 | Resolved |
+| KI-016 | Supabase REST 1,000-row cap, refresh, snapshot pagination | 2 | Resolved |
+| KI-017 | signals 0, eligible 0, snapshot history, signal worker | 3 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -30,8 +33,8 @@
 | Level | Count |
 |---|---:|
 | 1 — Documented | 2 |
-| 2 — Detected | 5 |
-| 3 — Auto-recovered | 6 |
+| 2 — Detected | 7 |
+| 3 — Auto-recovered | 7 |
 | 4 — Prevented | 1 |
 
 > Update this table whenever an entry changes level.
@@ -440,3 +443,26 @@ A subsequent refresh completed with `refreshed: 2518` and `youtubeCalls: 51`.
 ### Related
 `lib/server/youtube-discovery.ts`
 `app/api/discovery/route.ts`
+
+
+## KI-017 — Signal worker incorrectly suppressed all videos after snapshot pagination
+First seen: 2026-09-19 · Status: Resolved · Ladder level: 3 → target 4
+Severity: HIGH — blocks the verified signal feed
+
+### Symptom
+The discovery pool contained 2,518 videos and every video had at least two persisted observations, but the scheduled signal worker returned `signals: 0, eligibleVideos: 0, suppressedVideos: 2518`.
+
+### Cause
+The signal worker attempted to reconstruct per-video observation history from a globally paginated Supabase REST response. The REST endpoint's 1,000-row response ceiling meant the worker could not reliably assemble the required per-video history even though the database contained sufficient observations.
+
+### Fix
+Added `public.get_recent_video_snapshots(text[])`, a bounded SQL RPC that returns up to five recent observations per requested video. The signal worker now calls it in batches of 200 video IDs, reverses each video's newest-first history before scoring, and publishes the new signal batch before cleaning up older observations. The serving API also reports only the latest signal batch and limits the user payload to 20–100 records.
+
+### Prevention
+Keep signal computation inside bounded database operations rather than relying on global REST pagination. Verify both `eligibleVideos` and persisted `discovery_signals` counts after every signal run.
+
+### Related
+`lib/server/youtube-discovery.ts`
+`app/api/discovery/route.ts`
+`supabase/migrations/20260919102000_get_recent_video_snapshots.sql`
+`docs/RESILIENCE_SYSTEM.md`
