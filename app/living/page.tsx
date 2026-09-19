@@ -147,6 +147,7 @@ export default function LivingDiscover() {
   const [selectedPulse, setSelectedPulse] = useState<Item | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [apiUsageLatestAt, setApiUsageLatestAt] = useState<number | null>(null);
+  const [verifiedSignalCount, setVerifiedSignalCount] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const pulseViewportRef = useRef<HTMLDivElement>(null);
@@ -202,6 +203,7 @@ export default function LivingDiscover() {
         }) : []);
         setLastUpdatedAt(b.refreshedAt ? Date.parse(b.refreshedAt) : null);
         setApiUsageLatestAt(b.apiUsageLatestAt ? Date.parse(b.apiUsageLatestAt) : null);
+        setVerifiedSignalCount(Number(b.verifiedSignalCount || 0));
         setNotice("");
       } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
       finally { setLoading(false); }
@@ -233,7 +235,12 @@ export default function LivingDiscover() {
     return () => window.clearInterval(id);
   }, [items.length]);
 
-  const ranked = useMemo(() => [...items].sort((a, b) => (b.metadata?.momentum_score || 0) - (a.metadata?.momentum_score || 0)), [items]);
+  const ranked = useMemo(
+    () => items
+      .filter(item => Boolean(item.metadata?.signal))
+      .sort((a, b) => (b.metadata?.momentum_score || 0) - (a.metadata?.momentum_score || 0)),
+    [items],
+  );
   const heroCandidates = useMemo(() => {
     const cutoff = Date.now() - 2 * 60 * 60 * 1000;
     const candidates = ranked.filter(x => x.metadata?.signal && x.stats_refreshed_at && Date.parse(x.stats_refreshed_at) >= cutoff);
@@ -399,7 +406,7 @@ export default function LivingDiscover() {
           <button className="more" type="button" onClick={() => setShowAllCategories(v => !v)}>{showAllCategories ? "Less ↑" : `+${categories.length - 10} more`}</button>
         </div>
         <div className="liveStrip" aria-label="Live discovery activity">
-          <div className="liveStripHead"><span><i/> LIVE FIELD</span><small>{loading ? "syncing" : `${ranked.length} verified signals`}</small></div>
+          <div className="liveStripHead"><span><i/> LIVE FIELD</span><small>{loading ? "syncing" : `${verifiedSignalCount} verified signals`}</small></div>
           <div className="liveStripItems">
             {ranked.slice(0, 3).map((x, i) => (
               <button key={x.id} type="button" onClick={() => setModal(x)}>
@@ -427,7 +434,7 @@ export default function LivingDiscover() {
             <button className="core" type="button" aria-label="Activate RALLIVIO living discovery core" onClick={activateCore} onPointerDown={() => setPulse(n => n + 1)}>
               <span className="coreHalo h1"/><span className="coreHalo h2"/><span className="coreHalo h3"/><span className="coreLight"/>
               <DiscoverGlobe />
-              <strong>RALL<span>IVIO</span></strong><small>LIVING DISCOVERY SYSTEM</small><i><b>●</b> {loading ? "syncing" : `${ranked.length} verified signals`} · {activePlatform} focus</i>
+              <strong>RALL<span>IVIO</span></strong><small>LIVING DISCOVERY SYSTEM</small><i><b>●</b> {loading ? "syncing" : `${verifiedSignalCount} verified signals`} · {activePlatform} focus</i>
             </button>
           </div>
         </div>
@@ -441,7 +448,7 @@ export default function LivingDiscover() {
         <strong><i/> Live</strong>
       </div>
       <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(risingCreators)}</b><small>Rising Creators</small></div>
-      <div className="pulseMetric"><span>♨</span><b>{loading ? "—" : fmt(ranked.length)}</b><small>Verified Signals</small></div>
+      <div className="pulseMetric"><span>♨</span><b>{loading ? "—" : fmt(verifiedSignalCount)}</b><small>Verified Signals</small></div>
       <div className="pulseMetric"><span>✦</span><b>{loading ? "—" : fmt(categoryPulse.length)}</b><small>Active Topics</small></div>
       <div className="pulseMetric"><span>♧</span><b>{loading ? "—" : fmt(creatorPool.length)}</b><small>Tracked Creators</small></div>
       <div className="pulseWorld">
