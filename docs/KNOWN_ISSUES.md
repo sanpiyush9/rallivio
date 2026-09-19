@@ -18,6 +18,7 @@
 | KI-009 | DiscoverGlobe, setTimeout, never, TypeScript, CI | 3 | Resolved |
 | KI-010 | JSX syntax, orphaned /span>, living page build | 1 | Resolved |
 | KI-011 | Vercel build-log connector, Tool get_deployment_build_logs not found | 2 | Open |
+| KI-012 | Vercel cron validation, no deployment record, Hobby, sub-daily cron | 2 | Resolved |
 
 **Ladder levels** (see `docs/RESILIENCE_SYSTEM.md`):
 0 unknown · 1 documented · 2 auto-detected · 3 auto-recovered · 4 prevented
@@ -317,3 +318,31 @@ Local production build is now the first build-evidence source, so this connector
 ### Related
 `docs/RESILIENCE_SYSTEM.md`
 `docs/RUNBOOK.md` → Build fails on Vercel but no log access
+
+
+## KI-012 — Vercel Hobby cron validation rejects sub-daily schedules
+First seen: 2026-09-19 · Status: Resolved · Ladder level: 2 → target 4
+Severity: HIGH — blocks deployment creation
+
+### Symptom
+A verified feature commit received a failed Vercel status but no normal deployment record. The Vercel status target redirected to Vercel Cron Jobs Usage & Pricing documentation.
+
+### Cause
+Confirmed: the Hobby deployment rejected sub-daily cron expressions during Vercel validation before the normal deployment/build path. The repository declared acquire every 6 hours, refresh hourly, and signals hourly.
+
+### Fix
+Changed vercel.json to once-daily schedules: acquire 0 2 * * *, refresh 0 8 * * *, signals 30 8 * * *. Commit a751048c8d99e1558925aabb6e3ece80a70f85ca. No application logic changed. The corrected commit received a real Vercel deployment target and entered pending state.
+
+### Prevention
+Before diagnosing a missing deployment, inspect the exact commit's Vercel status target and follow it. Then inspect vercel.json and compare cron frequency with the active hosting plan. Target Level 4: add a repository verification guard for the declared deployment plan/profile so incompatible cron schedules fail before push.
+
+### Recovery rule
+Do not create repeated trigger commits. Classify the failure first, make the smallest deterministic configuration fix, then verify deployment creation → READY → exact deployed SHA → served route.
+
+### Caveat
+Daily Hobby schedules restore deployability but reduce refresh frequency. Hourly “Now Moving” semantics require a scheduler/hosting capability that supports hourly or sub-daily execution.
+
+### Related
+vercel.json
+docs/RESILIENCE_SYSTEM.md
+docs/SESSION_LOG.md
