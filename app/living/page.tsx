@@ -155,6 +155,7 @@ export default function LivingDiscover() {
   const [risingCreatorCount, setRisingCreatorCount] = useState(0);
   const [activeTopicCount, setActiveTopicCount] = useState(0);
   const [globalRegions, setGlobalRegions] = useState<string[]>([]);
+  const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const pulseViewportRef = useRef<HTMLDivElement>(null);
@@ -177,9 +178,12 @@ export default function LivingDiscover() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const loadDiscovery = async (signal: string | null = null) => {
+  const loadDiscovery = async (signal: string | null = null, topic: string | null = null) => {
     try {
-      const query = signal ? `?limit=60&signal=${encodeURIComponent(signal)}` : "?limit=60";
+      const params = new URLSearchParams({ limit: "60" });
+      if (signal) params.set("signal", signal);
+      if (topic && topic !== "Trending") params.set("topic", topic);
+      const query = `?${params.toString()}`;
       const r = await fetch(`/api/discovery${query}`, { cache: "default" });
         const b = await r.json();
         if (!r.ok || !b.ok) throw new Error(b.state || "YOUTUBE_UNAVAILABLE");
@@ -217,6 +221,7 @@ export default function LivingDiscover() {
         setRisingCreatorCount(Number(b.risingCreators || 0));
         setActiveTopicCount(Number(b.activeTopics || 0));
         setGlobalRegions(Array.isArray(b.regions) ? b.regions : []);
+        setTopicCounts(b.topicCounts && typeof b.topicCounts === "object" ? b.topicCounts : {});
         setNotice("");
     } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
     finally { setLoading(false); }
@@ -224,9 +229,9 @@ export default function LivingDiscover() {
 
   useEffect(() => {
     void loadDiscovery(null);
-    const id = window.setInterval(() => void loadDiscovery(activeSignal), 60000);
+    const id = window.setInterval(() => void loadDiscovery(activeSignal, filter), 60000);
     return () => window.clearInterval(id);
-  }, [activeSignal]);
+  }, [activeSignal, filter]);
 
   useEffect(() => { if (!notice) return; const id = window.setTimeout(() => setNotice(""), 4200); return () => window.clearTimeout(id); }, [notice]);
 
@@ -300,8 +305,8 @@ export default function LivingDiscover() {
   const categoryPulse = useMemo(() => categories.slice(1).map(c => {
     const matches = ranked.filter(x => categoryFor(x) === c.name);
     const momentum = matches.length ? Math.round(matches.reduce((sum, x) => sum + (x.metadata?.momentum_score || 0), 0) / matches.length) : 0;
-    return { ...c, count: matches.length, momentum };
-  }).filter(c => c.count > 0).sort((a, b) => b.momentum - a.momentum), [ranked]);
+    return { ...c, count: Number(topicCounts[c.name] || 0), momentum };
+  }).filter(c => c.count > 0).sort((a, b) => b.count - a.count || b.momentum - a.momentum), [ranked, topicCounts]);
 
   const radarCategories = useMemo(() => {
     if (!categoryPulse.length) return [];
@@ -359,7 +364,7 @@ export default function LivingDiscover() {
   const command = (s: string) => {
     const l = s.trim().toLowerCase(); if (!l) return;
     const c = categories.find(x => x.name.toLowerCase() === l || x.name.toLowerCase().includes(l) || l.includes(x.name.toLowerCase()));
-    if (c) { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null); pulseField(`RALLIVIO tuned the field to ${c.name}.`); return; }
+    if (c) { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField(`RALLIVIO tuned the field to ${c.name}.`); return; }
     const p = platforms.find(x => l.includes(x.name.toLowerCase()));
     if (p) { activatePlatform(p); return; }
     if (l.includes("creator") || l.includes("profile")) { go("/creators"); return; }
@@ -367,7 +372,7 @@ export default function LivingDiscover() {
     if (l.includes("opportun")) { go("/opportunities"); return; }
     setFilter("Trending"); setQ(s); pulseField(`Searching the verified discovery pool for “${s}”.`);
   };
-  const activateCore = () => { setActivePlatform("YouTube"); setActiveSignal(null); setFilter("Trending"); setQ(""); void loadDiscovery(null); pulseField("RALLIVIO re-centered. The living field is listening."); };
+  const activateCore = () => { setActivePlatform("YouTube"); setActiveSignal(null); setFilter("Trending"); setQ(""); void loadDiscovery(null, null); pulseField("RALLIVIO re-centered. The living field is listening."); };
 
   return <main className={`rv theme-${theme}`}>
     <button className="themeScrim" type="button" aria-label="Close theme picker" onClick={() => setShowThemes(false)} style={{ display: showThemes ? "block" : "none" }} />
@@ -422,7 +427,7 @@ export default function LivingDiscover() {
         <p>RALLIVIO turns the creator internet into a living field — people, culture, signals and opportunities moving together in one place.</p>
         <form className="heroSearch" onSubmit={e => { e.preventDefault(); command(q); }}><span className="searchMark">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="What do you want to discover?" aria-label="Universal discovery search"/><button type="submit" aria-label="Search">→</button></form>
         <div className="categoryRail" aria-label="Discovery categories">
-          {visibleCategories.map(c => <button key={c.name} className={filter === c.name ? "active" : ""} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null); pulseField(`Field tuned to ${c.name}.`); }}>{c.name}</button>)}
+          {visibleCategories.map(c => <button key={c.name} className={filter === c.name ? "active" : ""} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField(`Field tuned to ${c.name}.`); }}>{c.name}</button>)}
           <button className="more" type="button" onClick={() => setShowAllCategories(v => !v)}>{showAllCategories ? "Less ↑" : `+${categories.length - 10} more`}</button>
         </div>
         <div className="liveStrip" aria-label="Live discovery activity">
