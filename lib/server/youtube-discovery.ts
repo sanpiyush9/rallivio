@@ -424,8 +424,8 @@ export async function refresh() {
       const pageLimit = Math.min(1000, limit - rows.length);
       const filter =
         tier === "hot"
-          ? `tier=eq.hot&last_observed_at=lt.${encodeURIComponent(cutoff)}`
-          : `tier=eq.${tier}&last_observed_at=lt.${encodeURIComponent(cutoff)}`;
+          ? `tier=eq.hot&stats_refreshed_at=lt.${encodeURIComponent(cutoff)}`
+          : `tier=eq.${tier}&stats_refreshed_at=lt.${encodeURIComponent(cutoff)}`;
 
       const response = await sb(
         `youtube_discovery_pool?select=*&${filter}&order=last_observed_at.asc.nullsfirst,updated_at.asc&limit=${pageLimit}&offset=${offset}`,
