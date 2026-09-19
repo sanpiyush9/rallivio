@@ -409,14 +409,20 @@ export async function acquire() {
 export async function refresh() {
   config();
 
-  const poolResponse = await sb(
-    "youtube_discovery_pool?select=*&order=views.desc&limit=2500",
-  );
-  if (!poolResponse.ok) {
-    throw new Error(`Pool read failed: ${poolResponse.status}`);
+  const pool: any[] = [];
+  for (let offset = 0; offset < 2500; offset += 1000) {
+    const poolResponse = await sb(
+      `youtube_discovery_pool?select=*&order=views.desc&limit=1000&offset=${offset}`,
+    );
+    if (!poolResponse.ok) {
+      throw new Error(`Pool read failed: ${poolResponse.status} ${await poolResponse.text()}`);
+    }
+
+    const page = (await poolResponse.json()) as any[];
+    pool.push(...page);
+    if (page.length < 1000) break;
   }
 
-  const pool = (await poolResponse.json()) as any[];
   const poolById = new Map(pool.map((row) => [String(row.id), row]));
   const now = new Date().toISOString();
   const batches = Array.from(
@@ -498,24 +504,29 @@ export async function refresh() {
 export async function signals() {
   config();
 
-  const poolResponse = await sb(
-    "youtube_discovery_pool?select=id,channel_id,views,likes,comments,published_at,live_broadcast_content,metadata,region,topic&order=views.desc&limit=2500",
-  );
-  if (!poolResponse.ok) {
-    throw new Error(`Pool read failed: ${poolResponse.status}`);
+  const pool: any[] = [];
+  for (let offset = 0; offset < 2500; offset += 1000) {
+    const poolResponse = await sb(
+      `youtube_discovery_pool?select=id,channel_id,views,likes,comments,published_at,live_broadcast_content,metadata,region,topic&order=views.desc&limit=1000&offset=${offset}`,
+    );
+    if (!poolResponse.ok) {
+      throw new Error(`Pool read failed: ${poolResponse.status} ${await poolResponse.text()}`);
+    }
+
+    const page = (await poolResponse.json()) as any[];
+    pool.push(...page);
+    if (page.length < 1000) break;
   }
 
-  const pool = (await poolResponse.json()) as any[];
   if (!pool.length) {
     return { signals: 0, eligibleVideos: 0, suppressedVideos: 0 };
   }
 
-  const ids = pool.map((x) => String(x.id));
   const snapshotResponse = await sb(
-    `video_stats_snapshots?select=video_id,captured_at,views,likes,comments&video_id=in.(${ids.join(",")})&order=captured_at.desc&limit=10000`,
+    "video_stats_snapshots?select=video_id,captured_at,views,likes,comments&order=captured_at.desc&limit=10000",
   );
   if (!snapshotResponse.ok) {
-    throw new Error(`Snapshot read failed: ${snapshotResponse.status}`);
+    throw new Error(`Snapshot read failed: ${snapshotResponse.status} ${await snapshotResponse.text()}`);
   }
 
   const grouped = new Map<string, any[]>();
