@@ -43,7 +43,7 @@ async function supabase(path: string, init: RequestInit = {}) {
   });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json(
       { ok: false, state: "CONFIGURATION_REQUIRED" },
@@ -52,11 +52,13 @@ export async function GET() {
   }
 
   try {
+    const requestedLimit = Number(new URL(request.url).searchParams.get("limit") ?? "60");
+    const limit = Number.isFinite(requestedLimit) ? Math.min(100, Math.max(20, Math.floor(requestedLimit))) : 60;
     const params = new URLSearchParams({
       select:
         "id,title,channel_title,channel_id,published_at,thumbnail,description,views,likes,comments,duration,url,embeddable,live_broadcast_content,topic,format,region,metadata,acquired_at,stats_refreshed_at",
       order: "views.desc",
-      limit: "500",
+      limit: String(limit),
     });
 
     const response = await supabase(`youtube_discovery_pool?${params}`, {
@@ -80,7 +82,7 @@ export async function GET() {
       : [];
 
     const signalResponse = await supabase(
-      "discovery_signals?select=video_id,signal_type,momentum_score&order=momentum_score.desc&limit=1000",
+      "discovery_signals?select=video_id,signal_type,momentum_score,observed_at&order=observed_at.desc,momentum_score.desc&limit=3000",
       { headers: { Prefer: "count=exact" } },
     );
     const signals = signalResponse.ok
@@ -88,13 +90,16 @@ export async function GET() {
           video_id: string;
           signal_type: string;
           momentum_score: number;
+          observed_at: string;
         }[])
       : [];
 
-    const signalCount = Number(
-      signalResponse.headers.get("content-range")?.split("/")[1] ?? signals.length,
-    );
-    const signalByVideo = new Map(signals.map((item) => [item.video_id, item]));
+    const latestObservedAt = signals[0]?.observed_at ?? null;
+    const currentSignals = latestObservedAt
+      ? signals.filter((item) => item.observed_at === latestObservedAt)
+      : [];
+    const signalCount = currentSignals.length;
+    const signalByVideo = new Map(currentSignals.map((item) => [item.video_id, item]));
 
     const enriched = items.map((item) => {
       const signal = signalByVideo.get(item.id);
@@ -130,7 +135,7 @@ export async function GET() {
         verifiedSignalCount: signalCount,
         items: enriched,
       },
-      { headers: { "Cache-Control": "no-store" } },
+      { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" } },
     );
   } catch (error) {
     console.error("discovery read failed", error);
