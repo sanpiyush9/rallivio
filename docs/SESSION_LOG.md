@@ -621,3 +621,14 @@ Wait for the new Preview deployment to become READY, then use the live scheduler
 ### Remaining verification
 - The latest committed Education mapping and final test/docs commits still need their Vercel deployment to become the active branch preview before the final re-fetch is considered the definitive post-head verification.
 - Item 3 remains blocked until the current discovery verification is closed.
+
+## 2026-09-20 — Discovery signal scale correction
+
+- Diagnosed the apparent signal collapse: the live pool had 7,840 videos and 4,682 current discovery-signal rows, but only 340 pool rows had `stats_refreshed_at`, so the feed truth gate exposed only 199 rows after the materialized view refresh.
+- Verified that all 7,840 videos already had at least two distinct statistics snapshots; 7,840 had repeated observations and 7,838 had a latest snapshot within the prior 6 hours at audit time.
+- Applied `backfill_observation_truth_from_snapshots` so repeated acquisition snapshots become the observation-truth timestamp; live pool is now 7,840/7,840 observation-ready and `feed_rankings` contains 4,682 signal rows.
+- Current multi-label signal counts from the latest signal pass: Now Moving 2,266; Breaking Out 1,191; On the Rise 385; Under the Radar 1,191; Just Dropped 1,850; Live 0 because the current acquired pool contains no active live broadcasts.
+- Added indexed, refreshable feed infrastructure and API multi-label signal filtering/counts. Signal tabs now request the selected signal rather than selecting one card from the 60-item sample.
+- Fixed acquisition refresh semantics: rediscovery no longer clears `stats_refreshed_at` or injects acquisition-time signal/momentum metadata into existing rows; tier refresh now includes NULL observation timestamps.
+- Added a daily rotating newest-upload + live sweep using YouTube `search.list`, covering 100 region/category cells per daily acquisition and rotating through the full matrix. This is designed to grow the pool beyond the current most-popular-only sample.
+- Deployment is currently blocked by the Vercel team's build-rate limit; the latest READY branch deployment remains older than these commits. Database-side signal counts/truth gate are live now; UI/API source changes are committed to `feature/creator-platform-subscription` and require the next successful preview deployment.
