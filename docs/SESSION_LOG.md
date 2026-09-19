@@ -642,3 +642,18 @@ Wait for the new Preview deployment to become READY, then use the live scheduler
 - Added scripts/check-vercel-crons.mjs and wired it into prebuild so a future sub-daily Vercel cron regression fails deterministically before deployment.
 - The higher-frequency signal cycle remains handled by the Supabase database scheduler; Vercel is no longer relied upon for that cadence.
 - A GitHub verification workflow was restored as the documented build-evidence fallback because Vercel build-log retrieval is unavailable. No protected branch was touched.
+
+
+## 2026-09-20 — Neural Grid foundation implementation
+
+- Reviewed the owner-provided architecture direction and kept the active implementation branch as feature/creator-platform-subscription.
+- Incorporated the useful deployment-gate part of the external review: the existing Husky pre-push gate was strengthened from build-only to the full npm run verify pipeline; the GitHub verification workflow now exposes typecheck, lint, tests, build, canonical and docs checks separately.
+- Did not create a package-lock blindly because the repository currently has no lockfile; the CI workflow continues to use npm install rather than npm ci.
+- Added the UNKNOWN observation state and preserved it during tier rebalance until a candidate has at least two snapshots. Unknown candidates receive a 15-minute adaptive observation cadence; rapid growth can still reduce sampling to two minutes.
+- Added the Neural Grid intelligence foundation: creator intelligence, topic × region × format intelligence, regional intelligence, entity-aware durable events and a read-only /api/intelligence API.
+- Applied the new database migrations to Supabase and executed the complete discovery signal cycle successfully.
+- Database verification at cycle execution: pool 7,840; signals 4,529; creator intelligence 6,864; topic/region/format intelligence 714; region intelligence 25; tier distribution 389 HOT / 1,672 WARM / 5,779 COLD / 0 UNKNOWN / 0 ARCHIVE.
+- Phase 3 remains an architecture boundary rather than a fabricated ClickHouse deployment. Supabase/Postgres remains the current analytical node until measured scale justifies a second store.
+- Phase 6 additional external sources, Phase 7 trained ML, and Phase 8 external LLM explanations remain explicitly unconnected; deterministic foundations and contracts are in place.
+- Vercel is still blocked by the team build-rate limit. No claim of live UI/API deployment was made.
+- Next gate: wait for/obtain a GitHub verification run, inspect the first failing stage if any, then only after verification consider the next Vercel deployment attempt.
