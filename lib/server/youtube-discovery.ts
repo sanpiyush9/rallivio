@@ -442,7 +442,7 @@ export async function refresh() {
     });
 
     if (!write.ok) {
-      throw new Error(`Pool refresh failed: ${write.status}`);
+      throw new Error(`Pool refresh failed: ${write.status} ${await write.text()}`);
     }
 
     const snapshots = items.map((v: any) => ({
