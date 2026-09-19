@@ -321,11 +321,11 @@ export async function acquire() {
   // 10,000-unit daily YouTube quota while leaving the budget configurable for
   // an approved higher quota. The rotating cursor means we accumulate new
   // creators instead of repeatedly asking the same cells for the same videos.
-  const configuredSearchBudget = Number(process.env.YOUTUBE_SEARCH_SWEEP_CALLS ?? 88);
+  const configuredSearchBudget = Number(process.env.YOUTUBE_SEARCH_SWEEP_CALLS ?? 80);
   const searchBudget = Math.max(
     1,
     Math.min(
-      Number.isFinite(configuredSearchBudget) ? configuredSearchBudget : 88,
+      Number.isFinite(configuredSearchBudget) ? configuredSearchBudget : 80,
       allSearchCells.length,
     ),
   );
@@ -565,8 +565,8 @@ export async function acquire() {
 export async function refresh(options?: { limit?: number; worker?: string }) {
   config();
 
-  const requestedLimit = Number(options?.limit ?? process.env.OBSERVATION_BATCH_LIMIT ?? 1500);
-  const limit = Math.max(50, Math.min(Number.isFinite(requestedLimit) ? requestedLimit : 1500, 5000));
+  const requestedLimit = Number(options?.limit ?? process.env.OBSERVATION_BATCH_LIMIT ?? 500);
+  const limit = Math.max(50, Math.min(Number.isFinite(requestedLimit) ? requestedLimit : 500, 5000));
   const worker = options?.worker ?? `vercel-observer:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
 
   const claim = await sb("rpc/claim_youtube_observation_jobs", {
