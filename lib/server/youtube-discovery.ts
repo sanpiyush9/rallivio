@@ -151,14 +151,14 @@ export async function yt(path: string) {
   return response.json();
 }
 
-async function usage(endpoint: string, metadata: Record<string, any>) {
+async function usage(endpoint: string, metadata: Record<string, any>, units = 1) {
   const response = await sb("api_usage", {
     method: "POST",
     headers: { Prefer: "return=minimal" },
     body: JSON.stringify({
       service: "youtube",
       endpoint,
-      units: 1,
+      units,
       metadata,
     }),
   });
@@ -362,7 +362,7 @@ export async function acquire() {
 
     try {
       const data = (await yt("search?" + p.toString())) as any;
-      await usage("search.list", { phase: "acquire", region, category, mode });
+      await usage("search.list", { phase: "acquire", region, category, mode }, 100);
       return { region, category, mode, items: data.items ?? [] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
