@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     mode: "subscription",
     "line_items[0][price]": priceId,
     "line_items[0][quantity]": "1",
-    success_url: new URL("/account?subscription=success", request.url).toString(),
+    success_url: new URL("/pro?subscription=success", request.url).toString(),
     cancel_url: new URL("/pricing?canceled=1", request.url).toString(),
     customer_email: user.email || "",
     "metadata[user_id]": user.id,
