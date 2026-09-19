@@ -522,22 +522,25 @@ export async function signals() {
     return { signals: 0, eligibleVideos: 0, suppressedVideos: 0 };
   }
 
-  // PostgREST may cap a single response at 1,000 rows. A single 1,000-row
-  // page can contain only the newest observation for each video, which would
-  // incorrectly suppress every signal. Page through the full snapshot history
-  // so every video can prove at least two observations.
+  // Read the latest observations in bounded RPC batches. This avoids relying on
+  // PostgREST's global 1,000-row response cap, which previously made every
+  // video appear to have fewer than two observations.
   const snapshotRows: any[] = [];
-  for (let offset = 0; offset < 15000; offset += 1000) {
-    const snapshotResponse = await sb(
-      `video_stats_snapshots?select=video_id,captured_at,views,likes,comments&order=captured_at.desc&limit=1000&offset=${offset}`,
-    );
+  const poolIds = pool.map((x) => String(x.id));
+  for (let start = 0; start < poolIds.length; start += 200) {
+    const batchIds = poolIds.slice(start, start + 200);
+    const snapshotResponse = await sb("rpc/get_recent_video_snapshots", {
+      method: "POST",
+      body: JSON.stringify({ p_video_ids: batchIds }),
+    });
     if (!snapshotResponse.ok) {
-      throw new Error(`Snapshot read failed: ${snapshotResponse.status} ${await snapshotResponse.text()}`);
+      throw new Error(
+        `Snapshot RPC failed: ${snapshotResponse.status} ${await snapshotResponse.text()}`,
+      );
     }
 
-    const page = (await snapshotResponse.json()) as any[];
-    snapshotRows.push(...page);
-    if (page.length < 1000) break;
+    const batch = (await snapshotResponse.json()) as any[];
+    snapshotRows.push(...batch);
   }
 
   const grouped = new Map<string, any[]>();
