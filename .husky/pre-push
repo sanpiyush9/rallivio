@@ -1,4 +1,6 @@
-npm run build || {
-  echo "✗ Build failed — not pushing. Fix locally first."
+#!/usr/bin/env sh
+
+npm run verify || {
+  echo "✗ Verification failed — not pushing. Fix locally first."
   exit 1
 }
