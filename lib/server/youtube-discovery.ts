@@ -517,7 +517,7 @@ export async function acquire() {
     };
   });
 
-  const acquisitionRows = rows.map(({ stats_refreshed_at: _statsRefreshedAt, ...row }) => row);
+  const acquisitionRows = rows;
   const write = await sb("youtube_discovery_pool?on_conflict=id", {
     method: "POST",
     headers: {
