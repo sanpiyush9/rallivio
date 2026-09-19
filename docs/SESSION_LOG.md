@@ -1,3 +1,6 @@
+## 2026-09-19 — Supabase Preview environment scope corrected
+Environment-only recovery step: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are now scoped to feature/creator-platform-subscription alongside CRON_SECRET and YOUTUBE_API_KEY. A fresh Preview deployment is required so the running serverless functions receive the updated environment. No secret values are recorded here.
+
 ## 2026-09-19 — Discover five-item QA recheck: actual served route identified
 Branch: feature/creator-platform-subscription
 Status: Code changes applied; verification gate needs one clean run
