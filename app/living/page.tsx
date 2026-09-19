@@ -148,6 +148,7 @@ export default function LivingDiscover() {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [apiUsageLatestAt, setApiUsageLatestAt] = useState<number | null>(null);
   const [verifiedSignalCount, setVerifiedSignalCount] = useState(0);
+  const [poolCount, setPoolCount] = useState(0);
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const pulseViewportRef = useRef<HTMLDivElement>(null);
@@ -204,6 +205,7 @@ export default function LivingDiscover() {
         setLastUpdatedAt(b.refreshedAt ? Date.parse(b.refreshedAt) : null);
         setApiUsageLatestAt(b.apiUsageLatestAt ? Date.parse(b.apiUsageLatestAt) : null);
         setVerifiedSignalCount(Number(b.verifiedSignalCount || 0));
+        setPoolCount(Number(b.poolCount || 0));
         setNotice("");
       } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
       finally { setLoading(false); }
@@ -465,7 +467,7 @@ export default function LivingDiscover() {
           </svg>
           <i/><i/><i/><i/><i/><i/>
         </div>
-        <div><b>Global Activity</b><small>Verified source coverage · {new Set(items.map(x => x.region).filter(Boolean)).size ? Array.from(new Set(items.map(x => x.region).filter(Boolean))).join(", ") : "—"}<br/>{loading ? "Refreshing source observations…" : `${fmt(items.length)} videos · ${fmt(creatorPool.length)} verified creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
+        <div><b>Global Activity</b><small>Verified source coverage · {new Set(items.map(x => x.region).filter(Boolean)).size ? Array.from(new Set(items.map(x => x.region).filter(Boolean))).join(", ") : "—"}<br/>{loading ? "Refreshing source observations…" : `${fmt(poolCount)} videos · ${fmt(creatorPool.length)} verified creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
       </div>
     </section>
 
