@@ -321,11 +321,11 @@ export async function acquire() {
   // 10,000-unit daily YouTube quota while leaving the budget configurable for
   // an approved higher quota. The rotating cursor means we accumulate new
   // creators instead of repeatedly asking the same cells for the same videos.
-  const configuredSearchBudget = Number(process.env.YOUTUBE_SEARCH_SWEEP_CALLS ?? 80);
+  const configuredSearchBudget = Number(process.env.YOUTUBE_SEARCH_SWEEP_CALLS ?? 88);
   const searchBudget = Math.max(
     1,
     Math.min(
-      Number.isFinite(configuredSearchBudget) ? configuredSearchBudget : 80,
+      Number.isFinite(configuredSearchBudget) ? configuredSearchBudget : 88,
       allSearchCells.length,
     ),
   );
