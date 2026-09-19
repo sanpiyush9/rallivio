@@ -561,3 +561,32 @@ A GitHub create-file connector call briefly created the OG-image commit on `main
 
 ### Validation
 The current feature branch is ahead of `checkpoint/living-front-v12` by the isolated requested changes. Vercel has produced READY previews for the truth-state and metadata commits; the newest detail-page/OG commit is awaiting its feature Preview deployment. Do not call these newest UI changes live until deployment SHA/state and route tests agree.
+
+
+## 2026-09-19 — Item 2 live-state reconciliation and tier rebalance wiring
+Branch: feature/creator-platform-subscription
+Status: Implementation applied; scheduler proof still pending
+
+### Audit findings
+- Feature branch HEAD before this change was the handoff commit `6559a6372b34441e2a45c9b1575b5149e0f7ef4e`; the active branch is confirmed as `feature/creator-platform-subscription`.
+- Live Supabase migration history was ahead of the repository source with three later versions: `20260919173419`, `20260919175454`, and `20260919175522`.
+- Those later migration files were not present in the feature branch, so live DB behavior and repository migration history were inconsistent.
+- Live `youtube_discovery_pool` currently contains 7,840 rows, not the older 2,797-row handoff snapshot.
+- Live tier distribution is currently exactly HOT 392 (5%), WARM 1,568 (20%), COLD 5,880 (75%), ARCHIVE 0.
+- Live `rebalance_youtube_observation_tiers()` is percentile-based: top 10% acceleration within topic, capped to global 5% HOT; WARM is the next activity band through 25% cumulative; ARCHIVE is reserved for 30-day no-movement rows.
+- The refresh worker already selects stale rows using `stats_refreshed_at`, but the signal worker did not invoke the tier rebalance after publishing a signal batch.
+
+### Changes
+- Added repository migration `supabase/migrations/20260919200000_reconcile_percentile_observation_tiers.sql` to reconcile the live percentile tier function into source-controlled migration history.
+- Added a signal-pass call to `rpc/rebalance_youtube_observation_tiers` so tier assignment is refreshed after each successful signal publish.
+- No protected branch or checkpoint was modified.
+
+### Current verification
+- The live rebalance function was executed successfully and returned HOT 392 / WARM 1,568 / COLD 5,880 for the current 7,840-row pool.
+- Supabase Cron refresh job is active and recent runs are succeeding.
+- The required proof that a later refresh, after HOT becomes stale, actually selects HOT rows remains pending.
+- Vercel has created deployment `dpl_AroDdYbY9Pnwm5vHEBqvTWaUSEfc` for the new worker SHA `1f1ac129ca0f8011d848517eb0996362104f5a23`; it is currently building.
+- GitHub combined status for the new SHA has no status yet because the verification workflow is not triggered by feature-branch pushes under the current workflow configuration.
+
+### Next action
+Wait for the new Preview deployment to become READY, then use the live scheduler/worker to verify the next stale-HOT refresh and confirm `stats_refreshed_at` advances for the selected HOT cohort. Do not start Item 3 before that proof is complete.
