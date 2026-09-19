@@ -763,7 +763,8 @@ export async function signals() {
       const observations = [...(grouped.get(String(x.id)) ?? [])].sort(
         (a, b) => Date.parse(a.captured_at) - Date.parse(b.captured_at),
       );
-      if (observations.length < 2) return null;
+      const isLive = x.live_broadcast_content === "live";
+      if (observations.length < 2 && !isLive) return null;
 
       const current = observations[observations.length - 1];
       const scored = score(
@@ -861,22 +862,29 @@ export async function signals() {
     const x = item.x;
     const labels: string[] = [];
 
-    if (item.velocityPct <= 0.25 && item.latestSnapshotAgeHours <= movementFreshHours) {
+    const hasSignalEvidence = item.observations.length >= 2;
+
+    // Velocity/momentum states require a real delta between at least two
+    // observations. Live is different: the live state is directly observable
+    // from YouTube's live broadcast flag and may be published from one snapshot.
+    if (hasSignalEvidence && item.velocityPct <= 0.25 && item.latestSnapshotAgeHours <= movementFreshHours) {
       labels.push("Now Moving");
     }
-    if (item.accelerationPct <= 0.10 && item.latestSnapshotAgeHours <= movementFreshHours) {
+    if (hasSignalEvidence && item.accelerationPct <= 0.10 && item.latestSnapshotAgeHours <= movementFreshHours) {
       labels.push("Breaking Out");
     }
     if (
+      hasSignalEvidence &&
       item.consecutiveVelocityIncreases >= 3 &&
       item.latestSnapshotAgeHours <= riseFreshHours
     ) {
       labels.push("On the Rise");
     }
-    if (item.audiencePct <= 0.10 && item.latestSnapshotAgeHours <= radarFreshHours) {
+    if (hasSignalEvidence && item.audiencePct <= 0.10 && item.latestSnapshotAgeHours <= radarFreshHours) {
       labels.push("Under the Radar");
     }
     if (
+      hasSignalEvidence &&
       Date.parse(x.published_at) >= now.getTime() - 48 * 36e5 &&
       item.latestSnapshotAgeHours <= droppedFreshHours
     ) {
@@ -904,7 +912,7 @@ export async function signals() {
       video_id: String(x.id),
       signal_type: primary,
       signal_labels: labels,
-      momentum_score: item.scored.momentum,
+      momentum_score: item.observations.length >= 2 ? item.scored.momentum : null,
       evidence: {
         ...item.scored.evidence,
         velocity_percentile: Number((1 - item.velocityPct).toFixed(4)),
