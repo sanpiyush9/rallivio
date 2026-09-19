@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-function fmt(n:number){return new Intl.NumberFormat("en-US",{notation:"compact",maximumFractionDigits:1}).format(n)}
+import { compactNumber } from "@/lib/server/formatters";
 
 export default async function ProPage(){
   const supabase=await createClient();
@@ -24,9 +24,9 @@ export default async function ProPage(){
     <header><Link href="/living" className="logo">RALLIVIO</Link><div className="right"><span>PRO INTELLIGENCE</span><Link href="/account">Account</Link></div></header>
     <section className="hero"><span className="eyebrow">VERIFIED SIGNAL INTELLIGENCE</span><h1>Your paid discovery workspace.</h1><p>These metrics are computed from RALLIVIO's persisted observation and signal history. They are activity measures, not invented audience estimates.</p></section>
     <section className="metrics">
-      <article><span>LAST 24 HOURS</span><strong>{fmt(d24.count||0)}</strong><small>signal transitions observed</small></article>
-      <article><span>LAST 7 DAYS</span><strong>{fmt(d7.count||0)}</strong><small>signal transitions observed</small></article>
-      <article><span>LAST 30 DAYS</span><strong>{fmt(d30.count||0)}</strong><small>signal transitions observed</small></article>
+      <article><span>LAST 24 HOURS</span><strong>{compactNumber(d24.count||0)}</strong><small>signal transitions observed</small></article>
+      <article><span>LAST 7 DAYS</span><strong>{compactNumber(d7.count||0)}</strong><small>signal transitions observed</small></article>
+      <article><span>LAST 30 DAYS</span><strong>{compactNumber(d30.count||0)}</strong><small>signal transitions observed</small></article>
     </section>
     <section className="panel"><div className="panel-head"><div><span className="eyebrow">CREATOR RADAR</span><h2>Creators with current momentum</h2></div><Link href="/living">Open Discover →</Link></div><div className="creator-grid">{(creators.data||[]).map((c:any,i:number)=><article key={c.channel_id}><div className="rank">{String(i+1).padStart(2,"0")}</div><div><strong>{c.channel_id}</strong><small>{c.breakout_state||"Observed"} · {c.signal_count||0} active signals · {c.video_count||0} videos</small></div><b>{Number(c.momentum_score||0).toFixed(1)}</b></article>)}</div></section>
     <section className="notice"><strong>Pro access is live.</strong><span>Your membership unlocks this intelligence layer while the public Discover field remains available for exploration.</span></section>
