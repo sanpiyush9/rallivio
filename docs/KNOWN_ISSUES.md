@@ -399,3 +399,24 @@ For every GitHub write, explicitly pass the active feature branch and immediatel
 ### Related
 `docs/AI_START_HERE.md`
 `docs/SESSION_LOG.md`
+
+## KI-015 — Preview acquisition reached the worker but YouTube chart requests returned 404
+First seen: 2026-09-19 · Status: Fix deployed pending data verification · Ladder level: 2 → target 4
+Severity: HIGH — blocks fresh discovery data
+
+### Symptom
+The new Preview scheduler authentication succeeded, but the first acquisition request on deployment `dpl_8BvRrmvNi9gP4Wjmmdi1SZYyBsD5` returned HTTP 502 because a YouTube Data API acquisition call returned HTTP 404 `Requested entity was not found`. Supabase still showed the original 25-video pool, 25 snapshots, and zero `api_usage` rows.
+
+### Cause
+The acquisition worker treated any unavailable regional/category chart cell as a fatal worker error, so one unsupported/missing YouTube chart cell aborted the entire acquisition pass.
+
+### Fix
+The acquisition worker now skips only the documented unavailable-chart/not-found 400/404 cases for an individual region/category cell and continues the remaining acquisition cells. Authorization and unexpected API failures remain fatal. The Discover serving route also strips acquisition-time signal/momentum metadata unless a current `discovery_signals` row exists, so stale seed labels cannot be presented as verified signals.
+
+### Prevention
+Verify `api_usage`, pool growth, snapshot freshness, and signal counts after each acquisition pass. A successful HTTP response from the worker is not sufficient; the persisted data must change.
+
+### Related
+`lib/server/youtube-discovery.ts`
+`app/api/discovery/route.ts`
+`app/living/page.tsx`
