@@ -41,8 +41,13 @@ async function schedulerAuth(candidate: string | null) {
     method: "POST",
     body: JSON.stringify({ candidate }),
   });
-  if (!response.ok) return false;
-  return Boolean(await response.json());
+  if (!response.ok) {
+    console.warn("scheduler token RPC rejected", response.status);
+    return false;
+  }
+  const valid = Boolean(await response.json());
+  if (!valid) console.warn("scheduler token RPC returned false");
+  return valid;
 }
 
 export async function auth(request: Request) {
