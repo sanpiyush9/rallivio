@@ -390,3 +390,26 @@ Verify the active branch's newest deployment by exact SHA and Vercel state, then
 ## 2026-09-19 — Vercel deployment trigger recovery
 Branch: feature/creator-platform-subscription
 Status: Triggering deployment from verified feature HEAD; no application behavior changed.
+
+
+## 2026-09-19 — Vercel Hobby cron validation incident resolved
+Branch: feature/creator-platform-subscription
+Status: Configuration fixed; deployment pending final READY/route verification
+
+### What happened
+The verified feature commit had no normal Vercel deployment record and a failed Vercel status. We did not assume rate limiting. The exact Vercel status target redirected to Cron Jobs Usage & Pricing, and the repository vercel.json showed three sub-daily cron schedules incompatible with the Hobby plan.
+
+### Exact recovery
+Changed only vercel.json: acquire 0 2 * * *, refresh 0 8 * * *, signals 30 8 * * *. Commit: a751048c8d99e1558925aabb6e3ece80a70f85ca.
+
+### Evidence
+The corrected commit received a real Vercel deployment target and entered pending state. This distinguishes the cron-validation failure from the earlier missing-deployment symptom.
+
+### Self-healing lesson
+For missing Vercel deployments: inspect the exact commit status → follow the status target → classify the failure → inspect repository deployment configuration → make the smallest deterministic fix → verify deployment creation → READY → exact SHA → served route. Do not create repeated trigger commits before the cause is classified.
+
+### Tradeoff recorded
+The Hobby-compatible schedules restore deployment but reduce acquisition/refresh frequency to daily. Hourly Now Moving semantics require a hosting/scheduler capability that supports sub-daily execution.
+
+### Related
+KI-012, docs/RESILIENCE_SYSTEM.md, docs/KNOWN_ISSUES.md, vercel.json
