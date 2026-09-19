@@ -18,6 +18,7 @@ on:
     branches:
       - main
       - staging
+      - 'feature/**'
   workflow_dispatch:
 
 concurrency:
