@@ -551,13 +551,6 @@ export async function signals() {
     (x) => (grouped.get(String(x.id))?.length ?? 0) >= 2,
   );
 
-  const cleanup = await sb("discovery_signals?signal_type=not.is.null", {
-    method: "DELETE",
-  });
-  if (!cleanup.ok) {
-    throw new Error(`Signal cleanup failed: ${cleanup.status}`);
-  }
-
   const now = new Date().toISOString();
   const rows = ready.map((x) => {
     const q = score(
@@ -573,7 +566,7 @@ export async function signals() {
           commentCount: x.comments,
         },
       },
-      grouped.get(String(x.id)) ?? [],
+      [...(grouped.get(String(x.id)) ?? [])].reverse(),
     );
 
     return {
@@ -596,8 +589,17 @@ export async function signals() {
     });
 
     if (!write.ok) {
-      throw new Error(`Signal write failed: ${write.status}`);
+      throw new Error(`Signal write failed: ${write.status} ${await write.text()}`);
     }
+  }
+
+  // Publish the new batch before removing the previous batch so a transient
+  // write failure can never leave the public signal feed empty.
+  const cleanup = await sb(`discovery_signals?observed_at=lt.${encodeURIComponent(now)}`, {
+    method: "DELETE",
+  });
+  if (!cleanup.ok) {
+    console.warn("Signal cleanup failed after successful publish", cleanup.status);
   }
 
   return {
