@@ -667,3 +667,11 @@ Wait for the new Preview deployment to become READY, then use the live scheduler
 - Executed the discovery signal cycle successfully: 7,840 pool rows, 4,514 signals, 6,864 creators, 714 topic intelligence rows, 25 regions, and feed refresh completed.
 - Fixed the signal-tab/card mismatch by preserving primary signal state while displaying the selected matching multi-label signal.
 - Vercel deployment remains externally blocked by the current build-rate limit; no live deployment claim is made until exact-SHA READY verification is available.
+
+## 2026-09-20 — 100K discovery scale execution
+
+- Started the real-data scale phase toward 100K+ observed videos.
+- Added quota-aware rotating long-tail acquisition with an 80-call/day default search budget, configurable for approved quota capacity.
+- Added accurate YouTube search quota telemetry and a scale-status endpoint backed by Supabase counts.
+- No synthetic videos, synthetic observations, or synthetic signals were added.
+- The next measurement is the actual unique-pool delta produced by the scaled acquisition pass and the number of videos that subsequently obtain repeated observations.
