@@ -40,6 +40,7 @@ function classifyRallivioTopic(video: any, category: string) {
   const text = `${video.snippet?.title ?? ""} ${video.snippet?.description ?? ""} ${video.snippet?.channelTitle ?? ""}`.toLowerCase();
 
   const keywordTopics: Array<[string, RegExp]> = [
+    ["Travel", /\b(travel|tourism|vacation|holiday|trip|itinerary|destination|hotel review|travel vlog)\b/i],
     ["Food", /\b(food|recipe|cooking|cook|restaurant|cuisine|baking|chef|meal|street food|restaurant review)\b/i],
     ["Fitness", /\b(fitness|workout|gym|exercise|yoga|weight loss|bodybuilding|training)\b/i],
     ["Podcasts", /\b(podcast|podcasts|interview show|episode)\b/i],
