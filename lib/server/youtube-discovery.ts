@@ -204,8 +204,8 @@ function score(video: any, history: any[]) {
 
   let acceleration = 0;
   if (history.length >= 2) {
-    const first = history[history.length - 1];
-    const last = history[0];
+    const first = history[0];
+    const last = history[history.length - 1];
     const elapsed = Math.max(
       (Date.parse(last.captured_at) - Date.parse(first.captured_at)) / 36e5,
       0.1,
@@ -539,84 +539,65 @@ export async function acquire() {
   };
 }
 
-export async function refresh() {
+export async function refresh(options?: { limit?: number; worker?: string }) {
   config();
 
-  const now = new Date();
-  const isoNow = now.toISOString();
-  const hotLimit = 5000;
-  const warmPerPass = 3340;
-  const coldPerPass = 4170;
+  const requestedLimit = Number(options?.limit ?? process.env.OBSERVATION_BATCH_LIMIT ?? 1500);
+  const limit = Math.max(50, Math.min(Number.isFinite(requestedLimit) ? requestedLimit : 1500, 5000));
+  const worker = options?.worker ?? `vercel-observer:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
 
-  async function loadTier(tier: "hot" | "warm" | "cold", limit: number, staleHours: number) {
-    const cutoff = new Date(now.getTime() - staleHours * 36e5).toISOString();
-    const rows: any[] = [];
-    let offset = 0;
-
-    while (rows.length < limit) {
-      const pageLimit = Math.min(1000, limit - rows.length);
-      const filter =
-        tier === "hot"
-          ? `tier=eq.hot&or=(stats_refreshed_at.is.null,stats_refreshed_at.lt.${encodeURIComponent(cutoff)})`
-          : `tier=eq.${tier}&or=(stats_refreshed_at.is.null,stats_refreshed_at.lt.${encodeURIComponent(cutoff)})`;
-
-      const response = await sb(
-        `youtube_discovery_pool?select=*&${filter}&order=last_observed_at.asc.nullsfirst,updated_at.asc&limit=${pageLimit}&offset=${offset}`,
-      );
-      if (!response.ok) {
-        throw new Error(`Tier pool read failed: ${response.status} ${await response.text()}`);
-      }
-
-      const page = (await response.json()) as any[];
-      rows.push(...page);
-      if (page.length < pageLimit) break;
-      offset += page.length;
-    }
-
-    return rows;
+  const claim = await sb("rpc/claim_youtube_observation_jobs", {
+    method: "POST",
+    body: JSON.stringify({
+      p_limit: limit,
+      p_worker: worker,
+      p_lease_seconds: 240,
+    }),
+  });
+  if (!claim.ok) {
+    throw new Error(`Observation claim failed: ${claim.status} ${await claim.text()}`);
   }
 
-  const hot = await loadTier("hot", hotLimit, 1);
-  const warm = await loadTier("warm", warmPerPass, 6);
-  const cold = await loadTier("cold", coldPerPass, 24);
-  const pool = [...hot, ...warm, ...cold];
-
+  const pool = (await claim.json()) as any[];
   if (!pool.length) {
     return {
       refreshed: 0,
       youtubeCalls: 0,
-      tiers: { hot: 0, warm: 0, cold: 0 },
+      worker,
+      queue: "empty",
     };
   }
 
+  const now = new Date();
+  const isoNow = now.toISOString();
   const batches = Array.from(
     { length: Math.ceil(pool.length / 50) },
     (_, i) => pool.slice(i * 50, i * 50 + 50),
   );
 
+  let refreshed = 0;
   await runConcurrent(batches, 12, async (batch, index) => {
     if (!batch.length) return null;
 
-    // videos.batchGetStats is a dedicated 1-unit quota method introduced by
-    // YouTube in 2026. It is designed for repeated statistics refreshes and
-    // keeps observation quota separate from discovery/acquisition.
-    const p = new URLSearchParams({
-      part: "statistics",
-      id: batch.map((x) => x.id).join(","),
-    });
-    const data = (await yt(`videos:batchGetStats?${p}`)) as any;
-    await usage("videos.batchGetStats", {
-      phase: "refresh",
-      batch: index,
-      videoCount: batch.length,
-    });
+    try {
+      const p = new URLSearchParams({
+        part: "statistics",
+        id: batch.map((x) => x.id).join(","),
+      });
+      const data = (await yt(`videos:batchGetStats?${p}`)) as any;
+      await usage("videos.batchGetStats", {
+        phase: "adaptive-observation",
+        batch: index,
+        videoCount: batch.length,
+      });
 
-    const items = data.items ?? [];
-    const existingById = new Map(batch.map((x) => [String(x.id), x]));
+      const items = data.items ?? [];
+      const byId = new Map(batch.map((x) => [String(x.id), x]));
+      const nextTimes: string[] = [];
+      const successfulIds: string[] = [];
 
-    const poolRows = items
-      .map((v: any) => {
-        const existing = existingById.get(String(v.id));
+      const poolRows = items.map((v: any) => {
+        const existing = byId.get(String(v.id));
         if (!existing) return null;
 
         const nextViews = num(v.statistics?.viewCount);
@@ -625,8 +606,26 @@ export async function refresh() {
           ? (nextViews - previousViews) / previousViews
           : nextViews > 0 ? 1 : 0;
 
+        const isLive = existing.live_broadcast_content === "live";
+        const tierMinutes =
+          existing.tier === "hot" ? 5 :
+          existing.tier === "warm" ? 30 :
+          720;
+
+        // Adaptive sampling: unusually fast movement immediately increases
+        // observation frequency even before the next tier rebalance.
+        const nextMinutes =
+          isLive ? 2 :
+          growth >= 0.10 ? 2 :
+          growth >= 0.02 ? Math.min(tierMinutes, 10) :
+          tierMinutes;
+
+        const nextAt = new Date(now.getTime() + nextMinutes * 60000).toISOString();
+        successfulIds.push(String(v.id));
+        nextTimes.push(nextAt);
+
         return {
-          ...existing,
+          id: String(v.id),
           views: nextViews,
           likes: num(v.statistics?.likeCount),
           comments: num(v.statistics?.commentCount),
@@ -636,51 +635,140 @@ export async function refresh() {
           stats_refreshed_at: isoNow,
           verified_at: isoNow,
           last_movement_at:
-            growth >= 0.02
-              ? isoNow
-              : existing.last_movement_at ?? null,
+            growth >= 0.02 ? isoNow : existing.last_movement_at ?? null,
+          observation_priority:
+            growth >= 0.10 ? Math.max(num(existing.observation_priority), 100) :
+            growth >= 0.02 ? Math.max(num(existing.observation_priority), 50) :
+            num(existing.observation_priority),
+          signal_dirty_at: isoNow,
           updated_at: isoNow,
         };
-      })
-      .filter(Boolean);
+      }).filter(Boolean);
 
-    const write = await sb("youtube_discovery_pool?on_conflict=id", {
-      method: "POST",
-      headers: {
-        Prefer: "resolution=merge-duplicates,return=minimal",
-      },
-      body: JSON.stringify(poolRows),
-    });
+      if (poolRows.length) {
+        const write = await sb("youtube_discovery_pool?on_conflict=id", {
+          method: "POST",
+          headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+          body: JSON.stringify(poolRows),
+        });
+        if (!write.ok) {
+          throw new Error(`Pool observation write failed: ${write.status} ${await write.text()}`);
+        }
 
-    if (!write.ok) {
-      throw new Error(`Pool refresh failed: ${write.status} ${await write.text()}`);
+        const snapshots = items.map((v: any) => ({
+          video_id: String(v.id),
+          captured_at: isoNow,
+          views: num(v.statistics?.viewCount),
+          likes: num(v.statistics?.likeCount),
+          comments: num(v.statistics?.commentCount),
+        }));
+
+        const snapshotWrite = await sb("video_stats_snapshots", {
+          method: "POST",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify(snapshots),
+        });
+        if (!snapshotWrite.ok) {
+          throw new Error(`Snapshot write failed: ${snapshotWrite.status} ${await snapshotWrite.text()}`);
+        }
+
+        const complete = await sb("rpc/complete_youtube_observation_jobs", {
+          method: "POST",
+          body: JSON.stringify({
+            p_video_ids: successfulIds,
+            p_next_observation_at: nextTimes,
+            p_worker: worker,
+          }),
+        });
+        if (!complete.ok) {
+          throw new Error(`Observation completion failed: ${complete.status} ${await complete.text()}`);
+        }
+
+        refreshed += successfulIds.length;
+      }
+
+      // A video that vanished from the batch is not deleted from RALLIVIO;
+      // it simply gets a normal retry window on the next scheduler pass.
+      const missingIds = batch
+        .map((x) => String(x.id))
+        .filter((id) => !successfulIds.includes(id));
+      if (missingIds.length) {
+        await sb("rpc/fail_youtube_observation_jobs", {
+          method: "POST",
+          body: JSON.stringify({
+            p_video_ids: missingIds,
+            p_error: "video_not_returned_by_batch_stats",
+            p_worker: worker,
+          }),
+        });
+      }
+
+      return null;
+    } catch (error) {
+      await sb("rpc/fail_youtube_observation_jobs", {
+        method: "POST",
+        body: JSON.stringify({
+          p_video_ids: batch.map((x) => String(x.id)),
+          p_error: error instanceof Error ? error.message : "observation_failed",
+          p_worker: worker,
+        }),
+      }).catch(() => undefined);
+      throw error;
     }
-
-    const snapshots = items.map((v: any) => ({
-      video_id: v.id,
-      captured_at: isoNow,
-      views: num(v.statistics?.viewCount),
-      likes: num(v.statistics?.likeCount),
-      comments: num(v.statistics?.commentCount),
-    }));
-
-    const snapshotWrite = await sb("video_stats_snapshots", {
-      method: "POST",
-      headers: { Prefer: "return=minimal" },
-      body: JSON.stringify(snapshots),
-    });
-
-    if (!snapshotWrite.ok) {
-      throw new Error(`Snapshot write failed: ${snapshotWrite.status} ${await snapshotWrite.text()}`);
-    }
-
-    return null;
   });
 
   return {
-    refreshed: pool.length,
+    refreshed,
     youtubeCalls: batches.length,
-    tiers: { hot: hot.length, warm: warm.length, cold: cold.length },
+    worker,
+    tiers: pool.reduce<Record<string, number>>((acc, row) => {
+      acc[row.tier] = (acc[row.tier] ?? 0) + 1;
+      return acc;
+    }, {}),
+    adaptiveIntervalsMinutes: {
+      hot: 5,
+      warm: 30,
+      cold: 720,
+      live: 2,
+      fastGrowth: 2,
+    },
+  };
+}
+
+export async function signals() {
+  config();
+
+  const recompute = await sb("rpc/recompute_discovery_signals", {
+    method: "POST",
+    body: "{}",
+  });
+  if (!recompute.ok) {
+    throw new Error(`Signal engine failed: ${recompute.status} ${await recompute.text()}`);
+  }
+
+  const result = (await recompute.json()) as Record<string, any>;
+
+  const rebalance = await sb("rpc/rebalance_youtube_observation_tiers", {
+    method: "POST",
+    body: "{}",
+  });
+  if (!rebalance.ok) {
+    throw new Error(`Tier rebalance failed: ${rebalance.status} ${await rebalance.text()}`);
+  }
+
+  const feedRefresh = await sb("rpc/refresh_discovery_feed_rankings", {
+    method: "POST",
+    body: "{}",
+  });
+  if (!feedRefresh.ok) {
+    throw new Error(`Feed ranking refresh failed: ${feedRefresh.status} ${await feedRefresh.text()}`);
+  }
+
+  return {
+    ...result,
+    engine: "database-windowed-signal-engine",
+    rebalance: await rebalance.json(),
+    feedRefreshed: true,
   };
 }
 
