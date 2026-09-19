@@ -151,6 +151,10 @@ export default function LivingDiscover() {
   const [signalCounts, setSignalCounts] = useState<Record<string, number>>({});
   const [activeSignal, setActiveSignal] = useState<string | null>(null);
   const [poolCount, setPoolCount] = useState(0);
+  const [trackedCreators, setTrackedCreators] = useState(0);
+  const [risingCreatorCount, setRisingCreatorCount] = useState(0);
+  const [activeTopicCount, setActiveTopicCount] = useState(0);
+  const [globalRegions, setGlobalRegions] = useState<string[]>([]);
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const pulseViewportRef = useRef<HTMLDivElement>(null);
@@ -209,6 +213,10 @@ export default function LivingDiscover() {
         setVerifiedSignalCount(Number(b.verifiedSignalCount || 0));
         setSignalCounts(b.signalCounts && typeof b.signalCounts === "object" ? b.signalCounts : {});
         setPoolCount(Number(b.poolCount || 0));
+        setTrackedCreators(Number(b.trackedCreators || 0));
+        setRisingCreatorCount(Number(b.risingCreators || 0));
+        setActiveTopicCount(Number(b.activeTopics || 0));
+        setGlobalRegions(Array.isArray(b.regions) ? b.regions : []);
         setNotice("");
     } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
     finally { setLoading(false); }
@@ -324,9 +332,7 @@ export default function LivingDiscover() {
     return Array.from({ length: Math.min(8, creatorPool.length) }, (_, i) => creatorPool[(spotlightOffset + i) % creatorPool.length]);
   }, [creatorPool, spotlightOffset]);
 
-  const risingCreators = useMemo(() => new Set(
-    ranked.filter(x => ["now moving", "on the rise", "breaking out"].includes(signalKey(x.metadata?.signal))).map(x => x.channel_title)
-  ).size, [ranked]);
+  const risingCreators = risingCreatorCount;
 
   const pulseCards = useMemo(() => {
     if (!ranked.length) return [];
@@ -479,7 +485,7 @@ export default function LivingDiscover() {
           </svg>
           <i/><i/><i/><i/><i/><i/>
         </div>
-        <div><b>Global Activity</b><small>Verified source coverage · {new Set(items.map(x => x.region).filter(Boolean)).size ? Array.from(new Set(items.map(x => x.region).filter(Boolean))).join(", ") : "—"}<br/>{!apiUsageLatestAt ? "No source observations yet." : `${fmt(poolCount)} videos · ${fmt(creatorPool.length)} verified creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
+        <div><b>Global Activity</b><small>Verified source coverage · {new Set(items.map(x => x.region).filter(Boolean)).size ? globalRegions.length ? globalRegions.join(", ") : "—"}<br/>{!apiUsageLatestAt ? "No source observations yet." : `${fmt(poolCount)} videos · ${fmt(trackedCreators)} tracked creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
       </div>
     </section>
 
