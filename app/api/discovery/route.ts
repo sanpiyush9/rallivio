@@ -138,15 +138,28 @@ export async function GET(request: Request) {
       .map((ranking) => {
         const item = poolById.get(ranking.video_id);
         if (!item) return null;
+
+        // Truth gate: a momentum signal is valid only after at least one
+        // refresh has produced a second observation. Never surface the
+        // acquisition-time popularity score as momentum.
+        const hasMovementObservation = Boolean(item.stats_refreshed_at);
+        const signalFreshEnough =
+          hasMovementObservation &&
+          Date.parse(ranking.observed_at) >= Date.parse(item.stats_refreshed_at as string);
+
         const metadata = { ...item.metadata };
         delete metadata.signal;
+        delete metadata.signals;
         delete metadata.momentum_score;
-        metadata.signal = ranking.signal_type;
-        metadata.signals = ranking.signal_labels;
-        metadata.momentum_score = ranking.momentum_score ?? 0;
+
+        metadata.signal = signalFreshEnough ? ranking.signal_type : null;
+        metadata.signals = signalFreshEnough ? ranking.signal_labels : [];
+        metadata.momentum_score = signalFreshEnough ? ranking.momentum_score : null;
+
         return { ...item, metadata };
       })
-      .filter((item): item is DiscoveryRow & { metadata: Record<string, unknown> } => Boolean(item));
+      .filter((item): item is DiscoveryRow & { metadata: Record<string, unknown> } => Boolean(item))
+      .filter((item) => item.stats_refreshed_at !== null && item.metadata.signal !== null);
 
     const refreshedAt =
       enriched.map((item) => item.stats_refreshed_at)
