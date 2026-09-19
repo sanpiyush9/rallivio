@@ -137,7 +137,7 @@ begin
   )
   select channel_id, video_count, signal_count, current_views,
     round(velocity,2), round(acceleration,2), round(coalesce(momentum,0),2),
-    round((1 - velocity_rank) * 100,2),
+    round(((1 - velocity_rank) * 100)::numeric,2),
     case
       when velocity_rank <= 0.05 or acceleration >= 60 then 'breakout'
       when velocity_rank <= 0.20 or acceleration >= 35 then 'rising'
@@ -171,7 +171,7 @@ begin
     from grouped g
   )
   select topic, region, format, video_count, signal_count,
-    round(velocity,2), round(acceleration,2), round((1-velocity_rank)*100,2),
+    round(velocity,2), round(acceleration,2), round(((1-velocity_rank)*100)::numeric,2),
     case when velocity_rank <= 0.05 or acceleration >= 60 then 'breakout'
          when velocity_rank <= 0.20 or acceleration >= 35 then 'rising'
          else 'stable' end,
