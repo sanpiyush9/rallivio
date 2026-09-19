@@ -380,6 +380,24 @@ export async function acquire() {
     throw new Error(`Pool write failed: ${write.status} ${await write.text()}`);
   }
 
+  const initialSnapshots = rows.map((row) => ({
+    video_id: row.id,
+    captured_at: now,
+    views: row.views,
+    likes: row.likes,
+    comments: row.comments,
+  }));
+
+  const snapshotWrite = await sb("video_stats_snapshots", {
+    method: "POST",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify(initialSnapshots),
+  });
+
+  if (!snapshotWrite.ok) {
+    throw new Error(`Initial snapshot write failed: ${snapshotWrite.status} ${await snapshotWrite.text()}`);
+  }
+
   return {
     inserted: rows.length,
     youtubeCalls: jobs.length + Math.ceil(channelIds.length / 50),
