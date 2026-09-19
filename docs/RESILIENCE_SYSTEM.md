@@ -249,3 +249,24 @@ For large CSS/template-literal edits in `app/living/page.tsx`:
 ### Ladder
 **Level 3 — Detected / deterministic recovery, target Level 4.** CI catches invalid characters before deployment; the exact malformed-tail pattern is now documented for recurrence prevention.
 
+
+
+## 2026-09-19 — Vercel Hobby cron validation failure: self-healing record
+
+**Symptom:** A verified feature commit received a failed Vercel status but no normal deployment record. The Vercel status target `https://vercel.link/3Fpeeb1` redirected to Vercel Cron Jobs Usage & Pricing documentation.
+
+**Diagnosis process:** Do not infer the cause from the missing deployment. (1) verify the exact Git commit and green CI, (2) inspect the Vercel status target attached to that SHA, (3) follow the target, (4) inspect the exact `vercel.json`, and (5) compare every cron expression with the active hosting-plan constraint.
+
+**Confirmed cause:** Hobby cron validation rejected all three sub-daily schedules before the normal deployment/build path: acquire `0 */6 * * *`, refresh `15 * * * *`, signals `30 * * * *`.
+
+**Deterministic recovery:** Change only `vercel.json` to once-daily schedules: acquire `0 2 * * *`, refresh `0 8 * * *`, signals `30 8 * * *`. Commit `a751048c8d99e1558925aabb6e3ece80a70f85ca`. No application logic changed. The corrected commit immediately received a Vercel **pending** status with a real deployment target, proving the cron validation blocker was removed.
+
+**Required closure:** Vercel READY → exact deployed SHA → served-route verification. Pending is recovery evidence, not final live acceptance.
+
+**Repeatable self-healing ladder:** classify first; make the smallest deterministic fix; verify the exact new SHA; require deployment creation, READY, exact SHA and route verification; then document symptom, evidence, cause, fix and prevention. Never create repeated trigger commits to work around a configuration/plan validation failure.
+
+**Product caveat:** Daily schedules restore deployability but change freshness from hourly/sub-daily to daily. Hourly “Now Moving” semantics require a hosting/scheduler capability that supports the required frequency.
+
+**Ladder:** Level 2 — detected/deterministic recovery; target Level 4 via a repository verification guard for plan-specific cron constraints.
+
+**Related:** `vercel.json`, `docs/KNOWN_ISSUES.md` KI-012, `docs/SESSION_LOG.md`.
