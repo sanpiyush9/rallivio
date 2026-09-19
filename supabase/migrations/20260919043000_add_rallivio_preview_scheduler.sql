@@ -47,8 +47,8 @@ select cron.schedule(
     url := 'https://rallivio-git-feature-creator-platform-subscription-san-eca6.vercel.app/api/cron/acquire',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-rallivio-scheduler-token',
-      (select decrypted_secret from vault.decrypted_secrets where name = 'rallivio_scheduler_token')
+      'Authorization',
+      'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'rallivio_scheduler_token')
     ),
     body := '{}'::jsonb,
     timeout_milliseconds := 120000
@@ -64,8 +64,8 @@ select cron.schedule(
     url := 'https://rallivio-git-feature-creator-platform-subscription-san-eca6.vercel.app/api/cron/refresh',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-rallivio-scheduler-token',
-      (select decrypted_secret from vault.decrypted_secrets where name = 'rallivio_scheduler_token')
+      'Authorization',
+      'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'rallivio_scheduler_token')
     ),
     body := '{}'::jsonb,
     timeout_milliseconds := 120000
@@ -81,8 +81,8 @@ select cron.schedule(
     url := 'https://rallivio-git-feature-creator-platform-subscription-san-eca6.vercel.app/api/cron/signals',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'x-rallivio-scheduler-token',
-      (select decrypted_secret from vault.decrypted_secrets where name = 'rallivio_scheduler_token')
+      'Authorization',
+      'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'rallivio_scheduler_token')
     ),
     body := '{}'::jsonb,
     timeout_milliseconds := 120000
