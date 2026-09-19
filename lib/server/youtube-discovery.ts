@@ -617,7 +617,7 @@ export async function signals() {
     });
     const out = new Map<string, number>();
     if (sorted.length === 1) {
-      out.set(sorted[0].id, 1);
+      out.set(sorted[0].id, 0);
       return out;
     }
     sorted.forEach((entry, index) => out.set(entry.id, index / (sorted.length - 1)));
@@ -651,9 +651,17 @@ export async function signals() {
       );
 
       const recent = observations.slice(-4);
-      let consecutivePositiveSnapshots = 0;
-      for (let i = recent.length - 1; i > 0; i -= 1) {
-        if (num(recent[i].views) > num(recent[i - 1].views)) consecutivePositiveSnapshots += 1;
+      const velocitySeries = observations.map((observation) => {
+        const ageHours = Math.max(
+          0.1,
+          (Date.parse(observation.captured_at) - Date.parse(x.published_at)) / 36e5,
+        );
+        return Math.log10(1 + num(observation.views) / ageHours) * 18;
+      });
+      const recentVelocity = velocitySeries.slice(-4);
+      let consecutiveVelocityIncreases = 0;
+      for (let i = recentVelocity.length - 1; i > 0; i -= 1) {
+        if (recentVelocity[i] > recentVelocity[i - 1]) consecutiveVelocityIncreases += 1;
         else break;
       }
 
@@ -674,7 +682,7 @@ export async function signals() {
         observations,
         current,
         scored,
-        consecutivePositiveSnapshots,
+        consecutiveVelocityIncreases,
         audienceRelativeScore,
         latestSnapshotAgeHours,
         format,
@@ -728,7 +736,7 @@ export async function signals() {
       labels.push("Breaking Out");
     }
     if (
-      item.consecutivePositiveSnapshots >= 3 &&
+      item.consecutiveVelocityIncreases >= 3 &&
       item.latestSnapshotAgeHours <= riseFreshHours
     ) {
       labels.push("On the Rise");
@@ -771,7 +779,7 @@ export async function signals() {
         acceleration_percentile: Number((1 - item.accelerationPct).toFixed(4)),
         audience_relative_percentile: Number((1 - item.audiencePct).toFixed(4)),
         audience_relative_score: Number(item.audienceRelativeScore.toFixed(4)),
-        consecutive_positive_snapshots: item.consecutivePositiveSnapshots,
+        consecutive_velocity_increases: item.consecutiveVelocityIncreases,
         latest_snapshot_age_hours: Number(item.latestSnapshotAgeHours.toFixed(2)),
         freshness_windows_hours: {
           movement: movementFreshHours,
