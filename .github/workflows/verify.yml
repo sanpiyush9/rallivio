@@ -53,5 +53,5 @@ jobs:
             npm install
           fi
 
-      - name: Verify
+      - name: Verify latest feature commit
         run: npm run verify
