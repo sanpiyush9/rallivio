@@ -816,6 +816,5 @@ export async function signals() {
       for (const label of row.signal_labels) acc[label] = (acc[label] ?? 0) + 1;
       return acc;
     }, {}),
-    tiers: tierSummary,
   };
 }
