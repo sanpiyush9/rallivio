@@ -610,6 +610,7 @@ export async function refresh(options?: { limit?: number; worker?: string }) {
         const tierMinutes =
           existing.tier === "hot" ? 5 :
           existing.tier === "warm" ? 30 :
+          existing.tier === "unknown" ? 15 :
           720;
 
         // Adaptive sampling: unusually fast movement immediately increases
@@ -728,6 +729,7 @@ export async function refresh(options?: { limit?: number; worker?: string }) {
     adaptiveIntervalsMinutes: {
       hot: 5,
       warm: 30,
+      unknown: 15,
       cold: 720,
       live: 2,
       fastGrowth: 2,
