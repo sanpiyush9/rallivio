@@ -1025,4 +1025,8 @@ footer{margin-top:8px!important}
 @media(min-width:1251px){.ecosystem>.field{width:72%!important;justify-self:start!important;}.heroStatsPanel{right:0!important;top:4%!important;}}
 @media(min-width:951px) and (max-width:1250px){.ecosystem>.field{width:68%!important;justify-self:start!important;}.heroStatsPanel{right:0!important;top:2%!important;width:190px!important;}}
 @media(max-width:950px){.ecosystem>.field{width:100%!important;justify-self:center!important;}.heroStatsPanel{position:relative!important;top:auto!important;right:auto!important;}}
+/* Final spatial separation: stats card must clear the orbital field. */
+.ecosystem{overflow:visible!important;}
+@media(min-width:1251px){.ecosystem>.field{width:66%!important;justify-self:start!important;transform:translateX(-4%)!important;}.heroStatsPanel{right:-9%!important;top:4%!important;width:210px!important;}}
+@media(min-width:951px) and (max-width:1250px){.ecosystem>.field{width:62%!important;justify-self:start!important;transform:translateX(-3%)!important;}.heroStatsPanel{right:-6%!important;top:2%!important;width:190px!important;}}
 `;
