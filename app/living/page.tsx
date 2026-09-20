@@ -398,6 +398,8 @@ export default function LivingDiscover() {
   const signalGroups = useMemo(() => ["Now Moving", "Breaking Out", "On the Rise", "Under the Radar", "Just Dropped", "Live Now"]
     .map(name => ({ name, count: Number(signalCounts[name] || 0), items: activeSignal === name ? ranked : [] })),
   [signalCounts, activeSignal, ranked]);
+  const globalTopicTotal = useMemo(() => Object.values(topicCounts).reduce((sum, value) => sum + Number(value || 0), 0), [topicCounts]);
+
   const categoryPulse = useMemo(() => categories.slice(1).map(c => {
     const matches = ranked.filter(x => categoryFor(x) === c.name);
     const momentum = matches.length ? Math.round(matches.reduce((sum, x) => sum + (x.metadata?.momentum_score || 0), 0) / matches.length) : 0;
