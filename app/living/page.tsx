@@ -1180,10 +1180,10 @@ footer{margin-top:8px!important}
 }
 /* Header final geometry lock */
 .topbar{display:grid!important;grid-template-columns:250px minmax(0,1fr) 375px max-content!important;align-items:center!important;column-gap:24px!important;padding:0 34px!important;height:72px!important;min-height:72px!important;overflow:visible!important}
-.topbar nav{grid-column:2!important;min-width:0!important;width:100%!important;display:flex!important;justify-content:flex-start!important;gap:30px!important;overflow:hidden!important}
+.topbar nav{grid-column:2!important;min-width:0!important;width:100%!important;display:flex!important;justify-content:flex-start!important;gap:18px!important;overflow:visible!important}
 .topbar .search{grid-column:3!important;width:375px!important;min-width:375px!important;max-width:375px!important;margin:0!important;justify-self:stretch!important}
 .topActions{grid-column:4!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:12px!important;min-width:max-content!important;margin:0!important}
-.topbar nav button{flex:0 0 auto!important;white-space:nowrap!important}.topbar nav button:nth-child(3){max-width:none!important}
+.topbar nav button{flex:0 0 auto!important;white-space:nowrap!important;font-size:14px!important}.topbar nav button:nth-child(3){max-width:none!important}
 @media(max-width:1500px){.topbar{grid-template-columns:220px minmax(0,1fr) 320px max-content!important;column-gap:18px!important;padding:0 24px!important}.topbar nav{gap:20px!important}.topbar nav button{font-size:13px!important}.topbar .search{width:320px!important;min-width:320px!important;max-width:320px!important}}
 @media(max-width:1180px){.topbar{grid-template-columns:190px minmax(0,1fr) 280px max-content!important;column-gap:14px!important}.topbar nav{gap:16px!important}.topbar .search{width:280px!important;min-width:280px!important;max-width:280px!important}.topActions{gap:8px!important}.themeButton{min-width:40px!important;width:40px!important;padding:0!important;justify-content:center!important}.themeButtonLabel,.themeButtonDot{display:none!important}}
 @media(max-width:950px){.topbar{display:flex!important;flex-wrap:wrap!important;height:auto!important;min-height:72px!important;padding:10px 16px!important}.topbar nav{order:3!important;width:100%!important;overflow:auto!important}.topbar .search{order:2!important;flex:1 1 220px!important;width:auto!important;min-width:180px!important;max-width:none!important}.topActions{order:4!important;margin-left:auto!important}.brand{flex:0 0 auto!important}}
