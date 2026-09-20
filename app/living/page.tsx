@@ -83,7 +83,7 @@ const categories: Category[] = [
 ];
 
 const themeDefinitions = [
-  { id: "nebula", name: "Nebula Pulse", short: "Nebula", desc: "violet / deep space", mode: "explore", accent: "violet" },
+  { id: "nebula", name: "Nebula Pulse", short: "Nebula", desc: "blue / cyan", mode: "explore", accent: "violet" },
   { id: "aurora", name: "Aurora Matrix", short: "Aurora", desc: "cyan / emerald", mode: "flow", accent: "cyan" },
   { id: "neon", name: "Neon Reactor", short: "Neon", desc: "magenta / ember", mode: "reactor", accent: "magenta" },
   { id: "lunar", name: "Lunar Glass", short: "Lunar", desc: "ice / silver", mode: "calm", accent: "ice" },
@@ -138,7 +138,7 @@ export default function LivingDiscover() {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [pulse, setPulse] = useState(0);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [theme, setTheme] = useState("nebula");
+  const [theme, setTheme] = useState("aurora");
   const [showThemes, setShowThemes] = useState(false);
   const [pulseOffset, setPulseOffset] = useState(0);
   const [radarOffset, setRadarOffset] = useState(0);
@@ -158,6 +158,8 @@ export default function LivingDiscover() {
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
+  const [liveFieldIndex, setLiveFieldIndex] = useState(0);
+  const [liveFieldPaused, setLiveFieldPaused] = useState(false);
   const pulseViewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -308,6 +310,32 @@ export default function LivingDiscover() {
     return [...strongest.values()].sort((a, b) => (b.metadata?.momentum_score || 0) - (a.metadata?.momentum_score || 0)).slice(0, 8);
   }, [ranked]);
 
+  const liveFieldItems = useMemo(() => {
+    const source = ranked.filter(x => x.region);
+    const result: Item[] = [];
+    const regions = new Set<string>();
+    for (let offset = 0; offset < source.length && result.length < 8; offset++) {
+      const item = source[(liveFieldIndex + offset) % source.length];
+      const region = item.region || "WORLDWIDE";
+      if (regions.has(region)) continue;
+      regions.add(region);
+      result.push(item);
+    }
+    return result;
+  }, [ranked, liveFieldIndex]);
+
+  const regionFlag = (region?: string) => {
+    const code = (region || "").toUpperCase();
+    const flags: Record<string,string> = { US:"🇺🇸", GB:"🇬🇧", IN:"🇮🇳", CA:"🇨🇦", AU:"🇦🇺", DE:"🇩🇪", FR:"🇫🇷", JP:"🇯🇵", KR:"🇰🇷", SG:"🇸🇬", AE:"🇦🇪", BR:"🇧🇷", MX:"🇲🇽", ID:"🇮🇩", PH:"🇵🇭" };
+    return flags[code] || "🌐";
+  };
+
+  const evidenceLabel = (item: Item) => {
+    const signal = signalKey(item.metadata?.signal);
+    if (signal.includes("drop")) return age(item.stats_refreshed_at || item.published_at);
+    return `${fmt(item.views)} views`;
+  };
+
   const heroSignal = heroCandidates.length ? heroCandidates[heroIndex % heroCandidates.length] : null;
   const heroHeadline = useMemo(() => {
     if (!heroSignal) return "Listening for signals…";
@@ -317,6 +345,12 @@ export default function LivingDiscover() {
     const verb = signal.includes("break") ? "breaking out" : signal.includes("rise") || signal.includes("rising") ? "rising" : signal.includes("drop") ? "just dropping" : signal.includes("under") ? "surfacing under the radar" : signal.includes("live") ? "live" : "moving";
     return topic + " is " + verb + " in " + region + ".";
   }, [heroSignal]);
+
+  useEffect(() => {
+    if (liveFieldPaused || liveFieldItems.length < 2) return;
+    const id = window.setInterval(() => setLiveFieldIndex(index => (index + 1) % Math.max(ranked.length, 1)), 4000);
+    return () => window.clearInterval(id);
+  }, [liveFieldPaused, liveFieldItems.length, ranked.length]);
 
   useEffect(() => {
     if (heroPaused || heroCandidates.length < 2) return;
@@ -448,7 +482,8 @@ export default function LivingDiscover() {
           <div className="themeMenuFoot"><i/> Theme is saved on this device</div>
         </div>}
       </div>
-      <button className="round notificationButton" type="button" aria-label="Notifications" onClick={() => setNotice("Notifications are coming soon.")}>◌</button>\n      {userEmail ? (
+      <button className="round notificationButton" type="button" aria-label="Notifications" onClick={() => setNotice("Notifications are coming soon.")}>◌</button>
+      {userEmail ? (
         <button className="loginButton avatarButton" type="button" aria-label="Account" onClick={() => router.push("/account")}>
           {userEmail.split("@")[0]}
         </button>
@@ -469,20 +504,24 @@ export default function LivingDiscover() {
           {visibleCategories.map(c => <button key={c.name} className={filter === c.name ? "active" : ""} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField(`Field tuned to ${c.name}.`); }}>{c.name}</button>)}
           <button className="more" type="button" onClick={() => setShowAllCategories(v => !v)}>{showAllCategories ? "Less ↑" : `+${categories.length - 10} more`}</button>
         </div>
-        <div className="liveStrip" aria-label="Live discovery activity">
+        <div className="liveStrip" aria-label="Live discovery activity" onMouseEnter={() => setLiveFieldPaused(true)} onMouseLeave={() => setLiveFieldPaused(false)}>
           <div className="liveStripHead"><span><i/> LIVE FIELD</span><small>{fieldState}{verifiedSignalCount ? ` · ${verifiedSignalCount} verified signals` : ""}</small></div>
-          <div className="liveStripItems">
-            {ranked.slice(0, 3).map((x, i) => (
-              <button key={x.id} type="button" onClick={() => setModal(x)}>
-                <img src={x.thumbnail} alt="" />
-                <span><b>{x.metadata?.signal || "Observed"}</b><small>{x.channel_title}</small></span>
-                <em>{i === 0 ? "●" : "↗"}</em>
-              </button>
-            ))}
-            {!ranked.length && <div className="liveStripEmpty">{!apiUsageLatestAt ? "No acquisition has run yet." : "No verified signals yet."}</div>}
+          <div className="liveStripViewport">
+            <div className="liveStripItems">
+              {liveFieldItems.slice(0, 3).map((x) => (
+                <button key={x.id} type="button" onClick={() => setModal(x)}>
+                  <img src={x.thumbnail} alt="" />
+                  <span className="liveTickerCopy">
+                    <b className={"signalTone signal-" + (signalKey(x.metadata?.signal).replace(/ /g, "-") || "observed")}>{x.metadata?.signal || "Verified"}</b>
+                    <small>{regionFlag(x.region)} {x.region || "WORLDWIDE"} · {x.channel_title}</small>
+                    <em>{evidenceLabel(x)}</em>
+                  </span>
+                </button>
+              ))}
+              {!liveFieldItems.length && <div className="liveStripEmpty">{!apiUsageLatestAt ? "No acquisition has run yet." : "No verified signals yet."}</div>}
+            </div>
           </div>
-        </div>
-      </div>
+        </div>     </div>
 
       <div className="ecosystem">
         <div className={`field ${pulse ? "responding" : ""}`} aria-label="RALLIVIO living platform field" style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", flexShrink: 0 }}>
@@ -502,6 +541,12 @@ export default function LivingDiscover() {
             </button>
           </div>
         </div>
+        <aside className="heroStatsPanel" aria-label="RALLIVIO field statistics">
+          <div className="heroStatsTop"><strong>12+</strong><span>Platforms</span></div>
+          <div className="heroStatsMetric"><strong>{loading ? "—" : fmt(verifiedSignalCount)}</strong><span>Verified Signals</span></div>
+          <div className="heroStatsLines"><span>Real Trends</span><span>Real People</span><span>Real Opportunities</span></div>
+        </aside>
+        <div className="heroScript">A More Connected Tomorrow<i/></div>
         <div className="fieldHint"><span>✦</span> Touch / hover the core or any platform — the field responds</div>
       </div>
     </section>
@@ -896,5 +941,43 @@ footer{padding:55px 5vw 65px}
 footer{margin-top:8px!important}
 @media(max-width:950px){.topbar nav button:nth-child(3){display:none}.hero{min-height:auto!important}}
 @media(max-width:600px){.topbar{height:auto!important;padding:9px 14px!important}.plansButton{height:30px!important}.heroDynamicTitle{font-size:clamp(50px,14vw,70px)!important}}
+
+/* Final correction pass */
+.topActions .round:not(.plansButton){background:transparent!important;border:0!important;box-shadow:none!important;color:#d9f5ff!important;padding:0!important;width:32px!important;min-width:32px!important}
+.topActions .round:not(.plansButton):hover{background:transparent!important;color:#7ee7ff!important}
+.notificationButton{font-size:20px!important;line-height:1!important}
+.heroHeadlineWrap{overflow:visible!important}
+.heroDynamicTitle{overflow:visible!important;line-height:1.15!important}
+.heroDynamicTitle>em{line-height:1.15!important;overflow:visible!important;display:block!important;padding-bottom:.08em!important}
+.heroDynamicTitle>span{line-height:1!important}
+.liveStripViewport{overflow:hidden!important;width:100%!important}
+.liveStripItems{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.liveStripItems>button{min-height:72px!important}
+.liveTickerCopy{min-width:0!important;display:grid!important;gap:3px!important}
+.liveTickerCopy small{display:block!important}
+.liveTickerCopy em{font-size:7px!important;color:#d9ecff!important;font-style:normal!important;font-weight:800!important}
+.signalTone{color:#69e5ff!important}
+.signal-breaking-out{color:#ffd166!important}.signal-now-moving{color:#62e6ad!important}.signal-on-the-rise{color:#6ed8ff!important}.signal-under-the-radar{color:#b8a7ff!important}.signal-just-dropped{color:#ffca65!important}.signal-live-now{color:#ff667b!important}
+.heroStatsPanel{position:absolute!important;top:5%!important;right:1%!important;width:210px!important;padding:18px!important;border:1px solid rgba(100,210,255,.2)!important;border-radius:18px!important;background:linear-gradient(145deg,rgba(7,19,35,.92),rgba(7,13,26,.72))!important;box-shadow:0 20px 55px rgba(0,0,0,.3),0 0 35px rgba(45,166,255,.08)!important;backdrop-filter:blur(14px)!important;z-index:45!important}
+.heroStatsTop{display:flex!important;align-items:end!important;gap:8px!important;border-bottom:1px solid rgba(120,190,220,.12)!important;padding-bottom:12px!important}
+.heroStatsTop strong{font-size:28px!important;line-height:1!important;color:#f5fcff!important}
+.heroStatsTop span,.heroStatsMetric span{font-size:8px!important;color:#819ab2!important;text-transform:uppercase!important;letter-spacing:.8px!important}
+.heroStatsMetric{padding:13px 0!important;border-bottom:1px solid rgba(120,190,220,.12)!important}
+.heroStatsMetric strong{display:block!important;font-size:22px!important;color:#65ddff!important}
+.heroStatsLines{display:grid!important;gap:7px!important;padding-top:13px!important}
+.heroStatsLines span{font-size:8px!important;color:#b8cde0!important}
+.heroStatsLines span:before{content:"✓"!important;color:#5ee7b4!important;margin-right:7px!important}
+.heroScript{position:absolute!important;right:2%!important;bottom:4%!important;color:#62ddff!important;font-family:"Segoe Script","Brush Script MT",cursive!important;font-size:18px!important;font-style:italic!important;transform:rotate(-6deg)!important;z-index:45!important;text-shadow:0 0 18px rgba(72,218,255,.35)!important}
+.heroScript i{display:block!important;width:185px!important;height:2px!important;margin:5px 0 0 8px!important;background:linear-gradient(90deg,transparent,#5ee4ff 25%,#5ee4ff 75%,transparent)!important;transform:rotate(-2deg)!important;border-radius:50%!important}
+.search button,.heroSearch button{background:linear-gradient(135deg,#1f78ff,#46dfff)!important;box-shadow:0 0 22px rgba(45,174,255,.3)!important}
+.categoryRail button.active{border-color:#42cfff!important;background:rgba(37,139,255,.16)!important;box-shadow:0 0 22px rgba(37,139,255,.12)!important}
+.pulseTab.active,.viewSignalsButton{background:linear-gradient(135deg,#145dce,#1a9fe0)!important;border-color:#4bbfff!important}
+.core{border-color:#67ddff!important;box-shadow:0 0 70px rgba(38,183,255,.45),0 0 125px rgba(38,183,255,.2),0 0 0 18px rgba(38,183,255,.05)!important}
+.core:hover,.core:focus-visible,.core:active{box-shadow:0 0 105px rgba(38,210,255,.62),0 0 175px rgba(38,183,255,.28),0 0 0 30px rgba(38,183,255,.08)!important}
+.coreHalo{border-color:rgba(76,211,255,.45)!important}.h2{border-color:rgba(76,211,255,.28)!important}.h3{border-color:rgba(76,211,255,.18)!important}
+.spark em{background:linear-gradient(180deg,#62dfff,#2d82ff)!important}
+.theme-nebula{--accent:#4fcfff!important;--accent2:#2d7dff!important;--glow:#2d7dff!important}.theme-neon{--accent:#4fcfff!important;--accent2:#2d7dff!important;--glow:#2d7dff!important}.theme-aurora{--accent:#42dfff!important;--accent2:#2d8fff!important;--glow:#12bfe8!important}
+@media(max-width:1100px){.heroStatsPanel{right:0!important;width:190px!important}.heroScript{right:0!important}}
+@media(max-width:950px){.heroStatsPanel{position:relative!important;top:auto!important;right:auto!important;width:min(100%,360px)!important;margin:18px auto 0!important}.heroScript{position:relative!important;right:auto!important;bottom:auto!important;margin:22px auto 0!important;width:max-content!important;max-width:100%!important}.heroScript i{width:150px!important}.liveStripItems{grid-template-columns:1fr!important}.liveStripItems>button:nth-child(n+3){display:none!important}}
 `;
 
