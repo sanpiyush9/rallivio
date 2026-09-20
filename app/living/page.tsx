@@ -226,6 +226,7 @@ export default function LivingDiscover() {
         setActiveTopicCount(Number(b.activeTopics || 0));
         setGlobalRegions(Array.isArray(b.regions) ? b.regions : []);
         setTopicCounts(b.topicCounts && typeof b.topicCounts === "object" ? b.topicCounts : {});
+         setTopicMomentumWindows(b.topicMomentumWindows && typeof b.topicMomentumWindows === "object" ? b.topicMomentumWindows : {});
         setNotice("");
     } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
     finally { setLoading(false); }
@@ -391,9 +392,25 @@ export default function LivingDiscover() {
 
   const topicRows = useMemo(() => {
     if (!categoryPulse.length) return [];
-    const source = categoryPulse;
+    const source = categoryPulse.map(topic => ({ ...topic, windows: topicMomentumWindows[topic.name] || [] })).filter(topic => topic.windows.length >= 2);
     return Array.from({ length: Math.min(5, source.length) }, (_, i) => source[(topicOffset + i) % source.length]);
-  }, [categoryPulse, topicOffset]);
+  }, [categoryPulse, topicMomentumWindows, topicOffset]);
+
+  const momentumChange = (values: number[]) => {
+    if (values.length < 2 || values[0] <= 0) return null;
+    return ((values[values.length - 1] - values[0]) / values[0]) * 100;
+  };
+
+  const sparkPoints = (values: number[]) => {
+    const max = Math.max(...values, 1);
+    const min = Math.min(...values);
+    const range = Math.max(max - min, 1);
+    return values.map((value, index) => {
+      const x = values.length === 1 ? 2 : 2 + (index * 96) / (values.length - 1);
+      const y = 21 - ((value - min) / range) * 17;
+      return x.toFixed(1) + "," + y.toFixed(1);
+    }).join(" ");
+  };
 
   const creatorPool = useMemo(() => {
     const seen = new Set<string>();
@@ -681,11 +698,11 @@ export default function LivingDiscover() {
           {topicRows.length ? topicRows.map((c, i) => (
             <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); }}>
               <span className="topicRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b>
-              <i className={"spark spark-" + (i + 1)} aria-label={`${c.name} momentum ${c.momentum || 0}`}>
-                {Array.from({ length: 7 }, (_, j) => <em key={j} style={{ height: `${4 + ((c.momentum || 0) + j * 7 + topicOffset * 3) % 14}px` }}/>)}
+              <i className={"spark spark-" + (i + 1)} aria-label={`${c.name} momentum over the last ${c.windows.length} measured windows`}>
+                <svg viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline points={sparkPoints(c.windows)} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke"/></svg>
               </i>
-              <strong>{c.momentum ? c.momentum + " momentum" : "—"}</strong>
-            </button>
+              <strong>{(() => { const change = momentumChange(c.windows); return change == null ? "—" : (change >= 0 ? "+" : "") + change.toFixed(0) + "%"; })()}</strong>
+</button>
           )) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
