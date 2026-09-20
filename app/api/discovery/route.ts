@@ -153,6 +153,29 @@ export async function GET(request: Request) {
     const signalCounts = overview.signalCounts ?? {};
     const poolCount = Number(overview.poolCount ?? 0);
 
+    const topTopicNames = Object.entries(overview.topicCounts ?? {})
+      .filter(([, count]) => Number(count) > 0)
+      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .slice(0, 8)
+      .map(([topic]) => topic);
+    const momentumResponse = topTopicNames.length
+      ? await supabase("rpc/get_topic_momentum_windows", {
+          method: "POST",
+          body: JSON.stringify({ p_topics: topTopicNames, p_windows: 12 }),
+        })
+      : null;
+    const topicMomentumRows = momentumResponse?.ok
+      ? (await momentumResponse.json()) as Array<{ topic: string; window_start: string; momentum: number; video_count: number }>
+      : [];
+    const topicMomentumWindows = topTopicNames.reduce<Record<string, number[]>>((acc, topic) => {
+      acc[topic] = topicMomentumRows
+        .filter(row => row.topic === topic)
+        .sort((a, b) => Date.parse(a.window_start) - Date.parse(b.window_start))
+        .slice(-12)
+        .map(row => Number(row.momentum) || 0);
+      return acc;
+    }, {});
+
     const usageResponse = await supabase(
       "api_usage?select=created_at,endpoint&order=created_at.desc&limit=1",
     );
@@ -174,6 +197,7 @@ export async function GET(request: Request) {
           regions: Array.isArray(overview.regions) ? overview.regions : [],
           signalCounts: overview.signalCounts ?? signalCounts,
           topicCounts: overview.topicCounts ?? {},
+          topicMomentumWindows: {},
           promotedItems,
           items: [],
         },
@@ -266,6 +290,7 @@ export async function GET(request: Request) {
         regions: Array.isArray(overview.regions) ? overview.regions : [],
         signalCounts: overview.signalCounts ?? signalCounts,
         topicCounts: overview.topicCounts ?? {},
+        topicMomentumWindows,
         promotedItems,
         items: enriched,
         nextCursor: rankings.length === limit ? rankings[rankings.length - 1]?.global_rank ?? null : null,
