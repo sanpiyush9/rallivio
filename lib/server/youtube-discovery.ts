@@ -670,10 +670,10 @@ export async function refresh(options?: { limit?: number; worker?: string }) {
       }).filter(Boolean);
 
       if (poolRows.length) {
-        const write = await sb("youtube_discovery_pool?on_conflict=id", {
+        const write = await sb("rpc/apply_youtube_observations", {
           method: "POST",
-          headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-          body: JSON.stringify(poolRows),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ p_rows: poolRows }),
         });
         if (!write.ok) {
           throw new Error(`Pool observation write failed: ${write.status} ${await write.text()}`);
