@@ -1016,5 +1016,7 @@ footer{margin-top:8px!important}
 .topicList button{grid-template-columns:48px minmax(80px,1fr) 90px auto!important;min-height:66px!important}
 .spotlightList button img{width:56px!important;height:56px!important;border-radius:50%!important}
 .spotlightList button{min-height:68px!important}
+
+ .spark{height:24px!important;display:block!important;min-width:76px!important;color:#62dfff!important;opacity:1!important}.spark svg{display:block!important;width:100%!important;height:24px!important;overflow:visible!important}.spark em{display:none!important}
 `;
 
