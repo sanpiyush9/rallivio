@@ -400,7 +400,6 @@ export default function LivingDiscover() {
     if (c) { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField(`RALLIVIO tuned the field to ${c.name}.`); return; }
     const p = platforms.find(x => l.includes(x.name.toLowerCase()));
     if (p) { activatePlatform(p); return; }
-    if (s.trim().startsWith("http://") || s.trim().startsWith("https://")) { router.push("/promote?url=" + encodeURIComponent(s.trim())); return; }
     if (l.includes("creator") || l.includes("profile")) { go("/creators"); return; }
     if (l.includes("brand")) { go("/opportunities"); return; }
     if (l.includes("opportun")) { go("/opportunities"); return; }
@@ -414,7 +413,7 @@ export default function LivingDiscover() {
     <header className="topbar">
       <button className="brand" type="button" onClick={() => go("/")}>RALL<span>IVIO</span><small>CREATORS. BRANDS. A BRIGHTER TOMORROW.</small></button>
       <nav>{nav.map(([n, p]) => <button key={p} className={p === "/" ? "active" : ""} type="button" onClick={() => go(p)}>{n}</button>)}</nav>
-      <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span aria-hidden="true">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search or paste a content link to promote…" aria-label="Search creators, brands, videos, trends, or promotion links"/><button type="submit" aria-label="Open search">↗</button></form>
+      <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span aria-hidden="true">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search anything: creators, brands, videos, trends…" aria-label="Search creators, brands, videos, and trends"/><button type="submit" aria-label="Open search">↗</button></form>
       <div className="topActions">
         <button className="round signalButton" type="button" onClick={() => setNotice("Signals are sourced from the verified discovery pool.")}><i/>LIVE</button>
       <div className="themePickerWrap">
@@ -459,7 +458,7 @@ export default function LivingDiscover() {
           <h1 className="heroDynamicTitle"><span>See what&apos;s moving.</span><br/><strong key={heroSignal?.id ?? "waiting"}>{heroHeadline}</strong></h1>
         </div>
         <p>RALLIVIO turns the creator internet into a living field — people, culture, signals and opportunities moving together in one place.</p>
-        <form className="heroSearch" onSubmit={e => { e.preventDefault(); command(q); }}><span className="searchMark">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search or paste a link to start RALLIVIO promotion…" aria-label="Search or paste a content link"/><button type="submit" aria-label="Search">→</button></form>
+        <form className="heroSearch" onSubmit={e => { e.preventDefault(); command(q); }}><span className="searchMark">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="What do you want to discover?" aria-label="Universal discovery search"/><button type="submit" aria-label="Search">→</button></form>
         <div className="categoryRail" aria-label="Discovery categories">
           {visibleCategories.map(c => <button key={c.name} className={filter === c.name ? "active" : ""} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField(`Field tuned to ${c.name}.`); }}>{c.name}</button>)}
           <button className="more" type="button" onClick={() => setShowAllCategories(v => !v)}>{showAllCategories ? "Less ↑" : `+${categories.length - 10} more`}</button>
