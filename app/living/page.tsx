@@ -384,12 +384,15 @@ export default function LivingDiscover() {
 
   const radarCategories = useMemo(() => {
     if (!categoryPulse.length) return [];
-    const source = categories.slice(1).map(c => {
-      const live = categoryPulse.find(active => active.name === c.name);
-      return live || { ...c, count: 0, momentum: 0 };
-    }).sort((a, b) => b.momentum - a.momentum || b.count - a.count);
+    const source = categoryPulse.map(topic => {
+      const windows = topicMomentumWindows[topic.name] || [];
+      const change = windows.length >= 2 && windows[0] > 0
+        ? ((windows[windows.length - 1] - windows[0]) / windows[0]) * 100
+        : null;
+      return { ...topic, change };
+    }).sort((a, b) => Math.abs(b.change ?? 0) - Math.abs(a.change ?? 0) || b.momentum - a.momentum);
     return Array.from({ length: Math.min(8, source.length) }, (_, i) => source[(radarOffset + i) % source.length]);
-  }, [categoryPulse, radarOffset]);
+  }, [categoryPulse, topicMomentumWindows, radarOffset]);
 
   const topicRows = useMemo(() => {
     if (!categoryPulse.length) return [];
@@ -689,7 +692,7 @@ export default function LivingDiscover() {
         <div className="radarList">
           {radarCategories.length ? radarCategories.map((c, i) => {
             const pct = verifiedSignalCount ? Math.round((c.count / verifiedSignalCount) * 100) : 0;
-            return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b><strong>{c.count ? pct + "%" : "—"}</strong></button>;
+            return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b><strong>{c.change == null ? "—" : (c.change >= 0 ? "▲ " : "▼ ") + Math.abs(c.change).toFixed(0) + "%"}</strong></button>;
           }) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
