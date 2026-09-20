@@ -403,8 +403,12 @@ export default function LivingDiscover() {
   const categoryPulse = useMemo(() => categories.slice(1).map(c => {
     const matches = ranked.filter(x => categoryFor(x) === c.name);
     const momentum = matches.length ? Math.round(matches.reduce((sum, x) => sum + (x.metadata?.momentum_score || 0), 0) / matches.length) : 0;
-    return { ...c, count: Number(topicCounts[c.name] || 0), momentum };
-  }).filter(c => c.count > 0).sort((a, b) => b.count - a.count || b.momentum - a.momentum), [ranked, topicCounts]);
+    const windows = topicMomentumWindows[c.name] || [];
+    const change = windows.length >= 2 && windows[0] > 0
+      ? ((windows[windows.length - 1] - windows[0]) / windows[0]) * 100
+      : null;
+    return { ...c, count: Number(topicCounts[c.name] || 0), momentum, change };
+  }).filter(c => c.count > 0).sort((a, b) => b.count - a.count || b.momentum - a.momentum), [ranked, topicCounts, topicMomentumWindows]);
 
   const radarCategories = useMemo(() => {
     if (!categoryPulse.length) return [];
