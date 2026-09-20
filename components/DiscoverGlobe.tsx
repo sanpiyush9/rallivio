@@ -173,26 +173,6 @@ export default function DiscoverGlobe() {
         scene.add(new THREE.AmbientLight(0x3977aa, 0.48));
 
         // Thin cyan orbital rings naturally occlude behind/in front of the Earth.
-        const ringMaterial = new THREE.MeshBasicMaterial({
-          color: 0x57dcff,
-          transparent: true,
-          opacity: 0.62,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        });
-        const ring1 = new THREE.Mesh(new THREE.TorusGeometry(1.30, 0.006, 8, 160), ringMaterial);
-        ring1.rotation.x = THREE.MathUtils.degToRad(66);
-        ring1.rotation.z = THREE.MathUtils.degToRad(18);
-        group.add(ring1);
-        const ring2 = new THREE.Mesh(
-          new THREE.TorusGeometry(1.37, 0.004, 8, 160),
-          ringMaterial.clone(),
-        );
-        ring2.material.opacity = 0.42;
-        ring2.rotation.x = THREE.MathUtils.degToRad(108);
-        ring2.rotation.z = THREE.MathUtils.degToRad(-24);
-        group.add(ring2);
-
         // Sparse starfield surrounding the globe.
         const starPositions = new Float32Array(240 * 3);
         for (let i = 0; i < 240; i++) {
@@ -286,9 +266,7 @@ export default function DiscoverGlobe() {
   return (
     <div ref={hostRef} className="globeStage" aria-label="Animated 3D Earth">
       <div className="globeFallback" aria-hidden="true">
-        <span className="globeLand landA" />
-        <span className="globeLand landB" />
-        <span className="globeLand landC" />
+        <img src={EARTH_ALBEDO} alt="" />
       </div>
     </div>
   );
