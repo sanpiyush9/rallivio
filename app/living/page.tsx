@@ -15,7 +15,7 @@ type Item = {
   id: string; title: string; channel_title: string; published_at: string; thumbnail: string;
   description: string; views: number; likes: number; comments: number; engagement: number; velocity: number;
   live: boolean; url: string; embeddable: boolean; topic: string; region?: string;
-  metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number; promoted?: boolean; promotion_campaign_id?: string; promotion_label?: string };
+  metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number; signal_evidence?: Record<string, unknown> | null; promoted?: boolean; promotion_campaign_id?: string; promotion_label?: string };
   stats_refreshed_at?: string;
 };
 type DiscoveryPoolItem = {
@@ -33,7 +33,7 @@ type DiscoveryPoolItem = {
   live_broadcast_content?: string | null;
   topic?: string;
   region?: string;
-  metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number; promoted?: boolean; promotion_campaign_id?: string; promotion_label?: string };
+  metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number; signal_evidence?: Record<string, unknown> | null; promoted?: boolean; promotion_campaign_id?: string; promotion_label?: string };
   stats_refreshed_at?: string | null;
 };
 
@@ -333,6 +333,10 @@ export default function LivingDiscover() {
   const evidenceLabel = (item: Item) => {
     const signal = signalKey(item.metadata?.signal);
     if (signal.includes("drop")) return age(item.stats_refreshed_at || item.published_at);
+    const velocity = Number(item.metadata?.signal_evidence?.velocity);
+    if (Number.isFinite(velocity)) return `Velocity ${Math.round(velocity)}/100`;
+    const acceleration = Number(item.metadata?.signal_evidence?.acceleration);
+    if (Number.isFinite(acceleration)) return `Acceleration +${Math.round(acceleration)}`;
     return `${fmt(item.views)} views`;
   };
 
@@ -393,11 +397,17 @@ export default function LivingDiscover() {
 
   const creatorPool = useMemo(() => {
     const seen = new Set<string>();
-    return ranked.filter(x => {
-      if (!x.channel_title || seen.has(x.channel_title)) return false;
-      seen.add(x.channel_title);
-      return true;
-    });
+    return [...ranked]
+      .filter(x => {
+        if (!x.channel_title || seen.has(x.channel_title)) return false;
+        seen.add(x.channel_title);
+        return true;
+      })
+      .sort((a, b) => {
+        const aScore = Number(a.metadata?.signal_evidence?.audienceRelativeScore);
+        const bScore = Number(b.metadata?.signal_evidence?.audienceRelativeScore);
+        return (Number.isFinite(bScore) ? bScore : -Infinity) - (Number.isFinite(aScore) ? aScore : -Infinity);
+      });
   }, [ranked]);
 
   const spotlightCreators = useMemo(() => {
@@ -683,7 +693,7 @@ export default function LivingDiscover() {
         <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>{spotlightCreators.length ? "Creators to watch from verified observations" : "Waiting for verified creator observations"}</p></div><span className="scanState">{spotlightCreators.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
         <div className="spotlightList">
           {spotlightCreators.map(x => (
-            <button key={x.channel_title} type="button" onClick={() => setModal(x)}><img src={x.thumbnail} alt="" /><span><b>@{x.channel_title.replace(/\s+/g, "").slice(0, 22)}</b><small>{categoryFor(x)} · {fmt(x.metadata?.subscriber_count || 0)} subscribers</small></span><em>Follow</em></button>
+            <button key={x.channel_title} type="button" onClick={() => setModal(x)}><img src={x.thumbnail} alt="" /><span><b>@{x.channel_title.replace(/\s+/g, "").slice(0, 22)}</b><small>{categoryFor(x)} · {fmt(x.metadata?.subscriber_count || 0)} subscribers</small></span><em>{Number.isFinite(Number(x.metadata?.signal_evidence?.audienceRelativeScore)) ? `AR ${Number(x.metadata?.signal_evidence?.audienceRelativeScore).toFixed(2)}` : "Follow"}</em></button>
           ))}
           {!spotlightCreators.length && <p className="radarEmpty">Creator spotlight will appear as verified data arrives.</p>}
         </div>
