@@ -88,7 +88,7 @@ const themeDefinitions = [
   { id: "neon", name: "Neon Reactor", short: "Neon", desc: "magenta / ember", mode: "reactor", accent: "magenta" },
   { id: "lunar", name: "Lunar Glass", short: "Lunar", desc: "ice / silver", mode: "calm", accent: "ice" },
 ] as const;
-const nav = [["Discover", "/"], ["Creators", "/creators"], ["Opportunities", "/opportunities"], ["Community", "/community"], ["About", "/about"]] as const;
+const nav = [["Discover", "/"], ["Creators", "/creators"], ["Brands & Opportunities", "/opportunities"], ["Community", "/community"], ["About", "/about"]] as const;
 const signalKey = (s?: string) => (s || "").toLowerCase().replace(/[_-]/g, " ").trim();
 const signalMatches = (item: Item, signal: string) => signalKey(item.metadata?.signal) === signalKey(signal);
 const fmt = (n: number) => n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString();
@@ -335,7 +335,7 @@ export default function LivingDiscover() {
   // longer has any current verified rows for it.
   const signalGroups = useMemo(() => Object.entries(signalCounts)
     .map(([name, count]) => ({ name, count: Number(count || 0), items: activeSignal === name ? ranked : [] }))
-    .filter(group => group.count > 0)
+    
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)),
   [signalCounts, activeSignal, ranked]);
   const categoryPulse = useMemo(() => categories.slice(1).map(c => {
@@ -421,12 +421,12 @@ export default function LivingDiscover() {
     <header className="topbar">
       <button className="brand" type="button" onClick={() => go("/")}>RALL<span>IVIO</span><small>CREATORS. BRANDS. A BRIGHTER TOMORROW.</small></button>
       <nav>{nav.map(([n, p]) => <button key={p} className={p === "/" ? "active" : ""} type="button" onClick={() => go(p)}>{n}</button>)}</nav>
-      <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span aria-hidden="true">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search anything — or paste a link to promote…" aria-label="Search anything or paste a promotion link"/><button type="submit" aria-label={q.trim().startsWith("http://") || q.trim().startsWith("https://") ? "Start promotion" : "Open search"}>{q.trim().startsWith("http://") || q.trim().startsWith("https://") ? "↗" : "⌕"}</button></form>
+      <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span aria-hidden="true">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="What do you want to discover?" aria-label="What do you want to discover?"/><button type="submit" aria-label={q.trim().startsWith("http://") || q.trim().startsWith("https://") ? "Start promotion" : "Open search"}>{q.trim().startsWith("http://") || q.trim().startsWith("https://") ? "↗" : "⌕"}</button></form>
       <div className="topActions">
-        <button className="round signalButton" type="button" onClick={() => setNotice("Signals are sourced from the verified discovery pool.")}><i/>LIVE</button>
+        <button className="round plansButton" type="button" onClick={() => router.push("/pricing")}>Plans</button>
       <div className="themePickerWrap">
         <button className="round themeButton" type="button" aria-label="Choose field theme" aria-expanded={showThemes} onClick={() => setShowThemes(v => !v)}>
-          <span className={"themeButtonGlyph " + theme}>✦</span><span>{themeDefinitions.find(x => x.id === theme)?.short || "Theme"}</span><i className={"themeButtonDot " + theme}/>
+          <span className={"themeButtonGlyph " + theme}>☼</span><span className="themeButtonLabel">{themeDefinitions.find(x => x.id === theme)?.short || "Theme"}</span><i className={"themeButtonDot " + theme}/>
         </button>
         {showThemes && <div className="themeMenu" role="menu" aria-label="Field theme selector">
           <div className="themeMenuHead">
@@ -450,12 +450,12 @@ export default function LivingDiscover() {
           <div className="themeMenuFoot"><i/> Theme is saved on this device</div>
         </div>}
       </div>
-      {userEmail ? (
-        <button className="loginButton" type="button" onClick={() => router.push("/account")}>
+      <button className="round notificationButton" type="button" aria-label="Notifications" onClick={() => setNotice("Notifications are coming soon.")}>◌</button>\n      {userEmail ? (
+        <button className="loginButton avatarButton" type="button" aria-label="Account" onClick={() => router.push("/account")}>
           {userEmail.split("@")[0]}
         </button>
       ) : (
-        <button className="loginButton" type="button" onClick={() => router.push("/login")}>Login</button>
+        <button className="loginButton avatarButton" type="button" aria-label="Login" onClick={() => router.push("/login")}>S</button>
       )}
       </div>
     </header>
@@ -463,7 +463,7 @@ export default function LivingDiscover() {
     <section className="hero">
       <div className="heroCopy">
         <div className="heroHeadlineWrap" onMouseEnter={() => setHeroPaused(true)} onMouseLeave={() => setHeroPaused(false)}>
-          <h1 className="heroDynamicTitle"><span>See what&apos;s moving.</span><br/><strong key={heroSignal?.id ?? "waiting"}>{heroHeadline}</strong></h1>
+          <h1 className="heroDynamicTitle"><span>See what&apos;s</span><em>moving.</em><span>Shape what&apos;s next.</span></h1>
         </div>
         <p>RALLIVIO turns the creator internet into a living field — people, culture, signals and opportunities moving together in one place.</p>
         <form className="heroSearch" onSubmit={e => { e.preventDefault(); command(q); }}><span className="searchMark">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search anything — or paste a link to promote…" aria-label="Search anything or paste a promotion link"/><button type="submit" aria-label={q.trim().startsWith("http://") || q.trim().startsWith("https://") ? "Start promotion" : "Search"}>{q.trim().startsWith("http://") || q.trim().startsWith("https://") ? "↗" : "→"}</button></form>
@@ -495,7 +495,7 @@ export default function LivingDiscover() {
             <div className="energyArc arc1"/><div className="energyArc arc2"/><div className="energyArc arc3"/>
             {Array.from({ length: 22 }, (_, i) => <i key={i} className={`particle particle${i + 1}`}/>) }
             {platforms.map(p => <button key={p.id} className={`platform ${activePlatform === p.name ? "selected" : ""}`} style={{ position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)", width: 110, textAlign: "center" }} type="button" aria-label={`${p.name} platform`} onClick={() => activatePlatform(p)} onPointerEnter={() => setActivePlatform(p.name)} onFocus={() => setActivePlatform(p.name)}>
-              <span className={`platformMark ${p.kind}`}><PlatformIcon kind={p.kind}/></span><b>{p.name}</b><small>{p.connected ? "Connected" : "Explore"}</small>
+              <span className={`platformMark ${p.kind}`}><PlatformIcon kind={p.kind}/></span><b>{p.name}</b><small>{p.connected ? "Creators · Videos" : "Coming soon"}</small>
             </button>)}
             <button className="core" type="button" aria-label="Activate RALLIVIO living discovery core" onClick={activateCore} onPointerDown={() => setPulse(n => n + 1)}>
               <span className="coreHalo h1"/><span className="coreHalo h2"/><span className="coreHalo h3"/><span className="coreLight"/>
@@ -858,5 +858,45 @@ footer{padding:55px 5vw 65px}
 @media(max-width:1250px){.topbar{gap:18px!important;padding:0 24px!important}.topbar nav{gap:24px!important}.topbar .search{width:250px!important;min-width:190px!important;margin-right:18px!important}.topbar nav button{font-size:14px!important}}
 @media(max-width:950px){.topbar{height:auto!important;min-height:72px!important;flex-wrap:wrap!important;padding:10px 16px!important}.topbar nav{order:3;width:100%;overflow:auto;gap:20px!important}.topbar .search{flex:1 1 220px!important;width:auto!important;margin-right:0!important}.topActions{margin-left:auto!important}}
 
+
+/* Approved Discover UI finishing pass */
+.topbar{height:64px!important;padding:0 22px!important;gap:18px!important}
+.topbar nav button{white-space:nowrap!important}
+.topbar nav button:nth-child(3){max-width:none!important}
+.plansButton{min-width:58px!important;height:32px!important;padding:0 13px!important;border:0!important;border-radius:18px!important;background:#2563eb!important;color:#fff!important;font-size:10px!important;font-weight:900!important;box-shadow:0 7px 22px rgba(37,99,235,.28)!important}
+.notificationButton{width:32px!important;height:32px!important;padding:0!important}
+.avatarButton{width:32px!important;height:32px!important;padding:0!important;border-radius:50%!important;display:grid!important;place-items:center!important;background:linear-gradient(135deg,#55d9ff,#2563eb)!important;color:#fff!important;border:0!important;font-weight:900!important;font-size:10px!important}
+.themeButton{min-width:32px!important;width:32px!important;height:32px!important;padding:0!important;justify-content:center!important}
+.themeButtonLabel,.themeButtonDot{display:none!important}
+.themeButtonGlyph{font-size:17px!important;line-height:1!important}
+.hero{min-height:540px!important;padding:30px 28px 22px!important}
+.heroDynamicTitle{display:flex!important;flex-direction:column!important;align-items:flex-start!important;min-height:0!important}
+.heroDynamicTitle span,.heroDynamicTitle em{display:block!important}
+.heroDynamicTitle em{font-style:normal!important;background:linear-gradient(90deg,#63e5ff,#2b78ff)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important}
+.heroDynamicTitle strong{display:none!important}
+.heroSearch input::placeholder{color:#566b83!important}
+.categoryRail{max-height:60px!important;overflow:hidden!important}
+.categoryRail button{padding:6px 9px!important;font-size:8px!important}
+.liveStrip{margin-top:15px!important}
+.ecosystem{min-height:500px!important}
+.platform small{color:#7188a3!important}
+.platform:first-of-type small{color:#ff6a76!important}
+.pulseStrip{margin-top:0!important}
+.pulseMetric{min-height:66px!important}
+.pulseSection{padding-top:0!important}
+.pulseTabs{display:flex!important;gap:7px!important;overflow:auto!important}
+.pulseTab{flex:0 0 auto!important}
+.pulseTab.empty{opacity:.42!important}
+.pulseCards{scroll-snap-type:x proximity!important}
+.pulseCard{scroll-snap-align:start!important}
+.radarSection{align-items:stretch!important}
+.radarPanel,.topicsPanel,.spotlightPanel{min-height:390px!important}
+.radarList,.topicList,.spotlightList{max-height:310px!important;overflow-y:auto!important}
+.radarList::-webkit-scrollbar,.topicList::-webkit-scrollbar,.spotlightList::-webkit-scrollbar{width:4px}
+.radarList::-webkit-scrollbar-thumb,.topicList::-webkit-scrollbar-thumb,.spotlightList::-webkit-scrollbar-thumb{background:rgba(66,217,255,.25);border-radius:4px}
+.spark{opacity:.72!important}
+footer{margin-top:8px!important}
+@media(max-width:950px){.topbar nav button:nth-child(3){display:none}.hero{min-height:auto!important}}
+@media(max-width:600px){.topbar{height:auto!important;padding:9px 14px!important}.plansButton{height:30px!important}.heroDynamicTitle{font-size:clamp(50px,14vw,70px)!important}}
 `;
 
