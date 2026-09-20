@@ -1038,4 +1038,32 @@ footer{margin-top:8px!important}
 @media(min-width:951px) and (max-width:1250px){.ecosystem>.field{width:62%!important;justify-self:start!important;transform:translateX(-3%)!important;}.heroStatsPanel{right:-6%!important;top:2%!important;width:190px!important;}}
 /* Approved layout: no floating stats card over the living field. */
 .heroStatsPanel{display:none!important}
-`;
+/* Header layout lock: make search, theme, notification and auth controls unmistakable. */
+.topbar{height:72px!important;min-height:72px!important;padding:0 34px!important;gap:24px!important}
+.topbar nav{gap:31px!important}
+.topbar nav button{font-size:15px!important}
+.topbar .search{flex:0 0 375px!important;width:375px!important;min-width:375px!important;height:44px!important;margin-left:auto!important;margin-right:18px!important}
+.topbar .search button{width:50px!important;height:100%!important;background:linear-gradient(135deg,#1f78ff,#46dfff)!important;color:#fff!important;font-size:17px!important;box-shadow:none!important}
+.topActions{gap:14px!important}
+.plansButton{width:72px!important;min-width:72px!important;height:40px!important}
+.themeButton{display:inline-flex!important;width:auto!important;min-width:78px!important;height:40px!important;padding:0 12px!important;gap:7px!important;border:1px solid rgba(110,220,255,.28)!important;border-radius:20px!important;background:linear-gradient(135deg,#10172c,#182443)!important;color:#dff8ff!important;box-shadow:0 0 18px rgba(70,190,255,.12)!important}
+.themeButtonLabel{display:inline!important;font-size:9px!important;letter-spacing:.8px!important;font-weight:800!important;color:#dff8ff!important}
+.themeButtonDot{display:inline-block!important;width:6px!important;height:6px!important}
+.themeButtonGlyph{font-size:17px!important;color:#67ddff!important}
+.notificationButton{width:40px!important;min-width:40px!important;height:40px!important}
+.loginTextButton{width:92px!important;min-width:92px!important;height:40px!important;border-radius:21px!important;background:linear-gradient(135deg,#8b4dff,#c66cff)!important;box-shadow:0 8px 25px rgba(139,77,255,.28)!important;font-size:11px!important}
+.profileButton{width:40px!important;min-width:40px!important;height:40px!important}
+@media(max-width:1250px){
+ .topbar{gap:16px!important;padding:0 22px!important}
+ .topbar nav{gap:20px!important}
+ .topbar nav button{font-size:13px!important}
+ .topbar .search{flex:0 0 290px!important;width:290px!important;min-width:220px!important;margin-right:8px!important}
+ .themeButton{min-width:40px!important;width:40px!important;padding:0!important;justify-content:center!important}
+ .themeButtonLabel,.themeButtonDot{display:none!important}
+ .loginTextButton{width:76px!important;min-width:76px!important}
+}
+@media(max-width:950px){
+ .topbar .search{flex:1 1 220px!important;width:auto!important;min-width:180px!important;margin-left:0!important}
+ .themeButton{width:40px!important;min-width:40px!important}
+ .loginTextButton{width:76px!important;min-width:76px!important}
+}`;
