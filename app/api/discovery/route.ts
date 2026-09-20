@@ -174,6 +174,31 @@ export async function GET(request: Request) {
         .map(row => Number(row.momentum) || 0);
       return acc;
     }, {});
+    const topicTrendMeta = topTopicNames.reduce<Record<string, {
+      firstWindow: string | null;
+      latestWindow: string | null;
+      windows: number;
+      firstVideos: number;
+      latestVideos: number;
+      minVideos: number;
+      maxVideos: number;
+    }>>((acc, topic) => {
+      const rows = topicMomentumRows
+        .filter(row => row.topic === topic)
+        .sort((a, b) => Date.parse(a.window_start) - Date.parse(b.window_start))
+        .slice(-12);
+      const counts = rows.map(row => Number(row.video_count) || 0);
+      acc[topic] = {
+        firstWindow: rows[0]?.window_start ?? null,
+        latestWindow: rows.at(-1)?.window_start ?? null,
+        windows: rows.length,
+        firstVideos: counts[0] ?? 0,
+        latestVideos: counts.at(-1) ?? 0,
+        minVideos: counts.length ? Math.min(...counts) : 0,
+        maxVideos: counts.length ? Math.max(...counts) : 0,
+      };
+      return acc;
+    }, {});
 
     const usageResponse = await supabase(
       "api_usage?select=created_at,endpoint&order=created_at.desc&limit=1",
@@ -197,6 +222,7 @@ export async function GET(request: Request) {
           signalCounts: overview.signalCounts ?? signalCounts,
           topicCounts: overview.topicCounts ?? {},
           topicMomentumWindows: {},
+          topicTrendMeta: {},
           promotedItems,
           items: [],
         },
@@ -290,6 +316,7 @@ export async function GET(request: Request) {
         signalCounts: overview.signalCounts ?? signalCounts,
         topicCounts: overview.topicCounts ?? {},
         topicMomentumWindows,
+        topicTrendMeta,
         promotedItems,
         items: enriched,
         nextCursor: rankings.length === limit ? rankings[rankings.length - 1]?.global_rank ?? null : null,
