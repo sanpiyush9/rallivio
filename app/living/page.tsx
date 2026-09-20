@@ -716,7 +716,7 @@ export default function LivingDiscover() {
         <div className={`radarVisual liveRadar ${apiUsageLatestAt ? "" : "radarIdle"}`}>{apiUsageLatestAt ? <><div className="radarSweep"/><div className="radarRings"><i/><i/><i/><i/><b/></div><div className="radarGlow one"/><div className="radarGlow two"/><div className="radarGlow three"/></> : <span className="radarEmpty">No acquisition activity yet.</span>}</div>
         <div className="radarList allTopicsList">
           {categoryPulse.length ? categoryPulse.map(c => {
-            const pct = verifiedSignalCount ? (c.count / verifiedSignalCount) * 100 : 0;
+            const pct = globalTopicTotal ? (c.count / globalTopicTotal) * 100 : 0;
             return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}>
               <span className="radarRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b><span className="topicShare">{pct.toFixed(1)}% of verified global signals</span><strong>{c.change == null ? "—" : (c.change >= 0 ? "▲ " : "▼ ") + Math.abs(c.change).toFixed(0) + "%"}</strong>
             </button>;
@@ -724,7 +724,7 @@ export default function LivingDiscover() {
         </div>
       </div>
       <div className="topicsPanel">
-        <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>{categoryPulse.length ? "Live movement across verified observations" : "No measured topic movement yet"}</p></div><span className="scanState">{categoryPulse.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
+        <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>{categoryPulse.length ? "Worldwide verified topic movement · refreshed continuously" : "No measured topic movement yet"}</p></div><span className="scanState">{categoryPulse.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
         <div className="topicList allTopicTrends">
           {topicRows.length ? topicRows.map((c, i) => (
             <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); }}>
@@ -732,14 +732,14 @@ export default function LivingDiscover() {
               <i className={"spark spark-" + (i + 1)} aria-label={`${c.name} momentum over the last ${c.windows.length} measured windows`}>
                 <svg viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline points={sparkPoints(c.windows)} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke"/></svg>
               </i>
-              <small className="topicShare">{c.count.toLocaleString()} signals · {verifiedSignalCount ? ((c.count / verifiedSignalCount) * 100).toFixed(1) : "0.0"}% global share</small>
+              <small className="topicShare">{c.count.toLocaleString()} global signals · {globalTopicTotal ? ((c.count / globalTopicTotal) * 100).toFixed(1) : "0.0"}% global share</small>
               <strong>{(() => { const change = momentumChange(c.windows); return change == null ? "—" : (change >= 0 ? "+" : "") + change.toFixed(0) + "%"; })()}</strong>
 </button>
           )) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
       <div className="spotlightPanel">
-        <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>{spotlightCreators.length ? "Creators to watch from verified observations" : "Waiting for verified creator observations"}</p></div><span className="scanState">{spotlightCreators.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
+        <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>{spotlightCreators.length ? "Worldwide creator momentum · keep scrolling for more" : "Waiting for verified creator observations"}</p></div><span className="scanState">{spotlightCreators.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
         <div className="spotlightList infiniteCreatorList" onScroll={(e) => {
           const el = e.currentTarget;
           if (el.scrollTop + el.clientHeight >= el.scrollHeight - 120) void loadMoreDiscovery();
