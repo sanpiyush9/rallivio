@@ -1203,3 +1203,24 @@ footer{margin-top:8px!important}
 @media(max-width:1180px){.topbar{grid-template-columns:190px minmax(0,1fr) 280px max-content!important;column-gap:14px!important}.topbar nav{gap:16px!important}.topbar .search{width:280px!important;min-width:280px!important;max-width:280px!important}.topActions{gap:8px!important}.themeButton{min-width:40px!important;width:40px!important;padding:0!important;justify-content:center!important}.themeButtonLabel,.themeButtonDot{display:none!important}}
 @media(max-width:950px){.topbar{display:flex!important;flex-wrap:wrap!important;height:auto!important;min-height:72px!important;padding:10px 16px!important}.topbar nav{order:3!important;width:100%!important;overflow:auto!important}.topbar .search{order:2!important;flex:1 1 220px!important;width:auto!important;min-width:180px!important;max-width:none!important}.topActions{order:4!important;margin-left:auto!important}.brand{flex:0 0 auto!important}}
 `;
+/* Full-surface theme treatment: themes change the field, not only the accent. */
+.theme-nebula{--panel:rgba(10,14,34,.82);--panel2:rgba(16,21,48,.72);--line:rgba(117,139,255,.22);--muted:#9ba8c9;--text:#f4f6ff}
+.theme-aurora{--panel:rgba(5,24,31,.84);--panel2:rgba(8,39,47,.72);--line:rgba(53,210,193,.23);--muted:#91bdbb;--text:#effffc}
+.theme-neon{--panel:rgba(28,12,11,.86);--panel2:rgba(48,19,15,.74);--line:rgba(255,133,78,.24);--muted:#c5a39a;--text:#fff6f0}
+.theme-lunar{--panel:rgba(17,24,32,.88);--panel2:rgba(29,39,49,.76);--line:rgba(181,211,230,.24);--muted:#a7b8c5;--text:#f4f8fb}
+.theme-nebula .topbar,.theme-nebula .panel,.theme-nebula .discoveryPanel,.theme-nebula .spotlightPanel,.theme-nebula .search,.theme-nebula .themePicker,.theme-nebula .fieldCard,.theme-nebula .signalCard{background:var(--panel)!important;border-color:var(--line)!important}
+.theme-aurora .topbar,.theme-aurora .panel,.theme-aurora .discoveryPanel,.theme-aurora .spotlightPanel,.theme-aurora .search,.theme-aurora .themePicker,.theme-aurora .fieldCard,.theme-aurora .signalCard{background:var(--panel)!important;border-color:var(--line)!important}
+.theme-neon .topbar,.theme-neon .panel,.theme-neon .discoveryPanel,.theme-neon .spotlightPanel,.theme-neon .search,.theme-neon .themePicker,.theme-neon .fieldCard,.theme-neon .signalCard{background:var(--panel)!important;border-color:var(--line)!important}
+.theme-lunar .topbar,.theme-lunar .panel,.theme-lunar .discoveryPanel,.theme-lunar .spotlightPanel,.theme-lunar .search,.theme-lunar .themePicker,.theme-lunar .fieldCard,.theme-lunar .signalCard{background:var(--panel)!important;border-color:var(--line)!important}
+.theme-aurora .rv,.theme-neon .rv,.theme-lunar .rv{color:var(--text)}
+.theme-aurora .hero,.theme-neon .hero,.theme-lunar .hero{background:transparent!important}
+.theme-aurora .radarVisual{background:radial-gradient(circle,#0c5860 0,#062f38 32%,#04151c 66%,#02090d 100%)!important;box-shadow:inset 0 0 45px #00171c,0 0 45px #0b7e8030!important}
+.theme-neon .radarVisual{background:radial-gradient(circle,#71301f 0,#38150f 32%,#170b09 66%,#080405 100%)!important;box-shadow:inset 0 0 45px #160503,0 0 45px #ff704020!important}
+.theme-lunar .radarVisual{background:radial-gradient(circle,#465968 0,#263541 32%,#111a22 66%,#070b10 100%)!important;box-shadow:inset 0 0 45px #030609,0 0 45px #9ec7df18!important}
+.theme-aurora .radarGrid,.theme-aurora .radarRings{filter:hue-rotate(45deg)}
+.theme-neon .radarGrid,.theme-neon .radarRings{filter:hue-rotate(315deg) saturate(1.35)}
+.theme-lunar .radarGrid,.theme-lunar .radarRings{filter:grayscale(.45) brightness(1.15)}
+.theme-aurora .core{filter:saturate(1.15)}.theme-neon .core{filter:saturate(1.3)}.theme-lunar .core{filter:saturate(.55) brightness(1.1)}
+.theme-aurora .platformNode{filter:hue-rotate(55deg)}.theme-neon .platformNode{filter:hue-rotate(300deg) saturate(1.25)}.theme-lunar .platformNode{filter:grayscale(.55)}
+.theme-aurora .scanState i{background:#19d3c5!important;box-shadow:0 0 10px #19d3c5!important}.theme-neon .scanState i{background:#ff8a3d!important;box-shadow:0 0 10px #ff8a3d!important}.theme-lunar .scanState i{background:#d9e7f2!important;box-shadow:0 0 10px #d9e7f2!important}
+
