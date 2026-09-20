@@ -163,6 +163,7 @@ export default function LivingDiscover() {
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
   const [topicMomentumWindows, setTopicMomentumWindows] = useState<Record<string, number[]>>({});
   const [topicTrendMeta, setTopicTrendMeta] = useState<Record<string, { firstWindow: string | null; latestWindow: string | null; windows: number; firstVideos: number; latestVideos: number; minVideos: number; maxVideos: number }>>({});
+  const [showTrendMethod, setShowTrendMethod] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const [liveFieldIndex, setLiveFieldIndex] = useState(0);
@@ -744,7 +745,7 @@ export default function LivingDiscover() {
           </button>
           {showTrendMethod && <div className="trendAuditBody">
             <div><b>Source</b><span>YouTube public video statistics</span></div>
-            <div><b>Observation</b><span>Repeated view counts are stored with timestamps; YouTube exposes public video statistics such as views, likes and comments. citeturn0search0</span></div>
+            <div><b>Observation</b><span>Repeated view counts are stored with timestamps; YouTube exposes public video statistics such as views, likes and comments.</span></div>
             <div><b>Hourly metric</b><span>For each video, RALLIVIO calculates views gained per hour between consecutive hourly observations.</span></div>
             <div><b>Topic metric</b><span>RALLIVIO uses the median hourly view velocity across observed videos in that topic, so a topic with more videos does not automatically look bigger just because it has more samples.</span></div>
             <div><b>Quality gate</b><span>A trend needs at least 6 consecutive hourly windows with at least 20 observed videos per window. If that evidence is not available, RALLIVIO does not publish a trend percentage.</span></div>
