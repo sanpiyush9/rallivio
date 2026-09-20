@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1024" viewBox="0 0 2048 1024">
+<defs>
+ <radialGradient id="ocean" cx="42%" cy="34%" r="75%"><stop offset="0" stop-color="#2f9dcc"/><stop offset=".48" stop-color="#0d568d"/><stop offset="1" stop-color="#031d43"/></radialGradient>
+ <linearGradient id="land" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#71d69d"/><stop offset=".45" stop-color="#39a66f"/><stop offset="1" stop-color="#17644d"/></linearGradient>
+</defs>
+<rect width="2048" height="1024" fill="url(#ocean)"/>
+<g fill="url(#land)" stroke="#8be0a9" stroke-opacity=".18" stroke-width="4">
+<path d="M140 180l110-62 135 20 82 75 75 16 37 94-69 54-50 84-78-8-39-65-77-31-54-82z"/>
+<path d="M470 470l85 34 44 96-22 121-59 108-62-31-18-108-48-83 29-91z"/>
+<path d="M865 190l94-56 118 10 64 46 104-13 132 49 48 76-88 39-66 75-86-10-37 53-81-37-32-73-103-16-56-76z"/>
+<path d="M1000 420l102 6 62 58-19 110-56 82-46 137-71 46-46-84 28-91-32-91 29-89z"/>
+<path d="M1280 160l120-22 118 49 101-17 146 71-24 69-108 12-62 61-111-25-79-64-80-33z"/>
+<path d="M1605 515l104 33 72 88-24 103-87 64-72-41-17-94z"/>
+<path d="M1770 720l83 22 51 54-21 69-76 21-45-63z"/>
+</g>
+<g fill="#b4e9c7" opacity=".18">
+<ellipse cx="250" cy="220" rx="120" ry="42"/><ellipse cx="1070" cy="235" rx="160" ry="46"/><ellipse cx="1430" cy="250" rx="180" ry="42"/>
+</g>
+</svg>
