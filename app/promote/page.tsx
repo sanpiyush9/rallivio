@@ -68,3 +68,4 @@ function PromotionPageInner() {
 
 export default function PromotePage() {
   return <Suspense fallback={<main style={{padding:40}}>Loading…</main>}><PromotionPageInner /></Suspense>;
+}
