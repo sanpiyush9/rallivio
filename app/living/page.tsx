@@ -571,11 +571,6 @@ export default function LivingDiscover() {
             </button>
           </div>
         </div>
-        <aside className="heroStatsPanel" aria-label="RALLIVIO field statistics">
-          <div className="heroStatsTop"><strong>12+</strong><span>Platforms</span></div>
-          <div className="heroStatsMetric"><strong>{loading ? "—" : fmt(verifiedSignalCount)}</strong><span>Verified Signals</span></div>
-          <div className="heroStatsLines"><span>Real Trends</span><span>Real People</span><span>Real Opportunities</span></div>
-        </aside>
         <div className="heroScript">A More Connected Tomorrow<i/></div>
         <div className="fieldHint"><span>✦</span> Touch / hover the core or any platform — the field responds</div>
       </div>
@@ -1029,4 +1024,6 @@ footer{margin-top:8px!important}
 .ecosystem{overflow:visible!important;}
 @media(min-width:1251px){.ecosystem>.field{width:66%!important;justify-self:start!important;transform:translateX(-4%)!important;}.heroStatsPanel{right:-9%!important;top:4%!important;width:210px!important;}}
 @media(min-width:951px) and (max-width:1250px){.ecosystem>.field{width:62%!important;justify-self:start!important;transform:translateX(-3%)!important;}.heroStatsPanel{right:-6%!important;top:2%!important;width:190px!important;}}
+/* Approved layout: no floating stats card over the living field. */
+.heroStatsPanel{display:none!important}
 `;
