@@ -1,14 +1,20 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState, type PointerEvent, type CSSProperties } from "react";
-import { siDiscord, siFacebook, siInstagram, siPinterest, siReddit, siSnapchat, siSpotify, siTiktok, siTwitch, siX, siYoutube } from "simple-icons";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  siDiscord, siInstagram, siPinterest, siReddit, siSpotify, siTiktok,
+  siTwitch, siX, siYoutube,
+} from "simple-icons";
 
 const DiscoverGlobe = dynamic(() => import("../components/DiscoverGlobe"), { ssr: false });
 
 type PlatformIcon = { hex: string; path: string };
 
-const LINKEDIN_ICON: PlatformIcon = { hex: "0A66C2", path: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2.774 22.225 0z" };
+const LINKEDIN_ICON: PlatformIcon = {
+  hex: "0A66C2",
+  path: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 11-2.063-2.065 2.064 2.064 0 012.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 22.225 24z",
+};
 
 type DiscoveryItem = {
   id: string;
@@ -27,27 +33,40 @@ type DiscoveryItem = {
   live_broadcast_content: string | null;
   topic: string;
   region: string;
-  metadata?: { subscriber_count?: number | null; signal?: string; momentum_score?: number };
+  metadata?: {
+    subscriber_count?: number | null;
+    signal?: string;
+    momentum_score?: number;
+  };
   stats_refreshed_at?: string;
 };
 
-const topics = ["Trending", "AI", "Travel", "Food", "Gaming", "Fitness"];
-const platformNodes: Array<{ name: string; icon: PlatformIcon; className: string; state: string; position: string }> = [
-  { name: "YouTube", icon: siYoutube, className: "youtube", state: "Connected", position: "p1" },
-  { name: "Instagram", icon: siInstagram, className: "instagram", state: "Coming next", position: "p2" },
-  { name: "TikTok", icon: siTiktok, className: "tiktok", state: "Coming next", position: "p3" },
-  { name: "X", icon: siX, className: "x", state: "Coming next", position: "p4" },
-  { name: "LinkedIn", icon: LINKEDIN_ICON, className: "linkedin", state: "Coming next", position: "p5" },
-  { name: "Facebook", icon: siFacebook, className: "facebook", state: "Coming next", position: "p6" },
-  { name: "Twitch", icon: siTwitch, className: "twitch", state: "Coming next", position: "p7" },
-  { name: "Reddit", icon: siReddit, className: "reddit", state: "Coming next", position: "p8" },
-  { name: "Pinterest", icon: siPinterest, className: "pinterest", state: "Coming next", position: "p9" },
-  { name: "Discord", icon: siDiscord, className: "discord", state: "Coming next", position: "p10" },
-  { name: "Spotify", icon: siSpotify, className: "spotify", state: "Coming next", position: "p11" },
-  { name: "Snapchat", icon: siSnapchat, className: "snapchat", state: "Coming next", position: "p12" },
+const topics = [
+  "Trending", "AI & Tech", "Travel", "Food", "Gaming", "Fitness",
+  "Podcasts", "Music", "Fashion", "Lifestyle", "Business", "Science",
 ];
 
+const platformNodes: Array<{ name: string; icon: PlatformIcon; className: string; position: string }> = [
+  { name: "YouTube", icon: siYoutube, className: "youtube", position: "p1" },
+  { name: "Instagram", icon: siInstagram, className: "instagram", position: "p2" },
+  { name: "TikTok", icon: siTiktok, className: "tiktok", position: "p3" },
+  { name: "X", icon: siX, className: "x", position: "p4" },
+  { name: "LinkedIn", icon: LINKEDIN_ICON, className: "linkedin", position: "p5" },
+  { name: "Reddit", icon: siReddit, className: "reddit", position: "p6" },
+  { name: "Twitch", icon: siTwitch, className: "twitch", position: "p7" },
+  { name: "Spotify", icon: siSpotify, className: "spotify", position: "p8" },
+  { name: "Pinterest", icon: siPinterest, className: "pinterest", position: "p9" },
+  { name: "Discord", icon: siDiscord, className: "discord", position: "p10" },
+];
+
+const signalLabels = ["Now Moving", "Breaking Out", "On the Rise", "Under the Radar", "Just Dropped", "Live Now"];
+const signalIcons: Record<string, string> = {
+  "Now Moving": "🔥", "Breaking Out": "⚡", "On the Rise": "↗",
+  "Under the Radar": "👀", "Just Dropped": "⭐", "Live Now": "◉",
+};
+
 function formatCount(value: number) {
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
   return value.toLocaleString();
@@ -61,43 +80,38 @@ function ageLabel(iso: string) {
 }
 
 function topicFor(item: DiscoveryItem) {
-  const text = `${item.title} ${item.description}`.toLowerCase();
-  if (/travel|trip|tourism|hotel|flight|vacation/.test(text)) return "Travel";
-  if (/gaming|game|xbox|playstation|steam|gpu/.test(text)) return "Gaming";
-  if (/food|recipe|meal|cooking|restaurant/.test(text)) return "Food";
-  if (/fitness|workout|gym|health/.test(text)) return "Fitness";
-  if (/ai|artificial intelligence|chatgpt|machine learning|openai|robot/.test(text)) return "AI";
-  return "Tech";
+  if (item.topic) {
+    const raw = item.topic.replace(/_/g, " ");
+    return raw === "AI" ? "AI & Tech" : raw.replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  return "Unclassified";
 }
 
 function signalFor(item: DiscoveryItem) {
-  return item.metadata?.signal ?? "Trending";
+  return item.metadata?.signal ?? "";
+}
+
+function normalizeSignal(signal: string) {
+  if (!signal) return "";
+  const found = signalLabels.find((label) => label.toLowerCase() === signal.toLowerCase());
+  return found ?? signal;
+}
+
+function deltaLabel(score: number | undefined) {
+  if (score == null || !Number.isFinite(score)) return "—";
+  const value = Math.round(score);
+  return `${value >= 0 ? "+" : ""}${value}%`;
 }
 
 export default function Home() {
   const [items, setItems] = useState<DiscoveryItem[]>([]);
   const [activeTopic, setActiveTopic] = useState("Trending");
-  const [activePlatform, setActivePlatform] = useState("YouTube");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
-  const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const [notice, setNotice] = useState("");
-  const [heroIndex, setHeroIndex] = useState(0);
-  const [heroPaused, setHeroPaused] = useState(false);
-
-  useEffect(() => {
-    if (typeof PerformanceObserver === "undefined") return;
-    if (!PerformanceObserver.supportedEntryTypes?.includes("largest-contentful-paint")) return;
-    const observer = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      const last = entries[entries.length - 1];
-      if (last) console.info("[RALLIVIO PERF] LCP candidate", Math.round(last.startTime), "ms");
-    });
-    observer.observe({ type: "largest-contentful-paint", buffered: true });
-    return () => observer.disconnect();
-  }, []);
+  const [liveIndex, setLiveIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,7 +124,11 @@ export default function Home() {
         const next = Array.isArray(body.items) ? body.items : [];
         setItems(next);
         setLastSync(body.refreshedAt ?? next[0]?.stats_refreshed_at ?? null);
-        setSelectedId((current) => current && next.some((item: DiscoveryItem) => item.id === current) ? current : next[0]?.id ?? null);
+        setSelectedId((current) =>
+          current && next.some((item: DiscoveryItem) => item.id === current)
+            ? current
+            : next[0]?.id ?? null,
+        );
         setError(null);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : "DATA_UNAVAILABLE");
@@ -124,187 +142,356 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const timer = window.setInterval(() => setLiveIndex((v) => v + 1), 4_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     if (!notice) return;
     const timer = window.setTimeout(() => setNotice(""), 2800);
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  const ranked = useMemo(() => [...items].sort((a, b) => (b.metadata?.momentum_score ?? 0) - (a.metadata?.momentum_score ?? 0)), [items]);
-  const visible = useMemo(() => activeTopic === "Trending" ? ranked : ranked.filter((item) => topicFor(item) === activeTopic), [activeTopic, ranked]);
+  const ranked = useMemo(
+    () => [...items].sort((a, b) => {
+      const signalOrder = signalLabels.indexOf(normalizeSignal(signalFor(b))) - signalLabels.indexOf(normalizeSignal(signalFor(a)));
+      return signalOrder || (b.metadata?.momentum_score ?? 0) - (a.metadata?.momentum_score ?? 0);
+    }),
+    [items],
+  );
+
+  const visible = useMemo(
+    () => activeTopic === "Trending"
+      ? ranked
+      : ranked.filter((item) => topicFor(item) === activeTopic),
+    [activeTopic, ranked],
+  );
+
   const selected = visible.find((item) => item.id === selectedId) ?? visible[0] ?? ranked[0] ?? null;
-  const emerging = useMemo(() => ranked.filter((item) => {
-    const subscribers = item.metadata?.subscriber_count ?? 0;
-    return subscribers > 0 && subscribers <= 500_000;
-  }).slice(0, 5), [ranked]);
 
-  const heroSignals = useMemo(() => {
-    const byTopic = topics.slice(1).map((topic) => ranked.find((item) => topicFor(item) === topic));
-    return byTopic.filter((item): item is DiscoveryItem => Boolean(item));
-  }, [ranked]);
-  const heroSignal = heroSignals[heroSignals.length ? heroIndex % heroSignals.length : 0] ?? null;
-
-  const heroHeadline = useMemo(() => {
-    if (!heroSignal) return "Waiting for a verified signal.";
-    const topic = topicFor(heroSignal);
-    const region = heroSignal.region && heroSignal.region.toUpperCase() !== "GLOBAL" ? heroSignal.region : "worldwide";
-    const signal = signalFor(heroSignal).toLowerCase();
-    if (/accelerat|acceleration/.test(signal)) return `${topic} is accelerating in ${region}.`;
-    if (/emerg|newcom|rising/.test(signal) || ((heroSignal.metadata?.subscriber_count ?? 0) > 0 && (heroSignal.metadata?.subscriber_count ?? 0) <= 500_000)) return `Newcomers are rising in ${topic} in ${region}.`;
-    if (/surge|break|velocity|momentum|spike/.test(signal)) return `${topic} content is surging in ${region}.`;
-    return `${topic} is moving in ${region}.`;
-  }, [heroSignal]);
-
-  useEffect(() => {
-    if (heroPaused || heroSignals.length < 2) return;
-    const timer = window.setInterval(() => setHeroIndex((index) => index + 1), 5500);
-    return () => window.clearInterval(timer);
-  }, [heroPaused, heroSignals.length]);
-
-  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    setPointer({ x: ((event.clientX - rect.left) / rect.width - 0.5) * 2, y: ((event.clientY - rect.top) / rect.height - 0.5) * 2 });
-  };
-
-  const selectItem = (item: DiscoveryItem) => {
-    setSelectedId(item.id);
-    setActivePlatform("YouTube");
-  };
-
-  const selectPlatform = (name: string) => {
-    setActivePlatform(name);
-    if (name === "YouTube") {
-      setNotice("YouTube environment connected — showing verified discovery data.");
-    } else {
-      setNotice(`${name} environment is being prepared. No unverified activity is shown.`);
+  const signalCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const label of signalLabels) counts[label] = 0;
+    for (const item of items) {
+      const label = normalizeSignal(signalFor(item));
+      if (label in counts) counts[label] += 1;
     }
+    return counts;
+  }, [items]);
+
+  const latestSignals = useMemo(() => {
+    const sorted = [...items].sort((a, b) => new Date(b.stats_refreshed_at ?? b.published_at).getTime() - new Date(a.stats_refreshed_at ?? a.published_at).getTime());
+    const result: DiscoveryItem[] = [];
+    const usedRegions = new Set<string>();
+    for (const item of sorted) {
+      const region = (item.region || "Global").toUpperCase();
+      if (usedRegions.has(region) && result.length < 4) continue;
+      result.push(item);
+      usedRegions.add(region);
+      if (result.length === 4) break;
+    }
+    if (result.length < 4) {
+      for (const item of sorted) {
+        if (!result.some((x) => x.id === item.id)) result.push(item);
+        if (result.length === 4) break;
+      }
+    }
+    return result;
+  }, [items]);
+
+  const emerging = useMemo(
+    () => ranked.filter((item) => (item.metadata?.subscriber_count ?? 0) > 0 && (item.metadata?.subscriber_count ?? 0) <= 500_000).slice(0, 20),
+    [ranked],
+  );
+
+  const activeTopics = useMemo(() => new Set(items.map(topicFor).filter(Boolean)).size, [items]);
+  const trackedCreators = useMemo(() => new Set(items.map((item) => item.channel_id).filter(Boolean)).size, [items]);
+
+  const topicRows = useMemo(() => {
+    const rows = new Map<string, { count: number; score: number }>();
+    for (const item of items) {
+      const topic = topicFor(item);
+      const current = rows.get(topic) ?? { count: 0, score: 0 };
+      current.count += 1;
+      current.score += item.metadata?.momentum_score ?? 0;
+      rows.set(topic, current);
+    }
+    return [...rows.entries()].sort((a, b) => b[1].score - a[1].score).slice(0, 20);
+  }, [items]);
+
+  const liveCards = useMemo(() => {
+    if (!latestSignals.length) return [];
+    return Array.from({ length: Math.min(8, Math.max(4, latestSignals.length)) }, (_, index) => latestSignals[(index + liveIndex) % latestSignals.length]);
+  }, [latestSignals, liveIndex]);
+
+  const selectItem = (item: DiscoveryItem) => setSelectedId(item.id);
+
+  const openVideo = (item: DiscoveryItem) => {
+    if (item.url) window.open(item.url, "_blank", "noopener,noreferrer");
   };
+
+  const showNotice = (message: string) => setNotice(message);
 
   return (
-    <main className="rallivioDiscover" onPointerMove={handlePointerMove} onPointerLeave={() => setPointer({ x: 0, y: 0 })}>
+    <main className="rallivioDiscover">
       <style jsx global>{`
-        :root { --rv-bg:#07091a; --rv-purple:#8c4dff; --rv-pink:#e56cff; --rv-blue:#38bdf8; --rv-text:#f8f7ff; --rv-muted:#b8b8ce; }
-        * { box-sizing:border-box; }
-        body { margin:0; background:#060817; color:var(--rv-text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-        button,input { font:inherit; } button { cursor:pointer; }
-        .rallivioDiscover { min-height:100vh; overflow:hidden; background:radial-gradient(circle at 50% 10%,rgba(110,66,255,.27),transparent 33%),radial-gradient(circle at 86% 40%,rgba(0,210,255,.09),transparent 28%),linear-gradient(135deg,#090b21 0%,#08081a 52%,#10112b 100%); }
-        .topbar { position:sticky;top:0;z-index:50;height:72px;display:flex;align-items:center;gap:24px;padding:0 34px;border-bottom:1px solid rgba(255,255,255,.11);background:rgba(8,9,25,.73);backdrop-filter:blur(22px); }
-        .brand { font-size:28px;font-weight:900;letter-spacing:-1.5px;white-space:nowrap;line-height:.85; }.brand span,.footerLogo span { color:#a768ff; }.brand small { display:block;font-size:6px;letter-spacing:1.1px;color:#aaa9c1;margin-top:6px; }
-        .nav { display:flex;gap:18px;align-items:center;flex:1;min-width:0; }.nav button { border:0;background:transparent;color:#deddef;padding:10px 0;border-radius:999px;font-weight:600;white-space:nowrap;transition:.25s; }.nav button:hover,.nav button.active { color:#fff;background:linear-gradient(135deg,#8544ff,#bd61ff);box-shadow:0 0 28px rgba(157,75,255,.35); }
-        .topSearch { width:min(320px,24vw);height:42px;border:1px solid rgba(255,255,255,.18);border-radius:24px;background:rgba(4,5,17,.45);color:#bbb9cf;padding:0 18px;outline:0; }.topSearch:focus { border-color:#9b61ff;box-shadow:0 0 0 3px rgba(155,97,255,.12); }.topActions{display:flex;align-items:center;gap:12px;flex:0 0 auto}.circleButton{width:39px;height:39px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff}.avatar{width:37px;height:37px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#ffbf65,#8e4fff);font-weight:800}
-        .hero { position:relative;min-height:625px;padding:50px 48px 32px;display:grid;grid-template-columns:minmax(300px,.82fr) minmax(510px,1.7fr) minmax(250px,.62fr);gap:20px;align-items:center;isolation:isolate; }.hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 51% 46%,rgba(121,71,255,.30),transparent 27%),linear-gradient(180deg,rgba(17,19,51,.15),rgba(6,8,22,.9));z-index:-2}.hero::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:58px 58px;mask-image:linear-gradient(to bottom,black,transparent);z-index:-1}
-        .heroCopy{align-self:center;max-width:470px}.heroHeadlineWrap{min-height:178px}.heroUpdated{display:flex;align-items:center;gap:7px;margin-top:-5px;color:#9ea6c3;font-size:10px;letter-spacing:.35px}.heroUpdatedDot{width:7px;height:7px;border-radius:50%;background:#57e6a9;box-shadow:0 0 12px #57e6a9;animation:heroLivePulse 1.1s ease-in-out infinite}.livePill{display:inline-flex;gap:8px;align-items:center;padding:7px 12px;border-radius:999px;background:rgba(255,50,84,.13);border:1px solid rgba(255,74,102,.38);font-size:11px;font-weight:800}.liveDot{width:8px;height:8px;border-radius:50%;background:#ff4265;box-shadow:0 0 16px #ff4265;animation:blink 1.4s infinite}@keyframes blink{50%{opacity:.4;transform:scale(.75)}}
-        .hero h1{margin:18px 0 14px;font-size:clamp(48px,5.1vw,75px);line-height:.94;letter-spacing:-4px}.hero h1 em{font-style:normal;background:linear-gradient(90deg,#fff,#c269ff 60%,#7f6bff);-webkit-background-clip:text;color:transparent}.heroLead{color:#d0cfe0;font-size:18px;line-height:1.55;max-width:430px}.heroSearch{margin-top:25px;display:flex;align-items:center;height:52px;border-radius:28px;background:rgba(255,255,255,.95);padding:5px 6px 5px 18px;box-shadow:0 15px 50px rgba(75,49,184,.32)}.heroSearch input{flex:1;border:0;outline:0;background:transparent;color:#252239;font-size:14px}.heroSearch button{width:42px;height:42px;border:0;border-radius:50%;background:linear-gradient(135deg,#6244ff,#b45eff);color:#fff;font-size:22px}.topicPills{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.topicPills button{border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.06);color:#eee;padding:8px 13px;border-radius:18px;font-size:12px}.topicPills button.active{border-color:#e66aff;background:linear-gradient(135deg,rgba(119,64,255,.5),rgba(230,106,255,.32));box-shadow:0 0 22px rgba(179,85,255,.25)}
-        .stats{display:flex;gap:0;margin-top:25px;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}.stat{flex:1;padding:12px 13px;border-right:1px solid rgba(255,255,255,.08)}.stat:last-child{border:0}.stat strong{display:block;font-size:19px}.stat span{font-size:9px;color:#aaa9bf}
-        .ecosystem{position:relative;height:570px;display:grid;place-items:center;transition:transform .22s ease-out}.ecosystemInner{position:relative;width:100%;height:100%;transform:perspective(1200px) rotateY(calc(var(--mx) * -2deg)) rotateX(calc(var(--my) * 1.5deg));transition:transform .25s ease-out}.ecosystemGlow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:390px;height:390px;border-radius:50%;background:radial-gradient(circle,rgba(151,75,255,.46),rgba(72,50,201,.16) 38%,transparent 68%);filter:blur(5px);animation:glow 5s ease-in-out infinite}@keyframes glow{50%{transform:translate(-50%,-50%) scale(1.08);opacity:.78}}
-        .core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:220px;height:220px;border-radius:50%;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 35% 25%,#3846b7,#12142d 48%,#080a19 76%);border:1px solid rgba(184,140,255,.72);box-shadow:0 0 0 10px rgba(145,81,255,.07),0 0 70px rgba(131,69,255,.5),inset 0 0 60px rgba(72,57,208,.35);z-index:8}.core::before{content:"";position:absolute;inset:-20px;border-radius:50%;border:1px solid rgba(141,100,255,.2);animation:spin 22s linear infinite}.core::after{content:"";position:absolute;inset:-68px;border-radius:50%;border:1px dashed rgba(111,154,255,.17);animation:spin 34s linear infinite reverse}@keyframes spin{to{transform:rotate(360deg)}}.coreLogo{font-size:35px;font-weight:900;letter-spacing:-2px}.coreLogo span{color:#a75eff}.coreSub{font-size:9px;color:#d8d6ec;letter-spacing:.7px}.corePulse{margin-top:9px;font-size:9px;color:#72e4b3}.corePulse::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#61e8ad;box-shadow:0 0 10px #61e8ad;margin-right:5px}
-        .platformNode{position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:88px;border:0;background:transparent;color:#fff;transition:transform .4s cubic-bezier(.2,.8,.2,1);z-index:10}.platformNode:hover{transform:translateY(-7px) scale(1.06)}.platformIcon{width:61px;height:61px;border-radius:18px;display:grid;place-items:center;font-size:28px;font-weight:900;background:#11132b;border:1px solid rgba(255,255,255,.18);box-shadow:0 15px 35px rgba(0,0,0,.35)}.youtube .platformIcon{background:linear-gradient(135deg,#ff2d43,#9f1222)}.instagram .platformIcon{background:linear-gradient(135deg,#ffbf44,#ef3f86,#7d43e9)}.tiktok .platformIcon{background:#050607}.x .platformIcon{background:#050505}.linkedin .platformIcon{background:#0b66c2}.platformNode strong{font-size:11px}.platformNode small{font-size:8px;color:#a9a8bf}.p1{top:1%;left:43%}.p2{top:18%;right:6%}.p3{bottom:11%;right:12%}.p4{top:42%;left:6%}.p5{bottom:1%;left:42%}
-        .thumbNode{position:absolute;width:92px;border:1px solid rgba(255,255,255,.12);border-radius:15px;overflow:hidden;background:rgba(8,10,28,.72);color:#fff;padding:0;box-shadow:0 14px 35px rgba(0,0,0,.34);transition:transform .35s}.thumbNode:hover{transform:translateY(-8px) scale(1.07)}.thumbNode img{display:block;width:92px;height:67px;object-fit:cover}.thumbNode span{display:block;padding:6px 7px 7px;font-size:8px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.t1{top:22%;left:11%}.t2{top:12%;left:66%}.t3{bottom:14%;left:15%}.t4{bottom:19%;right:3%}.t5{top:55%;right:5%}
-        .orbitLine{position:absolute;left:11%;top:24%;width:78%;height:50%;border:1px solid rgba(150,111,255,.17);border-radius:50%;transform:rotate(-13deg)}.orbitLine.two{width:67%;height:70%;left:16%;top:15%;transform:rotate(30deg);border-color:rgba(52,191,255,.11)}
-        .activity{align-self:start;margin-top:18px;border:1px solid rgba(113,164,255,.35);border-radius:20px;background:rgba(11,15,39,.75);box-shadow:0 20px 50px rgba(0,0,0,.28),inset 0 0 35px rgba(54,104,255,.08);overflow:hidden}.activityHead{display:flex;justify-content:space-between;align-items:center;padding:17px 18px;border-bottom:1px solid rgba(255,255,255,.1)}.activityHead strong{font-size:18px}.liveStatus{font-size:9px;color:#5ef0b1}.activityList{padding:5px 0}.activityItem{display:grid;grid-template-columns:30px 1fr auto;gap:9px;align-items:center;width:100%;padding:11px 15px;border:0;background:transparent;color:#fff;text-align:left}.activityItem:hover{background:rgba(255,255,255,.04)}.activityIcon{width:27px;height:27px;border-radius:8px;display:grid;place-items:center;background:#ff2c43;font-size:12px}.activityItem:nth-child(2) .activityIcon{background:#d943e7}.activityItem:nth-child(3) .activityIcon{background:#111}.activityItem:nth-child(4) .activityIcon{background:#15bfa2}.activityItem:nth-child(5) .activityIcon{background:#1985cf}.activityText{font-size:10px;line-height:1.25}.activityTime{font-size:8px;color:#8d8ca4;white-space:nowrap}
-        .movingSection{margin:-44px 48px 0;position:relative;z-index:20;padding:22px;border:1px solid rgba(255,255,255,.18);border-radius:24px;background:rgba(248,246,255,.95);color:#13132c;box-shadow:0 25px 80px rgba(0,0,0,.35)}.sectionHead{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-bottom:15px}.sectionHead h2{margin:0;font-size:25px;color:#17183d}.sectionHead p{margin:4px 0 0;font-size:12px;color:#45466c}.viewAll{border:0;background:transparent;color:#6942dd;font-weight:700}.movingGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.trendCard{position:relative;border-radius:15px;overflow:hidden;background:#fff;box-shadow:0 8px 24px rgba(30,25,75,.13);cursor:pointer;transition:transform .28s,box-shadow .28s}.trendCard:hover{transform:translateY(-6px);box-shadow:0 15px 35px rgba(74,45,155,.22)}.trendCard.chosen{outline:2px solid #8b50ff}.trendImage{height:130px;position:relative;overflow:hidden;background:#ddd}.trendImage img{width:100%;height:100%;object-fit:cover;display:block}.trendBadge{position:absolute;top:9px;left:9px;padding:5px 9px;border-radius:10px;color:#fff;font-size:9px;font-weight:800;background:#7546ff}.trendPlay{position:absolute;right:8px;bottom:8px;width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#6031df}.trendInfo{padding:10px}.trendInfo strong{display:block;font-size:12px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.trendInfo span{display:block;font-size:9px;color:#696a83;margin-top:6px}.trendInfo small{font-size:9px;color:#30314a}.lowerGrid{display:grid;grid-template-columns:1.3fr .7fr;gap:15px;margin-top:16px}.journey{border-radius:20px;background:linear-gradient(100deg,#f2f0ff,#fff3ff);padding:20px 22px;border:1px solid rgba(104,66,220,.12)}.journey h2{margin:0 0 3px;font-size:23px;color:#24214d}.journey p{margin:0;color:#535275;font-size:12px}.journeySteps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:19px}.journeyStep{display:flex;align-items:center;gap:8px;color:#29264e;font-size:10px;font-weight:700}.journeyStep i{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid #ddd7ff;color:#6d43ef;font-style:normal;font-size:14px}.opportunity{border-radius:20px;overflow:hidden;position:relative;min-height:155px;padding:20px;background:linear-gradient(135deg,#24124f,#301067 58%,#19204d)}.opportunity::after{content:"";position:absolute;right:-20px;bottom:-35px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(239,105,255,.6),transparent 66%)}.opportunity h3{margin:0;position:relative;z-index:1;font-size:16px}.opportunity p{position:relative;z-index:1;color:#c8c2e2;font-size:11px;max-width:240px;line-height:1.5}.opportunity button{position:relative;z-index:1;border:0;border-radius:16px;padding:9px 13px;background:linear-gradient(135deg,#7b4aff,#cf5fff);color:#fff;font-size:10px;font-weight:700}
-        .emerging{margin:16px 0 0;border-radius:20px;background:rgba(255,255,255,.95);color:#17172f;padding:20px 22px}.emergingList{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.creator{display:grid;grid-template-columns:40px 1fr auto;gap:8px;align-items:center;padding:9px;border:1px solid #e8e5f5;border-radius:14px}.creator img{width:40px;height:40px;border-radius:50%;object-fit:cover}.creator strong{font-size:10px;display:block}.creator span{font-size:8px;color:#77758e}.creator b{font-size:10px;color:#22b95e}.follow{border:0;background:#7a48ed;color:#fff;border-radius:10px;padding:6px 8px;font-size:9px}.footerNote{padding:35px 48px 55px;color:#9291ad;font-size:10px;display:flex;justify-content:space-between}.footerLogo{font-size:18px;font-weight:900}.footerLogo small{display:block;font-size:8px;font-weight:400;margin-top:3px}.notice{position:fixed;right:24px;bottom:24px;z-index:100;padding:12px 16px;border:1px solid rgba(181,121,255,.35);border-radius:14px;background:rgba(12,13,34,.92);box-shadow:0 15px 45px rgba(0,0,0,.35);font-size:11px;color:#eee}
-        @media(max-width:1280px){.topbar{gap:16px;padding:0 20px}.brand{min-width:165px}.nav{gap:13px}.nav button{font-size:11px}.headerSearchWrap{min-width:190px}.topSearch{font-size:11px}.headerLunar{display:none}.hero{grid-template-columns:1fr 1.2fr;padding:35px 25px}.heroHeadlineWrap{min-height:160px}.heroDynamicTitle{min-height:160px}.activity{display:none}.movingSection{margin:-25px 25px 0}.movingGrid{grid-template-columns:repeat(3,1fr)}.emergingList{grid-template-columns:repeat(2,1fr)}}
-        @media(max-width:760px){.topbar{position:relative;flex-wrap:wrap}.nav{order:3;width:100%;overflow:auto}.topSearch{flex:1;width:auto}.hero{display:block;min-height:auto;padding:30px 18px 12px}.hero h1{font-size:50px;letter-spacing:-2.8px}.heroLead{font-size:15px}.ecosystem{height:430px;margin-top:15px}.core{width:170px;height:170px}.coreLogo{font-size:27px}.platformIcon{width:48px;height:48px;font-size:22px}.p1{top:0;left:39%}.p2{top:17%;right:0}.p3{bottom:9%;right:2%}.p4{top:43%;left:0}.p5{bottom:0;left:38%}.thumbNode{transform:scale(.86)}.t1{top:24%;left:8%}.t2{top:14%;left:66%}.t3{bottom:15%;left:7%}.t4{bottom:20%;right:-3%}.t5{top:55%;right:-2%}.movingSection{margin:0 12px;padding:14px}.movingGrid{grid-template-columns:repeat(2,1fr)}.trendImage{height:110px}.lowerGrid{grid-template-columns:1fr}.journeySteps{grid-template-columns:1fr 1fr}.emergingList{grid-template-columns:1fr}.stats{overflow:auto}.stat{min-width:80px}.footerNote{padding:25px 18px;display:block}.footerNote span{display:block;margin-top:10px}}
-        /* LIVE DISCOVER precision pass */
-        .topbar{height:74px;padding:10px 38px;gap:22px;position:sticky;top:0;z-index:100;background:rgba(5,7,20,.9);border-bottom:1px solid rgba(150,120,255,.18);box-shadow:0 8px 30px rgba(0,0,0,.2)}
-        .brand{font-size:29px;line-height:.82;min-width:195px}.brand small{font-size:6px}
-        .nav{gap:2px;align-items:center}.nav button{font-size:13px;padding:11px 13px;white-space:nowrap}.nav button:nth-child(3){max-width:150px;line-height:1.05}
-        .headerSearchWrap{position:relative;display:flex;align-items:center;flex:0 1 360px;min-width:230px}.headerSearchWrap>span{position:absolute;left:14px;color:#747b99;font-size:14px;z-index:1}.headerSearchWrap .topSearch{width:100%;padding-left:35px;height:42px}
-        .topActions{gap:8px}.headerLive,.headerLunar,.headerLogin{height:40px;border-radius:22px;font-size:11px;font-weight:850;cursor:pointer}.headerLive{padding:0 16px;border:1px solid #7a5dff88;background:linear-gradient(135deg,#8b43ff,#bb60ff);color:#fff;box-shadow:0 0 22px #914eff33}.headerLive i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#61efb2;box-shadow:0 0 10px #61efb2;margin-right:7px}.headerLunar{padding:0 14px;border:1px solid #ffffff18;background:#10132a;color:#d7d8e8}.headerLogin{padding:0 19px;border:0;background:linear-gradient(135deg,#9850ff,#c061ff);color:#fff;box-shadow:0 8px 24px #8d49ff33}
-        .heroNowTicker{display:flex;align-items:center;gap:7px;margin-top:12px;color:#9ea6c3;font-size:9px;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;overflow:hidden}.heroNowTicker b{color:#67e6b1}.heroNowTicker strong{color:#dce0f2;font-size:10px;overflow:hidden;text-overflow:ellipsis}.heroNowTicker small{color:#7d87a2;margin-left:auto}.heroNowPulse{width:7px;height:7px;border-radius:50%;background:#57e6a9;box-shadow:0 0 12px #57e6a9;animation:heroLivePulse 1.1s ease-in-out infinite}@keyframes heroLivePulse{50%{transform:scale(1.65);opacity:.45}}\n        @media (prefers-reduced-motion: reduce){.heroDynamicTitle strong,.heroUpdatedDot,.iconSheen{animation:none!important}.globeStage .discoverGlobeCanvas{display:none}.globeStage .globeFallback{opacity:1!important}.platformNode,.platformNode:hover{transition:none!important;transform:none!important}}
-        .heroDynamicTitle{min-height:178px;margin-top:17px!important}.heroDynamicTitle span{display:inline-block}.heroDynamicTitle strong{display:block;max-width:500px;font-size:clamp(27px,2.7vw,44px);line-height:1.02;letter-spacing:-1.8px;color:#dfe2ff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;animation:heroTitleIn .4s cubic-bezier(.4,0,.2,1) both}@keyframes heroTitleIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-        .ecosystem{height:600px}.ecosystemInner{isolation:isolate}.ecosystemGlow{width:470px;height:470px;background:radial-gradient(circle,rgba(92,120,255,.28),rgba(121,57,255,.16) 38%,transparent 70%);filter:blur(9px)}
-        .core{width:260px;height:260px;background:transparent;border:0;box-shadow:none;z-index:8;overflow:visible}.core::before{inset:-24px;border-color:#8d6cff55;z-index:5}.core::after{inset:-74px;border-color:#58caff2e;z-index:5}.coreContent{position:relative;z-index:20;display:grid;place-items:center;pointer-events:none;text-shadow:0 2px 15px #000}
-        .globeStage{position:absolute;inset:-4px;z-index:1;border-radius:50%;overflow:visible;filter:drop-shadow(0 0 30px rgba(63,156,255,.34));}
-        .globeFallback{position:absolute;inset:0;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 32% 25%,#66dcff 0,#1b64c7 27%,#09275e 59%,#020711 100%);box-shadow:inset -28px -20px 45px #000c,inset 18px 10px 28px rgba(107,230,255,.2),0 0 0 1px rgba(117,220,255,.48),0 0 35px rgba(60,157,255,.32);transition:opacity .25s ease;}
-        .globeFallback::before{content:"";position:absolute;inset:7%;border-radius:50%;background:linear-gradient(100deg,transparent 0 28%,rgba(255,255,255,.10) 38%,transparent 47% 100%);mix-blend-mode:screen;}
-        .globeFallback::after{content:"";position:absolute;inset:-7%;border-radius:50%;border:2px solid rgba(110,223,255,.45);box-shadow:0 0 18px rgba(95,217,255,.45),0 0 55px rgba(106,85,255,.18);}
-        .globeLand{position:absolute;background:rgba(57,217,160,.76);filter:drop-shadow(0 0 4px rgba(71,230,180,.34));clip-path:polygon(5% 30%,24% 8%,50% 17%,61% 40%,46% 56%,27% 50%,19% 78%,7% 61%);}
-        .landA{left:10%;top:22%;width:37%;height:34%;}.landB{left:43%;top:20%;width:38%;height:30%;transform:rotate(8deg);}.landC{left:56%;top:51%;width:30%;height:25%;transform:rotate(-13deg);}
-        .discoverGlobeCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .25s ease;}
-        .globeStage.globeReady .globeFallback{opacity:0;}.globeStage.globeReady .discoverGlobeCanvas{opacity:1;}
-        .platformNode{z-index:12;min-width:86px;position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;color:#fff;transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s;}.platformNode:hover{transform:translateY(-5px) scale(1.08);filter:brightness(1.08);}.platformIcon{position:relative;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,color-mix(in srgb,var(--brand) 72%,white),var(--brand) 46%,#05060d 100%);border:1px solid rgba(255,255,255,.28);box-shadow:inset 10px 8px 18px rgba(255,255,255,.20),inset -13px -15px 23px rgba(0,0,0,.60),0 14px 30px rgba(0,0,0,.44),0 0 20px color-mix(in srgb,var(--brand) 35%,transparent);transform:translateZ(0);overflow:hidden;}.platformGlyph{position:relative;z-index:3;width:25px;height:25px;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55));fill:#fff;}.platformIcon::before{content:"";position:absolute;left:16%;top:13%;width:25%;height:25%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,255,255,.24) 42%,transparent 70%);filter:blur(.3px);z-index:4;transition:transform .35s ease;}.platformIcon::after{content:"";position:absolute;inset:4px;border-radius:50%;border:1px solid rgba(255,255,255,.14);box-shadow:inset 0 0 14px rgba(255,255,255,.08),inset -5px -7px 10px rgba(0,0,0,.24);z-index:5;pointer-events:none;}.platformNode:hover .platformIcon::before{transform:translate(5px,3px) scale(1.08);}.iconSheen{position:absolute;inset:-25%;background:linear-gradient(125deg,transparent 35%,rgba(255,255,255,.32) 46%,transparent 55%);transform:translateX(-75%) rotate(15deg);animation:iconSheen 4.6s ease-in-out infinite;z-index:6;}.platformNode strong{font-size:9px;text-shadow:0 2px 8px #000;white-space:nowrap}.platformNode small{font-size:7px;color:#9ba7c4;white-space:nowrap}
-        .youtube{--brand:#ff0000}.instagram{--brand:#e4405f}.tiktok{--brand:#111111}.x{--brand:#000000}.linkedin{--brand:#0a66c2}.facebook{--brand:#1877f2}.twitch{--brand:#9146ff}.reddit{--brand:#ff4500}.pinterest{--brand:#bd081c}.discord{--brand:#5865f2}.spotify{--brand:#1ed760}.snapchat{--brand:#fffc00}.snapchat .platformGlyph{fill:#000}
-        .p1{top:1%;left:43%}.p2{top:18%;right:6%}.p3{bottom:11%;right:12%}.p4{top:42%;left:6%}.p5{bottom:1%;left:42%}
-        .p6{top:9%;left:17%}.p7{top:4%;right:25%}.p8{top:51%;right:0%}.p9{bottom:9%;right:27%}.p10{bottom:2%;left:24%}.p11{top:31%;right:1%}.p12{top:31%;left:22%}
-        @keyframes iconSheen{0%,45%{transform:translateX(-75%) rotate(15deg)}65%,100%{transform:translateX(75%) rotate(15deg)}}
-        .orbitLine{z-index:3;left:8%;top:20%;width:84%;height:60%;border-color:#8e66ff33;box-shadow:0 0 15px #8e66ff22}.orbitLine.two{width:73%;height:76%;left:14%;top:12%;border-color:#4fcaff2c}.orbitLine.three{position:absolute;left:17%;top:30%;width:66%;height:40%;border:1px dashed #ff72d833;border-radius:50%;transform:rotate(-32deg);z-index:3}
-        .thumbNode{z-index:14}
-        @media(max-width:1150px){.topbar{gap:10px;padding:10px 20px}.brand{min-width:165px}.nav button{padding:9px 8px;font-size:11px}.headerSearchWrap{min-width:180px}.headerLunar{display:none}.hero{grid-template-columns:1fr 1.2fr;padding:35px 25px}.heroDynamicTitle{min-height:220px}.activity{display:none}}
-        @media(max-width:760px){.topbar{height:auto;min-height:58px}.brand{min-width:0}.nav button:nth-child(3){max-width:none}.headerSearchWrap{order:4;flex-basis:100%;min-width:0}.headerLogin{padding:0 14px}.hero{display:block;min-height:auto;padding:30px 18px 12px}.heroHeadlineWrap{min-height:0}.heroDynamicTitle{min-height:0}.heroDynamicTitle strong{font-size:28px}.ecosystem{height:470px}.core{width:190px;height:190px}.platformIcon{width:54px;height:54px}.platformGlyph{width:22px;height:22px}.p6{top:5%;left:4%}.p7{top:3%;right:4%}.p8{right:-2%}.p9{bottom:6%;right:5%}.p10{bottom:0;left:4%}.p11{right:-3%}.p12{left:4%}.coreLogo{font-size:27px}}
+        :root {
+          --bg:#040914; --panel:rgba(10,18,32,.88); --panel2:rgba(16,28,48,.78);
+          --line:rgba(120,170,220,.18); --text:#f6fbff; --muted:#8ea1b9;
+          --cyan:#42d9ff; --blue:#2563eb; --green:#45e0a0; --red:#ff5267; --amber:#ffc857;
+        }
+        *{box-sizing:border-box}
+        html{scroll-behavior:smooth;background:var(--bg)}
+        body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+        button,input{font:inherit}
+        button{cursor:pointer}
+        .rallivioDiscover{min-height:100vh;overflow:hidden;background:
+          radial-gradient(circle at 55% 18%,rgba(37,99,235,.16),transparent 30%),
+          radial-gradient(circle at 85% 36%,rgba(66,217,255,.07),transparent 25%),var(--bg)}
+        .topbar{height:64px;display:flex;align-items:center;gap:20px;padding:0 22px;border-bottom:1px solid var(--line);background:rgba(4,9,20,.9);backdrop-filter:blur(18px);position:sticky;top:0;z-index:40}
+        .brand{font-size:24px;font-weight:950;letter-spacing:-1.5px;line-height:.8;white-space:nowrap}
+        .brand span,.footerLogo span{color:var(--cyan)}
+        .brand small{display:block;margin-top:5px;font-size:5.5px;letter-spacing:1px;color:#8292a8}
+        .nav{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+        .nav button{border:0;background:transparent;color:#aebbd0;padding:10px 13px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+        .nav button:hover,.nav button.active{color:#fff;background:var(--blue);box-shadow:0 7px 22px rgba(37,99,235,.3)}
+        .headerSearchWrap{position:relative;width:260px;flex:0 0 260px}
+        .headerSearchWrap>span{position:absolute;left:12px;top:8px;color:#8192aa;font-size:16px;z-index:1}
+        .topSearch{width:100%;height:34px;border:1px solid var(--line);border-radius:20px;background:#07101f;color:#e8f1ff;padding:0 12px 0 32px;font-size:10px;outline:0}
+        .topSearch:focus{border-color:#2c91ff;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+        .topActions{display:flex;align-items:center;gap:8px}
+        .plans{border:0;background:var(--blue);color:#fff;border-radius:17px;padding:8px 14px;font-size:10px;font-weight:800}
+        .circleButton{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#0a1424;color:#dceaff}
+        .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#58d8ff,#245be8);font-weight:900;font-size:11px}
+        .hero{position:relative;display:grid;grid-template-columns:minmax(320px,.95fr) minmax(500px,1.45fr) minmax(220px,.55fr);gap:18px;align-items:center;min-height:535px;padding:30px 28px 22px}
+        .hero:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 55% 50%,rgba(37,99,235,.16),transparent 30%),linear-gradient(180deg,rgba(7,16,31,.1),rgba(4,9,20,.72));z-index:-1}
+        .heroCopy{max-width:520px}
+        .liveBadge{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:rgba(112,15,31,.38);border:1px solid rgba(255,82,103,.25);font-size:9px;color:#f8dce1}
+        .liveBadge i{width:7px;height:7px;border-radius:50%;background:#ff4c64;box-shadow:0 0 12px #ff4c64}
+        .hero h1{margin:18px 0 12px;font-size:clamp(45px,4.8vw,72px);line-height:.91;letter-spacing:-4px}
+        .hero h1 em{font-style:normal;background:linear-gradient(90deg,#63e5ff,#2b78ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+        .heroLead{max-width:500px;color:#9fb0c7;font-size:13px;line-height:1.55}
+        .heroSearch{display:flex;align-items:center;margin-top:19px;height:47px;border-radius:26px;background:#f7fbff;padding:4px 5px 4px 16px;box-shadow:0 15px 45px rgba(37,99,235,.18)}
+        .heroSearch input{flex:1;border:0;outline:0;background:transparent;color:#162238;font-size:12px}
+        .heroSearch button{width:37px;height:37px;border:0;border-radius:50%;background:var(--blue);color:#fff;font-size:19px}
+        .topicPills{display:flex;flex-wrap:wrap;gap:6px;max-height:62px;overflow:hidden;margin-top:12px}
+        .topicPills button{border:1px solid var(--line);background:rgba(255,255,255,.035);color:#b9c6d9;border-radius:16px;padding:6px 9px;font-size:8px;white-space:nowrap}
+        .topicPills button.active{background:#164ba8;border-color:#2f80ff;color:#fff}
+        .heroStats{display:flex;gap:7px;margin-top:14px}
+        .heroStat{min-width:82px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:rgba(10,20,36,.62)}
+        .heroStat strong{display:block;font-size:15px}.heroStat span{font-size:7px;color:#8092aa}
+        .ecosystem{height:500px;position:relative;display:grid;place-items:center}
+        .ecosystemGlow{position:absolute;width:430px;height:430px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.27),rgba(66,217,255,.08) 42%,transparent 72%);filter:blur(10px)}
+        .core{position:relative;width:255px;height:255px;border-radius:50%;display:grid;place-items:center;z-index:5}
+        .globeStage{position:absolute!important;inset:0!important;border-radius:50%;z-index:1;filter:drop-shadow(0 0 32px rgba(54,184,255,.42))}
+        .globeFallback{background:radial-gradient(circle at 30% 25%,#5ce5ff,#1660c7 35%,#071c48 66%,#020713 100%)!important}
+        .coreContent{position:relative;z-index:10;text-align:center;text-shadow:0 3px 16px #000}
+        .coreLogo{font-size:28px;font-weight:950;letter-spacing:-1.7px}.coreSub{font-size:6px;letter-spacing:1.2px;color:#d8ebff}.corePulse{margin-top:8px;font-size:7px;color:#72e6b5}
+        .orbitLine{position:absolute;border:1px solid rgba(66,217,255,.35);border-radius:50%;width:380px;height:180px;transform:rotate(-18deg);z-index:7}.orbitLine.two{width:330px;height:235px;transform:rotate(31deg);border-color:rgba(66,217,255,.2)}.orbitLine.three{width:430px;height:300px;transform:rotate(-10deg);border-color:rgba(37,99,235,.16)}
+        .platformNode{position:absolute;display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:transparent;color:#fff;z-index:12;min-width:70px}
+        .platformIcon{width:45px;height:45px;border-radius:50%;display:grid;place-items:center;background:#0b1324;border:1px solid rgba(255,255,255,.16);box-shadow:0 12px 25px #0008}
+        .platformGlyph{width:20px;height:20px;fill:var(--brand,#fff)}
+        .platformNode strong{font-size:8px}.platformNode small{font-size:6px;color:#6f839e}
+        .platformNode:hover{transform:translateY(-3px)} .youtube .platformIcon{background:#f02b43}.instagram .platformIcon{background:#b83d92}.tiktok .platformIcon{background:#050505}.x .platformIcon{background:#050505}.linkedin .platformIcon{background:#0a66c2}
+        .p1{top:2%;left:45%}.p2{top:14%;right:5%}.p3{top:45%;right:0}.p4{top:46%;left:3%}.p5{bottom:1%;left:44%}.p6{top:5%;left:4%}.p7{top:7%;right:28%}.p8{bottom:5%;right:4%}.p9{bottom:8%;left:13%}.p10{bottom:1%;right:30%}
+        .activity{margin-top:12px;border:1px solid var(--line);border-radius:14px;background:rgba(8,16,30,.78);overflow:hidden}
+        .activityHead{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;border-bottom:1px solid var(--line);font-size:10px}.liveStatus{font-size:7px;color:var(--green)}
+        .activityList{max-height:270px;overflow:hidden}.activityItem{width:100%;display:grid;grid-template-columns:24px 1fr auto;gap:7px;align-items:center;padding:9px 11px;border:0;border-bottom:1px solid rgba(120,170,220,.08);background:transparent;color:#dce7f7;text-align:left}.activityItem:hover{background:rgba(37,99,235,.1)}.activityIcon{color:#ff4d63}.activityText{font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.activityTime{font-size:7px;color:#71839c}
+        .section{padding:0 28px 22px}.sectionHead{display:flex;justify-content:space-between;align-items:end;margin:4px 0 10px}.sectionHead h2{margin:0;font-size:17px}.sectionHead p{margin:3px 0 0;color:#71849e;font-size:8px}.viewAll{border:0;background:transparent;color:#63dfff;font-size:8px}
+        .liveField{border:1px solid var(--line);border-radius:14px;background:rgba(8,17,31,.82);overflow:hidden}.liveFieldHead{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line)}.liveFieldHead strong{font-size:11px}.liveFieldHead span{font-size:7px;color:#69e8b2}.liveFieldTrack{display:flex;gap:9px;padding:10px;overflow:hidden}.liveCard{min-width:220px;display:grid;grid-template-columns:76px 1fr;gap:8px;border:1px solid rgba(120,170,220,.13);border-radius:10px;background:rgba(255,255,255,.025);padding:6px}.liveCard img{width:76px;height:54px;object-fit:cover;border-radius:7px}.liveCard strong{display:block;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.liveCard small{display:block;font-size:7px;color:#71849d;margin-top:4px}.liveSignal{font-size:7px;font-weight:800;color:#42d9ff}.liveRegion{font-size:7px;color:#b7c8dc}
+        .pulse{padding:0 28px 22px}.pulseStrip{display:grid;grid-template-columns:180px repeat(4,1fr) 220px;gap:7px;align-items:stretch}.pulseLabel,.pulseMetric,.mapCard{border:1px solid var(--line);background:rgba(8,17,31,.8);border-radius:10px}.pulseLabel{padding:12px}.pulseLabel b{display:block;font-size:8px;letter-spacing:1px}.pulseLabel span{font-size:7px;color:var(--green)}.pulseMetric{padding:11px 12px}.pulseMetric strong{display:block;font-size:18px}.pulseMetric span{font-size:7px;color:#8497b0}.mapCard{padding:10px;background:radial-gradient(circle at 50% 50%,rgba(37,99,235,.2),rgba(8,17,31,.85) 70%)}.mapCard b{font-size:8px}.mapCard span{display:block;color:#7489a5;font-size:7px;margin-top:3px}
+        .pulseSection{padding:0 28px 22px}.signalTabs{display:flex;gap:6px;overflow:auto;padding-bottom:8px}.signalTab{border:1px solid var(--line);background:#091426;color:#9eb0c8;border-radius:17px;padding:7px 10px;font-size:8px;white-space:nowrap}.signalTab.active{background:#1555c6;border-color:#2f84ff;color:#fff}.signalCount{margin-left:6px;padding:2px 5px;border-radius:8px;background:#071020;color:#7890ad}.signalTab.zero{opacity:.45}
+        .cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.signalCard{border:1px solid var(--line);border-radius:11px;background:rgba(9,18,32,.88);overflow:hidden;cursor:pointer}.signalCard:hover{border-color:#2e7fff;transform:translateY(-2px)}.signalThumb{position:relative;aspect-ratio:16/9;background:#07101c}.signalThumb img{width:100%;height:100%;object-fit:cover;display:block}.signalBadge{position:absolute;left:6px;top:6px;border-radius:8px;padding:3px 6px;background:#0d64ce;color:#fff;font-size:6px;font-weight:900}.duration{position:absolute;right:5px;bottom:5px;background:#000b;color:#fff;padding:2px 4px;border-radius:4px;font-size:6px}.signalBody{padding:8px}.signalBody strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:9px;line-height:1.3}.channel{display:block;margin-top:5px;font-size:7px;color:#91a4bc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{display:flex;justify-content:space-between;gap:4px;margin-top:7px;font-size:6.5px;color:#71849c}.delta{color:var(--green);font-weight:800}
+        .bottomGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 28px 30px}.bottomPanel{border:1px solid var(--line);border-radius:12px;background:rgba(8,17,31,.86);min-height:360px;overflow:hidden}.bottomPanelHead{padding:12px 13px;border-bottom:1px solid var(--line)}.bottomPanelHead h3{margin:0;font-size:11px}.bottomPanelHead p{margin:3px 0 0;font-size:7px;color:#71849e}.radar{height:120px;margin:10px;border:1px solid rgba(66,217,255,.12);border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.18),transparent 56%),repeating-radial-gradient(circle,transparent 0 23px,rgba(66,217,255,.12) 24px);position:relative}.radar:after{content:"";position:absolute;left:50%;top:50%;width:2px;height:48%;background:linear-gradient(transparent,#42d9ff);transform-origin:bottom;animation:sweep 3.2s linear infinite}@keyframes sweep{to{transform:rotate(360deg)}}.topicRow,.creatorRow{display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid rgba(120,170,220,.07)}.topicIcon{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:#10213a;color:#63dfff;font-size:10px}.topicName{font-size:8px;color:#d4dfed}.topicChange{font-size:8px;color:#6e879f}.topicChange.rising{color:var(--green)}.topicChange.falling{color:var(--red)}.creatorRow{grid-template-columns:42px 1fr auto}.creatorRow img{width:38px;height:38px;border-radius:50%;object-fit:cover}.creatorRow strong{display:block;font-size:8px}.creatorRow span{display:block;margin-top:3px;font-size:7px;color:#71849c}.follow{border:0;background:var(--blue);color:#fff;border-radius:13px;padding:6px 9px;font-size:7px;font-weight:800}
+        .empty{padding:25px 13px;color:#71849c;font-size:8px}.notice{position:fixed;right:18px;bottom:18px;z-index:80;background:#10203a;border:1px solid #2b78ff;color:#dff4ff;border-radius:10px;padding:10px 13px;font-size:9px;box-shadow:0 15px 35px #0008}
+        @media(max-width:1200px){.hero{grid-template-columns:1fr 1.3fr}.activity{display:none}.pulseStrip{grid-template-columns:170px repeat(2,1fr)}.mapCard{display:none}.cards{grid-template-columns:repeat(3,1fr)}.bottomGrid{grid-template-columns:1fr 1fr}.bottomPanel:last-child{grid-column:1/-1}}
+        @media(max-width:820px){.topbar{flex-wrap:wrap;height:auto;padding:10px 14px}.nav{order:3;overflow:auto;flex-basis:100%}.nav button{padding:7px 9px}.headerSearchWrap{width:150px;flex:1}.hero{display:block;padding:24px 16px}.ecosystem{height:430px;margin-top:10px}.heroStats{flex-wrap:wrap}.section,.pulse,.pulseSection,.bottomGrid{padding-left:16px;padding-right:16px}.liveCard{min-width:190px}.cards{grid-template-columns:repeat(2,1fr)}.bottomGrid{grid-template-columns:1fr}.bottomPanel:last-child{grid-column:auto}}
+        @media(max-width:520px){.brand small{display:none}.nav button:nth-child(n+4){display:none}.topSearch{font-size:8px}.hero h1{font-size:43px;letter-spacing:-2.5px}.ecosystem{height:360px}.core{width:190px;height:190px}.orbitLine{width:290px;height:140px}.orbitLine.two{width:250px;height:175px}.platformNode{min-width:55px}.platformIcon{width:37px;height:37px}.platformNode strong{font-size:7px}.platformNode small{font-size:5px}.p1{top:0}.p6{left:0}.p7{right:16%}.cards{grid-template-columns:1fr}.pulseStrip{grid-template-columns:1fr 1fr}.pulseLabel{grid-column:1/-1}}
       `}</style>
 
       <header className="topbar">
         <div className="brand">RALL<span>IVIO</span><small>CREATORS. BRANDS. A BRIGHTER TOMORROW.</small></div>
         <nav className="nav" aria-label="Primary navigation">
           <button className="active" type="button">Discover</button>
-          <button type="button" onClick={() => document.getElementById("emerging")?.scrollIntoView({ behavior: "smooth" })}>Creators</button>
-          <button type="button" onClick={() => document.getElementById("opportunities")?.scrollIntoView({ behavior: "smooth" })}>Opportunities</button>
-          <button type="button" onClick={() => setNotice("Community intelligence is coming into the connected discovery field.")}>Community</button>
-          <button type="button" onClick={() => setNotice("RALLIVIO connects creators, brands and opportunities through verified signals.")}>About</button>
+          <button type="button" onClick={() => document.getElementById("creators")?.scrollIntoView({ behavior: "smooth" })}>Creators</button>
+          <button type="button" onClick={() => document.getElementById("opportunities")?.scrollIntoView({ behavior: "smooth" })}>Brands &amp; Opportunities</button>
+          <button type="button" onClick={() => showNotice("Community is coming soon.")}>Community</button>
+          <button type="button" onClick={() => showNotice("RALLIVIO connects creators, culture and opportunities.")}>About</button>
         </nav>
-        <div className="headerSearchWrap"><span>⌕</span><input className="topSearch" aria-label="Search RALLIVIO" placeholder="Search creators, brands, videos, trends..." /></div>
+        <div className="headerSearchWrap"><span>⌕</span><input className="topSearch" aria-label="Search RALLIVIO" placeholder="Search creators, topics, trends…" /></div>
         <div className="topActions">
-          <button className="headerLive" type="button" onClick={() => document.getElementById("moving")?.scrollIntoView({ behavior: "smooth" })}><i/> LIVE</button>
-          <button className="headerLunar" type="button" aria-label="Language">EN⌄</button>
-          <button className="headerLogin" type="button" onClick={() => window.location.assign("/login")}>Login</button>
+          <button className="plans" type="button" onClick={() => window.location.assign("/pricing")}>Plans</button>
+          <button className="circleButton" type="button" aria-label="Theme" onClick={() => showNotice("Theme controls are being refined.")}>☼</button>
+          <button className="circleButton" type="button" aria-label="Notifications" onClick={() => showNotice("No new notifications.")}>◌</button>
+          <button className="avatar" type="button" aria-label="Account" onClick={() => window.location.assign("/login")}>S</button>
         </div>
       </header>
 
-      <section className="hero" aria-label="RALLIVIO Discover">
+      <section className="hero">
         <div className="heroCopy">
-          <div className="heroNowTicker" aria-live="polite">
-            <span className="heroNowPulse"/><b>{heroSignal?.metadata?.signal ?? "LIVE SIGNAL"}</b>
-            <span>·</span><strong>{heroSignal ? heroSignal.channel_title : "Verified discovery field"}</strong>
-            {heroSignal && <small>{ageLabel(heroSignal.published_at)}</small>}
+          <div className="liveBadge"><i/> <b>LIVE</b><span>The Creator Economy is Moving Right Now</span></div>
+          <h1>See what&apos;s<br/><em>moving.</em><br/>Shape what&apos;s next.</h1>
+          <p className="heroLead">RALLIVIO turns the creator internet into a living field — people, culture, signals and opportunities moving together in one place.</p>
+          <div className="heroSearch">
+            <input placeholder="What do you want to discover?" aria-label="What do you want to discover?" />
+            <button type="button" onClick={() => showNotice("Discovery search will use the connected search index.")}>→</button>
           </div>
-          <div className="heroHeadlineWrap" onMouseEnter={() => setHeroPaused(true)} onMouseLeave={() => setHeroPaused(false)}>
-            <h1 className="heroDynamicTitle">
-              <span>See what&apos;s moving.</span><br />
-              <strong key={heroSignal?.id ?? "waiting"}>{heroHeadline}</strong>
-            </h1>
+          <div className="topicPills">
+            {topics.slice(0, 10).map((topic) => (
+              <button key={topic} className={activeTopic === topic ? "active" : ""} onClick={() => setActiveTopic(topic)}>{topic}</button>
+            ))}
+            <button onClick={() => showNotice(`${topics.length} topic categories are available as the discovery index grows.`)}>+12 more</button>
           </div>
-          <div className="heroUpdated"><span className="heroUpdatedDot" />{lastSync ? `updated ${ageLabel(lastSync)}` : "waiting for verified refresh"}</div>
-          <p className="heroLead">Real trends. Real creators. Real brands. Real opportunities — changing as verified signals move.</p>
-
-          <div className="heroSearch"><input aria-label="What would you like to discover" placeholder="What would you like to discover today?" onKeyDown={(event) => { if (event.key === "Enter") document.getElementById("moving")?.scrollIntoView({ behavior: "smooth" }); }} /><button onClick={() => document.getElementById("moving")?.scrollIntoView({ behavior: "smooth" })}>→</button></div>
-          <div className="topicPills">{topics.map((topic) => <button key={topic} className={activeTopic === topic ? "active" : ""} onClick={() => setActiveTopic(topic)}>{topic === "Trending" ? "🔥 " : ""}{topic}</button>)}</div>
-          <div className="stats"><div className="stat"><strong>{items.length ? `${items.length}+` : "—"}</strong><span>Verified signals</span></div><div className="stat"><strong>{emerging.length || "—"}</strong><span>Emerging creators</span></div><div className="stat"><strong>1</strong><span>Connected platform</span></div><div className="stat"><strong>60s</strong><span>Discovery refresh</span></div></div>
+          <div className="heroStats">
+            <div className="heroStat"><strong>1</strong><span>Connected platform</span></div>
+            <div className="heroStat"><strong>{formatCount(items.length)}</strong><span>Signals in current feed</span></div>
+            <div className="heroStat"><strong>{formatCount(activeTopics)}</strong><span>Active topics</span></div>
+          </div>
         </div>
 
         <div className="ecosystem">
-          <div className="ecosystemInner" style={{ transform: `perspective(1200px) rotateY(${pointer.x * -2}deg) rotateX(${pointer.y * 1.5}deg)` }}>
-            <div className="ecosystemGlow" />
-            <div className="orbitLine" /><div className="orbitLine two" /><div className="orbitLine three" />
-            {ranked.slice(0, 5).map((item, index) => <button key={item.id} className={`thumbNode t${index + 1}`} onClick={() => selectItem(item)} style={{ transform: `translate(${pointer.x * (index + 1) * 4}px, ${pointer.y * (index + 1) * 3}px)` }} aria-label={`Discover ${item.title}`}><img src={item.thumbnail} alt="" /><span>{item.channel_title}</span></button>)}
-            <div className="core">
-              <DiscoverGlobe />
-              <div className="coreContent">
-                <div className="coreLogo">RALL<span>IVIO</span></div><div className="coreSub">A LIVING CREATOR DISCOVERY SYSTEM</div>
-                <div className="corePulse">{loading ? "Syncing verified signals" : `${items.length} verified signals in motion`}</div>
-              </div>
+          <div className="ecosystemGlow"/>
+          <div className="orbitLine"/>
+          <div className="orbitLine two"/>
+          <div className="orbitLine three"/>
+          <div className="core">
+            <DiscoverGlobe/>
+            <div className="coreContent">
+              <div className="coreLogo">RALL<span>IVIO</span></div>
+              <div className="coreSub">A MORE CONNECTED TOMORROW</div>
+              <div className="corePulse">● {loading ? "Syncing verified signals" : "YouTube · verified"}</div>
             </div>
-            {platformNodes.map((platform) => <button key={platform.name} className={`platformNode ${platform.className} ${platform.position}`} style={{ "--brand": `#${platform.icon.hex}` } as CSSProperties} onClick={() => selectPlatform(platform.name)} aria-label={`${platform.name} platform environment`}><span className="platformIcon"><svg className="platformGlyph" viewBox="0 0 24 24" aria-hidden="true"><path d={platform.icon.path}/></svg><i className="iconSheen"/></span><strong>{platform.name}</strong><small>{platform.name === activePlatform ? "Selected" : platform.state}</small></button>)}</div>
+          </div>
+          {platformNodes.map((platform) => (
+            <button key={platform.name} className={`platformNode ${platform.className} ${platform.position}`} style={{ "--brand": `#${platform.icon.hex}` } as CSSProperties} onClick={() => platform.name === "YouTube" ? showNotice("YouTube is the connected source.") : showNotice(`${platform.name}: Coming soon`)}>
+              <span className="platformIcon"><svg className="platformGlyph" viewBox="0 0 24 24" aria-hidden="true"><path d={platform.icon.path}/></svg></span>
+              <strong>{platform.name}</strong>
+              <small>{platform.name === "YouTube" ? "● LIVE" : "Coming soon"}</small>
+            </button>
+          ))}
         </div>
 
         <aside className="activity">
-          <div className="activityHead"><strong>Live Activity</strong><span className="liveStatus">● VERIFIED SOURCE</span></div>
-          <div className="activityList">{ranked.slice(0, 5).map((item) => <button className="activityItem" key={item.id} onClick={() => selectItem(item)}><span className="activityIcon">▶</span><span className="activityText">{item.title}</span><span className="activityTime">{ageLabel(item.published_at)}</span></button>)}</div>
-          {!ranked.length && <div style={{ padding: 18, color: "#9997b0", fontSize: 12 }}>{error ? "Waiting for the verified discovery source." : "Syncing real activity..."}</div>}
+          <div className="activityHead"><strong>Global Activity</strong><span className="liveStatus">● LIVE</span></div>
+          <div className="activityList">
+            {ranked.slice(0, 6).map((item) => (
+              <button className="activityItem" key={item.id} onClick={() => openVideo(item)}>
+                <span className="activityIcon">●</span>
+                <span className="activityText">{topicFor(item)} · {item.title}</span>
+                <span className="activityTime">{ageLabel(item.stats_refreshed_at ?? item.published_at)}</span>
+              </button>
+            ))}
+            {!ranked.length && <div className="empty">{error ? "Waiting for the verified discovery source." : "Syncing real activity…"}</div>}
+          </div>
         </aside>
       </section>
 
-      <section className="movingSection" id="moving">
-        <div className="sectionHead"><div><h2>What&apos;s Moving Now?</h2><p>Verified discovery signals refreshed from connected sources. Tap any topic to explore.</p></div><button className="viewAll" onClick={() => setActiveTopic("Trending")}>View All →</button></div>
-        {error && <div style={{ padding: 15, marginBottom: 12, borderRadius: 12, background: "#fff1f3", color: "#8a2435", fontSize: 12 }}>Verified discovery is temporarily unavailable. RALLIVIO is not substituting fake content.</div>}
-        <div className="movingGrid">{visible.slice(0, 5).map((item) => <article key={item.id} className={`trendCard ${selected?.id === item.id ? "chosen" : ""}`} onClick={() => selectItem(item)}><div className="trendImage"><img src={item.thumbnail} alt="" /><span className="trendBadge">{topicFor(item)}</span><span className="trendPlay">▶</span></div><div className="trendInfo"><strong>{item.title}</strong><span>{item.channel_title}</span><small>{formatCount(item.views)} views · {ageLabel(item.published_at)}</small></div></article>)}{!visible.length && !loading && <div style={{ gridColumn: "1/-1", padding: 35, textAlign: "center", color: "#77758e" }}>No verified records match this topic yet.</div>}</div>
-
-        <div className="lowerGrid"><div className="journey"><h2>The RALLIVIO Journey</h2><p>From trends to real growth. A simple flow. A bigger tomorrow.</p><div className="journeySteps"><div className="journeyStep"><i>⌁</i>Discover →</div><div className="journeyStep"><i>◈</i>Understand →</div><div className="journeyStep"><i>◎</i>Connect →</div><div className="journeyStep"><i>♧</i>Collaborate →</div><div className="journeyStep"><i>✦</i>Grow</div></div></div><div className="opportunity" id="opportunities"><h3>Brands Are Looking for Creators</h3><p>Opportunity discovery will connect to verified creator and brand environments as those systems come online.</p><button>Explore Opportunities →</button></div></div>
+      <section className="section">
+        <div className="sectionHead">
+          <div><h2>LIVE FIELD</h2><p>Recent verified movement across 25 regions · YouTube</p></div>
+          <span className="liveStatus">● {items.length ? `${items.length} verified signals` : "syncing"}</span>
+        </div>
+        <div className="liveField">
+          <div className="liveFieldHead"><strong>What is moving worldwide right now</strong><span>updates every 60s</span></div>
+          <div className="liveFieldTrack">
+            {liveCards.map((item, index) => (
+              <button className="liveCard" key={`${item.id}-${index}`} onClick={() => openVideo(item)}>
+                <img src={item.thumbnail} alt="" />
+                <div>
+                  <span className="liveRegion">{(item.region || "GLOBAL").toUpperCase()}</span>
+                  <span className="liveSignal">{normalizeSignal(signalFor(item)) || "Verified"}</span>
+                  <strong>{item.channel_title}</strong>
+                  <small>{item.metadata?.momentum_score != null ? deltaLabel(item.metadata.momentum_score) : ageLabel(item.stats_refreshed_at ?? item.published_at)}</small>
+                </div>
+              </button>
+            ))}
+            {!liveCards.length && <div className="empty">No verified signal has been returned yet.</div>}
+          </div>
+        </div>
       </section>
 
-      <section className="emerging" id="emerging"><div className="sectionHead"><div><h2>Emerging Creators</h2><p>Audience-relative discovery: smaller channels can surface when verified performance supports it.</p></div><button className="viewAll">View All →</button></div><div className="emergingList">{emerging.map((item) => <div className="creator" key={item.id}><img src={item.thumbnail} alt="" /><div><strong>{item.channel_title}</strong><span>{topicFor(item)} · {formatCount(item.metadata?.subscriber_count ?? 0)} subscribers</span></div><b>{item.metadata?.momentum_score ?? 0}</b><button className="follow" onClick={() => selectItem(item)}>View</button></div>)}{!emerging.length && <div style={{ gridColumn: "1/-1", padding: 25, color: "#77758e" }}>Emerging-creator signals will appear after enough verified observations are available.</div>}</div></section>
+      <section className="pulse">
+        <div className="pulseStrip">
+          <div className="pulseLabel"><b>GLOBAL CREATOR PULSE</b><span>● Live</span></div>
+          <div className="pulseMetric"><strong>{formatCount(emerging.length)}</strong><span>Rising Creators</span></div>
+          <div className="pulseMetric"><strong>{formatCount(items.length)}</strong><span>Verified Signals</span></div>
+          <div className="pulseMetric"><strong>{formatCount(activeTopics)}</strong><span>Active Topics</span></div>
+          <div className="pulseMetric"><strong>{formatCount(trackedCreators)}</strong><span>Tracked Creators</span></div>
+          <div className="mapCard"><b>Global Activity</b><span>Real-time signals from the connected YouTube discovery pool.</span></div>
+        </div>
+      </section>
 
-      <footer className="footerNote"><div className="footerLogo">RALL<span>IVIO</span><small>Discover People. Power What&apos;s Next.</small></div><span>{lastSync ? "Verified source observations drive the discovery surface. Presentation motion is simulated; factual activity is not fabricated." : "Waiting for the first verified refresh."}</span></footer>
+      <section className="pulseSection" id="moving">
+        <div className="sectionHead">
+          <div><h2>RALLIVIO PULSE</h2><p>Real signals. Real movement. Updated in real-time from our discovery pool.</p></div>
+          <button className="viewAll" onClick={() => setActiveTopic("Trending")}>View all signals →</button>
+        </div>
+        <div className="signalTabs">
+          {signalLabels.map((label) => (
+            <button key={label} className={`signalTab ${label === "Now Moving" ? "active" : ""} ${signalCounts[label] === 0 ? "zero" : ""}`} onClick={() => showNotice(`${label}: ${signalCounts[label]} current signals`)}>
+              {signalIcons[label]} {label}<span className="signalCount">{signalCounts[label]}</span>
+            </button>
+          ))}
+        </div>
+        <div className="cards">
+          {visible.slice(0, 10).map((item) => (
+            <article className="signalCard" key={item.id} onClick={() => openVideo(item)}>
+              <div className="signalThumb">
+                <img src={item.thumbnail} alt="" />
+                <span className="signalBadge">{normalizeSignal(signalFor(item)) || "Verified"}</span>
+                {item.duration && <span className="duration">{item.duration}</span>}
+              </div>
+              <div className="signalBody">
+                <strong>{item.title}</strong>
+                <span className="channel">{item.channel_title}</span>
+                <div className="meta"><span>{formatCount(item.views)} views · {ageLabel(item.stats_refreshed_at ?? item.published_at)}</span><span className="delta">{deltaLabel(item.metadata?.momentum_score)}</span></div>
+              </div>
+            </article>
+          ))}
+          {!visible.length && <div className="empty">No verified records match this topic yet.</div>}
+        </div>
+      </section>
+
+      <section className="bottomGrid" id="creators">
+        <div className="bottomPanel">
+          <div className="bottomPanelHead"><h3>Discovery Radar</h3><p>Where attention is building right now</p></div>
+          <div className="radar"/>
+          {topicRows.map(([topic, data], index) => (
+            <div className="topicRow" key={topic}>
+              <div className="topicIcon">{index + 1}</div>
+              <span className="topicName">{topic}</span>
+              <span className="topicChange">{data.count ? `${formatCount(data.count)} signals` : "—"}</span>
+            </div>
+          ))}
+          {!topicRows.length && <div className="empty">Movement will appear after verified observations accumulate.</div>}
+        </div>
+
+        <div className="bottomPanel">
+          <div className="bottomPanelHead"><h3>Trending Topics</h3><p>Fastest growing topics across observed platforms</p></div>
+          {topicRows.map(([topic, data]) => (
+            <div className="topicRow" key={topic}>
+              <div className="topicIcon">↗</div>
+              <span className="topicName">{topic}</span>
+              <span className="topicChange">{data.score ? `${Math.round(data.score)} momentum` : "—"}</span>
+            </div>
+          ))}
+          {!topicRows.length && <div className="empty">No measurable topic movement yet.</div>}
+        </div>
+
+        <div className="bottomPanel" id="opportunities">
+          <div className="bottomPanelHead"><h3>Creator Spotlight</h3><p>Emerging creators to watch</p></div>
+          {emerging.slice(0, 8).map((item) => (
+            <div className="creatorRow" key={item.id}>
+              <img src={item.thumbnail} alt="" />
+              <div><strong>@{item.channel_title.replace(/\s+/g, "").toLowerCase()}</strong><span>{topicFor(item)} · {formatCount(item.metadata?.subscriber_count ?? 0)} followers</span></div>
+              <button className="follow" onClick={() => selectItem(item)}>Follow</button>
+            </div>
+          ))}
+          {!emerging.length && <div className="empty">Emerging-creator signals will appear after enough verified observations are available.</div>}
+        </div>
+      </section>
+
+      <footer className="footerNote"><div className="footerLogo">RALL<span>IVIO</span><small>Discover People. Power What&apos;s Next.</small></div><span>{lastSync ? "Verified source observations drive the discovery surface. No presentation metric is fabricated." : "Waiting for the first verified refresh."}</span></footer>
       {notice && <div className="notice" role="status">{notice}</div>}
     </main>
   );
