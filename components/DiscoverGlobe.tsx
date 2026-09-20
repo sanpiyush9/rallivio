@@ -50,7 +50,7 @@ export default function DiscoverGlobe() {
         // Keep the photographic Earth visibly bright in the dashboard: the source texture
         // is naturally dark in several regions, so lift the rendered surface without
         // changing the surrounding orbital UI.
-        renderer.domElement.style.filter = "brightness(1.18) saturate(1.14) contrast(1.06)";
+        renderer.domElement.style.filter = "brightness(1.58) saturate(1.28) contrast(1.04)";
         renderer.domElement.setAttribute("aria-hidden", "true");
         host.appendChild(renderer.domElement);
 
@@ -97,6 +97,21 @@ export default function DiscoverGlobe() {
 
         const earth = new THREE.Mesh(geometry, earthMaterial);
         group.add(earth);
+
+        // Bright daytime lift: a second low-opacity additive pass keeps
+        // continents and oceans readable against the dark RALLIVIO field.
+        const earthLiftMaterial = new THREE.MeshBasicMaterial({
+          map: albedo,
+          color: new THREE.Color(0xffffff),
+          transparent: true,
+          opacity: 0.18,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          toneMapped: false,
+        });
+        const earthLift = new THREE.Mesh(geometry.clone(), earthLiftMaterial);
+        earthLift.scale.setScalar(1.002);
+        group.add(earthLift);
 
         const atmosphereGeometry = new THREE.SphereGeometry(1.13, 48, 48);
         const atmosphereMaterial = new THREE.ShaderMaterial({
@@ -256,7 +271,7 @@ export default function DiscoverGlobe() {
   return (
     <div ref={hostRef} className="globeStage" aria-label="Animated 3D Earth">
       <div className="globeFallback" aria-hidden="true">
-        <img src={EARTH_ALBEDO} alt="" style={{ filter: "brightness(1.18) saturate(1.14) contrast(1.06)" }} />
+        <img src={EARTH_ALBEDO} alt="" style={{ filter: "brightness(1.58) saturate(1.28) contrast(1.04)" }} />
       </div>
     </div>
   );
