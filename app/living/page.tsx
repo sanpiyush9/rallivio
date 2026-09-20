@@ -15,7 +15,7 @@ type Item = {
   id: string; title: string; channel_title: string; published_at: string; thumbnail: string;
   description: string; views: number; likes: number; comments: number; engagement: number; velocity: number;
   live: boolean; url: string; embeddable: boolean; topic: string; region?: string;
-  metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number };
+  metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number; promoted?: boolean; promotion_campaign_id?: string; promotion_label?: string };
   stats_refreshed_at?: string;
 };
 type DiscoveryPoolItem = {
@@ -35,6 +35,7 @@ type DiscoveryPoolItem = {
   region?: string;
   metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number };
   stats_refreshed_at?: string | null;
+  metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number; promoted?: boolean; promotion_campaign_id?: string; promotion_label?: string };
 };
 
 type Category = { name: string; icon: string; keywords: string[] };
@@ -128,6 +129,7 @@ function PlatformIcon({ kind }: { kind: string }) {
 export default function LivingDiscover() {
   const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);
+  const [promotedItems, setPromotedItems] = useState<Item[]>([]);
   const [filter, setFilter] = useState("Trending");
   const [q, setQ] = useState("");
   const [notice, setNotice] = useState("");
@@ -186,7 +188,7 @@ export default function LivingDiscover() {
       const r = await fetch(`/api/discovery${query}`, { cache: "default" });
         const b = await r.json();
         if (!r.ok || !b.ok) throw new Error(b.state || "YOUTUBE_UNAVAILABLE");
-        setItems(Array.isArray(b.items) ? b.items.map((x: DiscoveryPoolItem) => {
+        const mapDiscoveryItem = (x: DiscoveryPoolItem): Item => {
           const views = Number(x.views || 0);
           const likes = Number(x.likes || 0);
           const comments = Number(x.comments || 0);
@@ -210,7 +212,9 @@ export default function LivingDiscover() {
             metadata: x.metadata || {},
             stats_refreshed_at: x.stats_refreshed_at || b.refreshedAt || undefined,
           };
-        }) : []);
+        };
+        setItems(Array.isArray(b.items) ? b.items.map(mapDiscoveryItem) : []);
+        setPromotedItems(Array.isArray(b.promotedItems) ? b.promotedItems.map(mapDiscoveryItem) : []);
         setLastUpdatedAt(b.refreshedAt ? Date.parse(b.refreshedAt) : null);
         setApiUsageLatestAt(b.apiUsageLatestAt ? Date.parse(b.apiUsageLatestAt) : null);
         setVerifiedSignalCount(Number(b.verifiedSignalCount || 0));
@@ -531,6 +535,31 @@ export default function LivingDiscover() {
         <div><b>Global Activity</b><small>Verified source coverage · {globalRegions.length ? globalRegions.join(", ") : "—"}<br/>{!apiUsageLatestAt ? "No source observations yet." : `${fmt(poolCount)} videos · ${fmt(trackedCreators)} tracked creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
       </div>
     </section>
+
+    {promotedItems.length > 0 && <section className="pulseSection" style={{ marginBottom: 24 }}>
+      <div className="pulseSectionHead">
+        <div className="pulseTitle"><span className="pulseWave">✦</span><div><h2>RALLIVIO CAMPAIGN SPOTLIGHT</h2><p>Creator campaigns currently receiving RALLIVIO-owned discovery distribution.</p></div></div>
+        <div className="pulseHeadActions"><span className="pulseLive"><i/> LIVE CAMPAIGN</span></div>
+      </div>
+      <div className="pulseCarousel">
+        <div className="pulseViewport">
+          <div className="pulseCards">
+            {promotedItems.map((x, i) => (
+              <article className="pulseCard" key={x.id + "-promoted-" + i} onClick={() => {
+                const campaignId = x.metadata?.promotion_campaign_id;
+                if (campaignId) window.open("/api/campaigns/click?campaign_id=" + encodeURIComponent(campaignId), "_blank", "noopener,noreferrer");
+              }} tabIndex={0}>
+                <div className="pulseThumb"><img src={x.thumbnail} alt="" /><span>RALLIVIO CAMPAIGN</span><time>{age(x.published_at)}</time></div>
+                <h3 title={x.title}>{x.title}</h3>
+                <p className="pulseCreator">◉ {x.channel_title}</p>
+                <small>{fmt(x.views)} views · {x.engagement.toFixed(1)}% engagement</small>
+                <div className="pulseCardMeta"><span>Campaign distribution</span><strong>Watch on YouTube ↗</strong></div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>}
 
     <section className="pulseSection">
       <div className="pulseSectionHead">
