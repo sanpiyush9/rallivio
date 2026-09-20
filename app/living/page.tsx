@@ -156,6 +156,7 @@ export default function LivingDiscover() {
   const [activeTopicCount, setActiveTopicCount] = useState(0);
   const [globalRegions, setGlobalRegions] = useState<string[]>([]);
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
+  const [topicMomentumWindows, setTopicMomentumWindows] = useState<Record<string, number[]>>({});
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const [liveFieldIndex, setLiveFieldIndex] = useState(0);
