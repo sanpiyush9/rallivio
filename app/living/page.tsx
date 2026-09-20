@@ -1020,5 +1020,9 @@ footer{margin-top:8px!important}
 .spotlightList button{min-height:68px!important}
 
  .spark{height:24px!important;display:block!important;min-width:76px!important;color:#62dfff!important;opacity:1!important}.spark svg{display:block!important;width:100%!important;height:24px!important;overflow:visible!important}.spark em{display:none!important}
+/* Layout correction: keep field stats card outside the RALLIVIO core/orbit. */
+.ecosystem{position:relative!important;}
+@media(min-width:1251px){.ecosystem>.field{width:72%!important;justify-self:start!important;}.heroStatsPanel{right:0!important;top:4%!important;}}
+@media(min-width:951px) and (max-width:1250px){.ecosystem>.field{width:68%!important;justify-self:start!important;}.heroStatsPanel{right:0!important;top:2%!important;width:190px!important;}}
+@media(max-width:950px){.ecosystem>.field{width:100%!important;justify-self:center!important;}.heroStatsPanel{position:relative!important;top:auto!important;right:auto!important;}}
 `;
-
