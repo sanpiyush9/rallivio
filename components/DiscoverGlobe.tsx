@@ -276,3 +276,5 @@ export default function DiscoverGlobe() {
     </div>
   );
 }
+
+// Keep live deployment aligned with the latest landing-page header lock.
