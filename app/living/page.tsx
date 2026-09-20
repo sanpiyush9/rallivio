@@ -1017,6 +1017,17 @@ footer{padding:55px 5vw 65px}
 .radarList::-webkit-scrollbar,.topicList::-webkit-scrollbar,.spotlightList::-webkit-scrollbar{width:4px}
 .radarList::-webkit-scrollbar-thumb,.topicList::-webkit-scrollbar-thumb,.spotlightList::-webkit-scrollbar-thumb{background:rgba(66,217,255,.25);border-radius:4px}
 .spark{opacity:.72!important}
+/* Equalize the three discovery panel content areas — final override */
+.radarPanel,.topicsPanel,.spotlightPanel{height:634px!important;min-height:634px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.radarPanelHead{flex:0 0 auto!important}
+.radarVisual{flex:0 0 150px!important}
+.allTopicsList,.allTopicTrends,.infiniteCreatorList{height:auto!important;max-height:none!important;min-height:0!important;flex:1 1 auto!important;overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:thin!important;scrollbar-color:rgba(66,217,255,.35) transparent!important}
+.allTopicsList::-webkit-scrollbar,.allTopicTrends::-webkit-scrollbar,.infiniteCreatorList::-webkit-scrollbar{width:5px!important}
+.allTopicsList::-webkit-scrollbar-thumb,.allTopicTrends::-webkit-scrollbar-thumb,.infiniteCreatorList::-webkit-scrollbar-thumb{background:rgba(66,217,255,.35)!important;border-radius:6px!important}
+.allTopicsList::-webkit-scrollbar-track,.allTopicTrends::-webkit-scrollbar-track,.infiniteCreatorList::-webkit-scrollbar-track{background:transparent!important}
+.allTopicsList button,.allTopicTrends button,.infiniteCreatorList button{flex:0 0 auto!important}
+@media(max-width:1250px){.radarPanel,.topicsPanel,.spotlightPanel{height:560px!important;min-height:560px!important}.radarVisual{flex-basis:145px!important}}
+@media(max-width:800px){.radarPanel,.topicsPanel,.spotlightPanel{height:auto!important;min-height:390px!important}.allTopicsList,.allTopicTrends,.infiniteCreatorList{max-height:310px!important;flex:none!important}}
 footer{margin-top:8px!important}
 @media(max-width:950px){.topbar nav button:nth-child(3){display:none}.hero{min-height:auto!important}}
 @media(max-width:600px){.topbar{height:auto!important;padding:9px 14px!important}.plansButton{height:30px!important}.heroDynamicTitle{font-size:clamp(50px,14vw,70px)!important}}
