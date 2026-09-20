@@ -20,6 +20,7 @@ function getRequestOrigin(requestHeaders: Headers) {
 export async function oauthLogin(formData: FormData) {
   const provider = String(formData.get("provider") ?? "");
   if (provider !== "google") redirect("/login?error=Unsupported%20sign-in%20provider.");
+  const next = safeNextPath(String(formData.get("next") ?? ""));
 
   const requestHeaders = await headers();
   const origin = getRequestOrigin(requestHeaders);
@@ -30,8 +31,10 @@ export async function oauthLogin(formData: FormData) {
       queryParams: {
         prompt: "select_account",
       },
-      // Keep the Supabase redirect target exact. The callback itself defaults to /living.
-      redirectTo: origin + "/auth/callback",
+      // Preserve the requested destination through the OAuth callback.
+      // Keep the callback on the same host that initiated sign-in so the
+      // Supabase session cookie is returned to the correct RALLIVIO deployment.
+      redirectTo: origin + "/auth/callback?next=" + encodeURIComponent(next),
     },
   });
 
