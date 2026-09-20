@@ -333,10 +333,8 @@ export default function LivingDiscover() {
   // every label currently emitted by the live signal engine appears here,
   // with its current verified count. A label disappears when the engine no
   // longer has any current verified rows for it.
-  const signalGroups = useMemo(() => Object.entries(signalCounts)
-    .map(([name, count]) => ({ name, count: Number(count || 0), items: activeSignal === name ? ranked : [] }))
-    
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)),
+  const signalGroups = useMemo(() => ["Now Moving", "Breaking Out", "On the Rise", "Under the Radar", "Just Dropped", "Live Now"]
+    .map(name => ({ name, count: Number(signalCounts[name] || 0), items: activeSignal === name ? ranked : [] })),
   [signalCounts, activeSignal, ranked]);
   const categoryPulse = useMemo(() => categories.slice(1).map(c => {
     const matches = ranked.filter(x => categoryFor(x) === c.name);
