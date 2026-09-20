@@ -723,19 +723,19 @@ export default function LivingDiscover() {
 
     <section className="radarSection">
       <div className="radarPanel">
-        <div className="radarPanelHead"><div><h3>Discovery Radar</h3><p>{apiUsageLatestAt ? "Continuously scanning verified source observations" : "Awaiting first acquisition"}</p></div><span className="scanState">{apiUsageLatestAt ? <><i/> SCANNING</> : "Awaiting first acquisition"}</span></div>
+        <div className="radarPanelHead"><div><h3>What’s Happening Now</h3><p>{apiUsageLatestAt ? "Current size of each topic in the verified discovery pool" : "Awaiting first acquisition"}</p></div><span className="scanState">{apiUsageLatestAt ? <><i/> LIVE SNAPSHOT</> : "Awaiting first acquisition"}</span></div>
         <div className={`radarVisual liveRadar ${apiUsageLatestAt ? "" : "radarIdle"}`}>{apiUsageLatestAt ? <><div className="radarSweep"/><div className="radarRings"><i/><i/><i/><i/><b/></div><div className="radarGlow one"/><div className="radarGlow two"/><div className="radarGlow three"/></> : <span className="radarEmpty">No acquisition activity yet.</span>}</div>
         <div className="radarList allTopicsList">
           {categoryPulse.length ? categoryPulse.map(c => {
             const pct = globalTopicTotal ? (c.count / globalTopicTotal) * 100 : 0;
             return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}>
-              <span className="radarRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b><span className="topicShare">{pct.toFixed(1)}% share of RALLIVIO verified signals</span><strong title="Momentum change from the earliest to the latest tracked window">{c.change == null ? "—" : (c.change >= 0 ? "▲ " : "▼ ") + Math.abs(c.change).toFixed(0) + "% momentum"}</strong>
+              <span className="radarRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b><span className="topicShare"><strong>{c.count.toLocaleString()} signals</strong> · {pct.toFixed(1)}% of all verified signals</span><em className="radarPlainNote">Current share</em>
             </button>;
           }) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
       <div className="topicsPanel">
-        <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>{categoryPulse.length ? "Share = this topic's signals ÷ all verified signals · Momentum = latest vs earliest tracked window" : "No measured topic movement yet"}</p></div><span className="scanState">{categoryPulse.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
+        <div className="radarPanelHead"><div><h3>What’s Rising or Falling</h3><p>{categoryPulse.length ? "The line shows movement over time · the percentage compares the latest window with the first" : "No measured topic movement yet"}</p></div><span className="scanState">{categoryPulse.length ? <><i/> LIVE TRENDS</> : "No data yet"}</span></div>
         <div className="topicList allTopicTrends">
           {topicRows.length ? topicRows.map((c, i) => (
             <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); }}>
@@ -748,20 +748,20 @@ export default function LivingDiscover() {
                 </svg>
                 <span className={"sparkDirection " + (momentumChange(c.windows) != null && momentumChange(c.windows)! >= 0 ? "up" : "down")} aria-hidden="true">{momentumChange(c.windows) == null ? "•" : momentumChange(c.windows)! >= 0 ? "↗" : "↘"}</span>
               </i>
-              <small className="topicShare">{c.count.toLocaleString()} verified signals · {globalTopicTotal ? ((c.count / globalTopicTotal) * 100).toFixed(1) : "0.0"}% RALLIVIO verified share</small>
-              <strong>{(() => { const change = momentumChange(c.windows); return change == null ? "—" : (change >= 0 ? "▲ " : "▼ ") + Math.abs(change).toFixed(0) + "% momentum change"; })()}</strong>
+              <small className="topicShare"><strong>{c.count.toLocaleString()} signals</strong> · {globalTopicTotal ? ((c.count / globalTopicTotal) * 100).toFixed(1) : "0.0"}% of all verified signals</small>
+              <strong title="Latest tracked window compared with the first tracked window">{(() => { const change = momentumChange(c.windows); return change == null ? "—" : (change >= 0 ? "▲ " : "▼ ") + Math.abs(change).toFixed(0) + "% vs first tracked window"; })()}</strong>
 </button>
           )) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
       <div className="spotlightPanel">
-        <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>{spotlightCreators.length ? "Audience Relative = source-provided comparison score · not subscribers or a percentage" : "Waiting for verified creator observations"}</p></div><span className="scanState">{spotlightCreators.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
+        <div className="radarPanelHead"><div><h3>Creators to Watch</h3><p>{spotlightCreators.length ? "Sorted by the source-provided audience comparison score · subscribers are shown separately" : "Waiting for verified creator observations"}</p></div><span className="scanState">{spotlightCreators.length ? <><i/> LIVE LIST</> : "No data yet"}</span></div>
         <div className="spotlightList infiniteCreatorList" onScroll={(e) => {
           const el = e.currentTarget;
           if (el.scrollTop + el.clientHeight >= el.scrollHeight - 120) void loadMoreDiscovery();
         }}>
           {spotlightCreators.map(x => (
-            <button key={x.channel_title} type="button" onClick={() => setModal(x)}><img src={x.thumbnail} alt="" /><span><b>@{x.channel_title.replace(/\s+/g, "").slice(0, 22)}</b><small>{categoryFor(x)} · {fmt(x.metadata?.subscriber_count || 0)} subscribers</small></span><em title="Audience Relative Score — source-provided comparison of audience evidence across creators; not a subscriber count or percentage">{Number.isFinite(Number(x.metadata?.signal_evidence?.audienceRelativeScore)) ? `Audience Relative: ${Number(x.metadata?.signal_evidence?.audienceRelativeScore).toFixed(2)}` : "Follow"}</em></button>
+            <button key={x.channel_title} type="button" onClick={() => setModal(x)}><img src={x.thumbnail} alt="" /><span><b>@{x.channel_title.replace(/\s+/g, "").slice(0, 22)}</b><small>{categoryFor(x)} · {fmt(x.metadata?.subscriber_count || 0)} subscribers</small></span><em title="Audience comparison score — supplied by the source. It is not a subscriber count, percentage, views, or reach.">{Number.isFinite(Number(x.metadata?.signal_evidence?.audienceRelativeScore)) ? `Audience comparison: ${Number(x.metadata?.signal_evidence?.audienceRelativeScore).toFixed(2)}` : "Follow"}</em></button>
           ))}
           {loadingMore && <p className="creatorLoading">Loading more verified creators…</p>}
           {!spotlightCreators.length && <p className="radarEmpty">Creator spotlight will appear as verified data arrives.</p>}
@@ -1081,7 +1081,7 @@ footer{margin-top:8px!important}
 
 .themeButtonGlyph svg,.notificationButton svg{width:19px!important;height:19px!important;display:block!important;fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;stroke-linecap:round!important;stroke-linejoin:round!important}
 .themeButtonGlyph svg circle{fill:none!important}
-.radarRank{width:40px!important;height:40px!important;border-radius:12px!important;display:grid!important;place-items:center!important;background:linear-gradient(145deg,rgba(38,128,220,.22),rgba(20,52,88,.7))!important;border:1px solid rgba(85,196,255,.16)!important;color:#68dfff!important;font-size:15px!important}
+.radarPlainNote{font-size:8px!important;color:#6f879f!important;font-style:normal!important;text-align:right!important;white-space:nowrap!important}.radarList button .topicShare strong,.topicList button .topicShare strong{color:#dff8ff!important;font-weight:800!important}.topicList button>strong{white-space:nowrap!important}.radarPanelHead p,.topicsPanel .radarPanelHead p,.spotlightPanel .radarPanelHead p{max-width:92%!important;line-height:1.45!important}.radarRank{width:40px!important;height:40px!important;border-radius:12px!important;display:grid!important;place-items:center!important;background:linear-gradient(145deg,rgba(38,128,220,.22),rgba(20,52,88,.7))!important;border:1px solid rgba(85,196,255,.16)!important;color:#68dfff!important;font-size:15px!important}
 .radarList button{grid-template-columns:40px 1fr auto!important;min-height:58px!important}
 .topicRank{width:48px!important;height:48px!important;border-radius:13px!important;display:grid!important;place-items:center!important;background:rgba(40,124,210,.14)!important;border:1px solid rgba(91,204,255,.14)!important;color:#6fe3ff!important;font-size:17px!important}
 .topicList button{grid-template-columns:48px minmax(80px,1fr) 90px auto!important;min-height:66px!important}
