@@ -16,6 +16,14 @@ type RankingRow = {
   observed_at: string; expires_at: string | null; global_rank: number;
 };
 
+type PromotionRow = {
+  id: string;
+  title: string | null;
+  source_url: string;
+  youtube_video_id: string;
+  trial_ends_at: string | null;
+};
+
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -58,11 +66,43 @@ function applyRankingFilters(params: URLSearchParams, request: Request) {
   const signal = search.get("signal")?.trim().slice(0, 40);
   if (region) params.set("region", `eq.${region}`);
   if (topic) params.set("topic", `eq.${topic}`);
-  // signal_labels is the canonical multi-label signal field. A video can
-  // legitimately belong to more than one discovery state, so filtering on
-  // signal_type would hide valid videos from the signal tabs.
   if (signal) params.set("signal_labels", `cs.${JSON.stringify([signal])}`);
   return params;
+}
+
+async function getPromotedItems() {
+  const now = new Date().toISOString();
+  const campaignResponse = await supabase(
+    `promotion_campaigns?select=id,title,source_url,youtube_video_id,trial_ends_at&status=eq.active&youtube_video_id=not.is.null&trial_ends_at=gte.${encodeURIComponent(now)}&order=created_at.desc&limit=8`,
+  );
+  if (!campaignResponse.ok) return [];
+
+  const campaigns = (await campaignResponse.json()) as PromotionRow[];
+  if (!campaigns.length) return [];
+
+  const ids = campaigns.map(c => c.youtube_video_id).filter(Boolean);
+  const poolResponse = await supabase(
+    "youtube_discovery_pool?select=id,title,channel_title,channel_id,published_at,thumbnail,description,views,likes,comments,duration,url,embeddable,live_broadcast_content,topic,format,region,metadata,acquired_at,stats_refreshed_at,language&id=in.(" + ids.join(",") + ")",
+  );
+  if (!poolResponse.ok) return [];
+
+  const pool = (await poolResponse.json()) as DiscoveryRow[];
+  const byId = new Map(pool.map(item => [item.id, item]));
+
+  return campaigns.map(campaign => {
+    const item = byId.get(campaign.youtube_video_id);
+    if (!item) return null;
+    return {
+      ...item,
+      metadata: {
+        ...item.metadata,
+        promoted: true,
+        promotion_campaign_id: campaign.id,
+        promotion_label: "RALLIVIO Campaign",
+        promotion_title: campaign.title || item.title,
+      },
+    };
+  }).filter((item): item is DiscoveryRow & { metadata: Record<string, unknown> } => Boolean(item));
 }
 
 export async function GET(request: Request) {
@@ -73,6 +113,7 @@ export async function GET(request: Request) {
   try {
     const limit = parseLimit(request);
     const cursor = parseCursor(request);
+    const promotedItems = await getPromotedItems();
 
     const feedParams = applyRankingFilters(
       new URLSearchParams({
@@ -108,8 +149,6 @@ export async function GET(request: Request) {
       topicCounts?: Record<string, number>;
     };
 
-    // One database aggregate supplies every headline count. Never derive
-    // global numbers from the current page-sized sample.
     const verifiedSignalCount = Number(overview.verifiedSignals ?? 0);
     const signalCounts = overview.signalCounts ?? {};
     const poolCount = Number(overview.poolCount ?? 0);
@@ -135,6 +174,7 @@ export async function GET(request: Request) {
           regions: Array.isArray(overview.regions) ? overview.regions : [],
           signalCounts: overview.signalCounts ?? signalCounts,
           topicCounts: overview.topicCounts ?? {},
+          promotedItems,
           items: [],
         },
         { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" } },
@@ -159,9 +199,6 @@ export async function GET(request: Request) {
         const item = poolById.get(ranking.video_id);
         if (!item) return null;
 
-        // Truth gate: a momentum signal is valid only after at least one
-        // refresh has produced a second observation. Never surface the
-        // acquisition-time popularity score as momentum.
         const signalFreshEnough = hasValidSignalObservation(
           item.stats_refreshed_at,
           ranking.observed_at,
@@ -204,6 +241,7 @@ export async function GET(request: Request) {
         regions: Array.isArray(overview.regions) ? overview.regions : [],
         signalCounts: overview.signalCounts ?? signalCounts,
         topicCounts: overview.topicCounts ?? {},
+        promotedItems,
         items: enriched,
         nextCursor: rankings.length === limit ? rankings[rankings.length - 1]?.global_rank ?? null : null,
       },
