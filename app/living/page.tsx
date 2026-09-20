@@ -176,10 +176,13 @@ export default function LivingDiscover() {
 
   useEffect(() => {
     const supabase = createClient();
-    const applyUser = (user: any | null) => {
+    const applyUser = (user: { email?: string | null; user_metadata?: Record<string, unknown> } | null) => {
+      const metadata = user?.user_metadata ?? {};
+      const fullName = typeof metadata.full_name === "string" ? metadata.full_name : typeof metadata.name === "string" ? metadata.name : null;
+      const avatar = typeof metadata.avatar_url === "string" ? metadata.avatar_url : typeof metadata.picture === "string" ? metadata.picture : null;
       setUserEmail(user?.email ?? null);
-      setUserName(user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? null);
-      setUserAvatar(user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null);
+      setUserName(fullName);
+      setUserAvatar(avatar);
     };
     void supabase.auth.getUser().then(({ data }) => applyUser(data.user));
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
