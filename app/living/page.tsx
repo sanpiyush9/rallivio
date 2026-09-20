@@ -400,7 +400,7 @@ export default function LivingDiscover() {
     if (c) { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField(`RALLIVIO tuned the field to ${c.name}.`); return; }
     const p = platforms.find(x => l.includes(x.name.toLowerCase()));
     if (p) { activatePlatform(p); return; }
-    if (/^https?:\/\//i.test(s.trim())) { router.push("/promote?url=" + encodeURIComponent(s.trim())); return; }
+    if (s.trim().startsWith("http://") || s.trim().startsWith("https://")) { router.push("/promote?url=" + encodeURIComponent(s.trim())); return; }
     if (l.includes("creator") || l.includes("profile")) { go("/creators"); return; }
     if (l.includes("brand")) { go("/opportunities"); return; }
     if (l.includes("opportun")) { go("/opportunities"); return; }
