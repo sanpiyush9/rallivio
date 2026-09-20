@@ -150,6 +150,8 @@ export default function LivingDiscover() {
   const [selectedPulse, setSelectedPulse] = useState<Item | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [apiUsageLatestAt, setApiUsageLatestAt] = useState<number | null>(null);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [verifiedSignalCount, setVerifiedSignalCount] = useState(0);
   const [signalCounts, setSignalCounts] = useState<Record<string, number>>({});
   const [activeSignal, setActiveSignal] = useState<string | null>(null);
@@ -192,9 +194,10 @@ export default function LivingDiscover() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const loadDiscovery = async (signal: string | null = null, topic: string | null = null) => {
+  const loadDiscovery = async (signal: string | null = null, topic: string | null = null, cursor: number | null = null, append = false) => {
     try {
-      const params = new URLSearchParams({ limit: "60" });
+      const params = new URLSearchParams({ limit: "100" });
+      if (cursor !== null) params.set("cursor", String(cursor));
       if (signal) params.set("signal", signal);
       if (topic && topic !== "Trending") params.set("topic", topic);
       const query = `?${params.toString()}`;
@@ -226,7 +229,8 @@ export default function LivingDiscover() {
             stats_refreshed_at: x.stats_refreshed_at || b.refreshedAt || undefined,
           };
         };
-        setItems(Array.isArray(b.items) ? b.items.map(mapDiscoveryItem) : []);
+        const incoming = Array.isArray(b.items) ? b.items.map(mapDiscoveryItem) : [];
+        setItems(prev => append ? [...prev, ...incoming.filter((x: Item) => !prev.some(p => p.id === x.id))] : incoming);
         setPromotedItems(Array.isArray(b.promotedItems) ? b.promotedItems.map(mapDiscoveryItem) : []);
         setLastUpdatedAt(b.refreshedAt ? Date.parse(b.refreshedAt) : null);
         setApiUsageLatestAt(b.apiUsageLatestAt ? Date.parse(b.apiUsageLatestAt) : null);
@@ -239,9 +243,16 @@ export default function LivingDiscover() {
         setGlobalRegions(Array.isArray(b.regions) ? b.regions : []);
         setTopicCounts(b.topicCounts && typeof b.topicCounts === "object" ? b.topicCounts : {});
          setTopicMomentumWindows(b.topicMomentumWindows && typeof b.topicMomentumWindows === "object" ? b.topicMomentumWindows : {});
+        setNextCursor(Number.isFinite(Number(b.nextCursor)) ? Number(b.nextCursor) : null);
         setNotice("");
     } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
-    finally { setLoading(false); }
+    finally { setLoading(false); setLoadingMore(false); }
+  };
+
+  const loadMoreDiscovery = async () => {
+    if (loadingMore || nextCursor === null) return;
+    setLoadingMore(true);
+    await loadDiscovery(activeSignal, filter === "Trending" ? null : filter, nextCursor, true);
   };
 
   useEffect(() => {
@@ -405,11 +416,7 @@ export default function LivingDiscover() {
     return Array.from({ length: Math.min(8, source.length) }, (_, i) => source[(radarOffset + i) % source.length]);
   }, [categoryPulse, topicMomentumWindows, radarOffset]);
 
-  const topicRows = useMemo(() => {
-    if (!categoryPulse.length) return [];
-    const source = categoryPulse.map(topic => ({ ...topic, windows: topicMomentumWindows[topic.name] || [] })).filter(topic => topic.windows.length >= 2);
-    return Array.from({ length: Math.min(5, source.length) }, (_, i) => source[(topicOffset + i) % source.length]);
-  }, [categoryPulse, topicMomentumWindows, topicOffset]);
+  const topicRows = useMemo(() => categoryPulse.map(topic => ({ ...topic, windows: topicMomentumWindows[topic.name] || [] })), [categoryPulse, topicMomentumWindows]);
 
   const momentumChange = (values: number[]) => {
     if (values.length < 2 || values[0] <= 0) return null;
@@ -442,10 +449,7 @@ export default function LivingDiscover() {
       });
   }, [ranked]);
 
-  const spotlightCreators = useMemo(() => {
-    if (!creatorPool.length) return [];
-    return Array.from({ length: Math.min(8, creatorPool.length) }, (_, i) => creatorPool[(spotlightOffset + i) % creatorPool.length]);
-  }, [creatorPool, spotlightOffset]);
+  const spotlightCreators = creatorPool;
 
   const risingCreators = risingCreatorCount;
 
@@ -710,22 +714,25 @@ export default function LivingDiscover() {
       <div className="radarPanel">
         <div className="radarPanelHead"><div><h3>Discovery Radar</h3><p>{apiUsageLatestAt ? "Continuously scanning verified source observations" : "Awaiting first acquisition"}</p></div><span className="scanState">{apiUsageLatestAt ? <><i/> SCANNING</> : "Awaiting first acquisition"}</span></div>
         <div className={`radarVisual liveRadar ${apiUsageLatestAt ? "" : "radarIdle"}`}>{apiUsageLatestAt ? <><div className="radarSweep"/><div className="radarRings"><i/><i/><i/><i/><b/></div><div className="radarGlow one"/><div className="radarGlow two"/><div className="radarGlow three"/></> : <span className="radarEmpty">No acquisition activity yet.</span>}</div>
-        <div className="radarList">
-          {radarCategories.length ? radarCategories.map((c, i) => {
-            const pct = verifiedSignalCount ? Math.round((c.count / verifiedSignalCount) * 100) : 0;
-            return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b><strong>{c.change == null ? "—" : (c.change >= 0 ? "▲ " : "▼ ") + Math.abs(c.change).toFixed(0) + "%"}</strong></button>;
+        <div className="radarList allTopicsList">
+          {categoryPulse.length ? categoryPulse.map(c => {
+            const pct = verifiedSignalCount ? (c.count / verifiedSignalCount) * 100 : 0;
+            return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}>
+              <span className="radarRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b><span className="topicShare">{pct.toFixed(1)}% of verified global signals</span><strong>{c.change == null ? "—" : (c.change >= 0 ? "▲ " : "▼ ") + Math.abs(c.change).toFixed(0) + "%"}</strong>
+            </button>;
           }) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
       <div className="topicsPanel">
         <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>{categoryPulse.length ? "Live movement across verified observations" : "No measured topic movement yet"}</p></div><span className="scanState">{categoryPulse.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
-        <div className="topicList">
+        <div className="topicList allTopicTrends">
           {topicRows.length ? topicRows.map((c, i) => (
             <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); }}>
               <span className="topicRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b>
               <i className={"spark spark-" + (i + 1)} aria-label={`${c.name} momentum over the last ${c.windows.length} measured windows`}>
                 <svg viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline points={sparkPoints(c.windows)} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke"/></svg>
               </i>
+              <small className="topicShare">{c.count.toLocaleString()} signals · {verifiedSignalCount ? ((c.count / verifiedSignalCount) * 100).toFixed(1) : "0.0"}% global share</small>
               <strong>{(() => { const change = momentumChange(c.windows); return change == null ? "—" : (change >= 0 ? "+" : "") + change.toFixed(0) + "%"; })()}</strong>
 </button>
           )) : <div className="radarEmpty">No data yet.</div>}
@@ -733,10 +740,14 @@ export default function LivingDiscover() {
       </div>
       <div className="spotlightPanel">
         <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>{spotlightCreators.length ? "Creators to watch from verified observations" : "Waiting for verified creator observations"}</p></div><span className="scanState">{spotlightCreators.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
-        <div className="spotlightList">
+        <div className="spotlightList infiniteCreatorList" onScroll={(e) => {
+          const el = e.currentTarget;
+          if (el.scrollTop + el.clientHeight >= el.scrollHeight - 120) void loadMoreDiscovery();
+        }}>
           {spotlightCreators.map(x => (
             <button key={x.channel_title} type="button" onClick={() => setModal(x)}><img src={x.thumbnail} alt="" /><span><b>@{x.channel_title.replace(/\s+/g, "").slice(0, 22)}</b><small>{categoryFor(x)} · {fmt(x.metadata?.subscriber_count || 0)} subscribers</small></span><em>{Number.isFinite(Number(x.metadata?.signal_evidence?.audienceRelativeScore)) ? `AR ${Number(x.metadata?.signal_evidence?.audienceRelativeScore).toFixed(2)}` : "Follow"}</em></button>
           ))}
+          {loadingMore && <p className="creatorLoading">Loading more verified creators…</p>}
           {!spotlightCreators.length && <p className="radarEmpty">Creator spotlight will appear as verified data arrives.</p>}
         </div>
       </div>
@@ -831,7 +842,7 @@ footer{padding:55px 5vw 65px}
 .pulseTabs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:16px}.pulseTabs button{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:6px;min-width:0;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:20px;background:rgba(255,255,255,.045);color:#d8d7e6;text-align:left;cursor:pointer}.pulseTabs button.active{border-color:#4c9fff;background:linear-gradient(90deg,#145dc8aa,#182c54aa);box-shadow:0 0 20px #338cff18}.pulseTabs button.empty{opacity:.65}.pulseTabIcon{font-size:13px}.pulseTabs b{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pulseTabs small{font-size:8px;color:#8c92ad}
 .pulseCards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-top:13px}.pulseCard{min-width:0;border:1px solid rgba(255,255,255,.1);border-radius:15px;overflow:hidden;background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.025));cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s}.pulseCard:hover{transform:translateY(-4px);border-color:#5aaaff66;box-shadow:0 18px 35px rgba(0,0,0,.28)}.pulseThumb{height:112px;position:relative;background:#0a0e1f}.pulseThumb img{width:100%;height:100%;object-fit:cover}.pulseThumb>span{position:absolute;left:7px;top:7px;padding:5px 7px;border-radius:8px;background:rgba(5,15,30,.84);border:1px solid rgba(255,255,255,.18);font-size:7px;font-weight:850;color:#fff}.pulseThumb time{position:absolute;right:7px;bottom:7px;padding:3px 5px;border-radius:5px;background:#050713dd;color:#fff;font-size:7px}.pulseCard h3{font-size:10px;line-height:1.35;margin:9px 9px 5px;color:#f4f2fa;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.pulseCreator{margin:0 9px 3px;color:#a6a8bc;font-size:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pulseCard>small{display:block;margin:0 9px;color:#707691;font-size:7px}.pulseCardMeta{display:flex;gap:8px;align-items:center;padding:9px;color:#8a8fa7;font-size:7px}.pulseCardMeta strong{margin-left:auto;color:#42e5a6;font-size:8px}.pulseEmpty{grid-column:1/-1;padding:35px;text-align:center;color:#7f849f;font-size:10px}
 .radarSection{position:relative;z-index:2;display:grid;grid-template-columns:1.05fr 1fr .92fr;gap:14px;margin:14px 5vw 35px}.radarPanel,.topicsPanel,.spotlightPanel{min-width:0;padding:17px 18px;border:1px solid rgba(85,125,205,.25);border-radius:16px;background:linear-gradient(145deg,#0b1730,#071022);box-shadow:0 18px 50px rgba(0,0,0,.2)}.radarPanelHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.radarPanelHead h3{margin:0;font-size:15px;color:#edf0fb}.radarPanelHead p{margin:4px 0 0;color:#7e849e;font-size:8px}.radarVisual{position:relative;height:130px;margin:10px 0 2px;overflow:hidden}.radarRings{position:absolute;left:22px;top:4px;width:125px;height:125px;border-radius:50%;background:repeating-radial-gradient(circle,#ffffff08 0 1px,transparent 1px 31px)}.radarRings i{position:absolute;width:7px;height:7px;border-radius:50%;background:#4fc9ff;box-shadow:0 0 14px #4fc9ff;left:54px;top:54px}.radarRings i:nth-child(2){left:91px;top:27px;background:#ff5b70;box-shadow:0 0 14px #ff5b70}.radarRings i:nth-child(3){left:23px;top:78px;background:#42baff;box-shadow:0 0 14px #42baff}.radarRings i:nth-child(4){left:72px;top:94px;background:#49e7a8;box-shadow:0 0 14px #49e7a8}.radarRings b{position:absolute;inset:0;border:1px solid #4d9fff25;border-radius:50%;box-shadow:0 0 0 18px #4d9fff09,0 0 0 38px #4d9fff06}.radarGlow{position:absolute;border-radius:50%;filter:blur(12px);opacity:.45}.radarGlow.one{width:35px;height:35px;background:#ff5a5a;left:90px;top:28px}.radarGlow.two{width:25px;height:25px;background:#46c7ff;left:44px;top:73px}.radarGlow.three{width:24px;height:24px;background:#5ce9ae;left:75px;top:89px}
-.radarList{display:grid;gap:4px}.radarList button,.topicList button{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;border:0;border-top:1px solid rgba(255,255,255,.055);background:transparent;padding:7px 0;color:#d8d8e7;text-align:left;cursor:pointer}.radarRank,.topicRank{display:grid;place-items:center;width:20px;height:20px;border:1px solid #ffffff1a;border-radius:6px;color:#a9adbf;font-size:8px}.radarList b,.topicList b{font-size:8px;font-weight:700}.radarList strong,.topicList strong{font-size:8px;color:#ff536e}.radarList button:nth-child(2) strong{color:#35aaff}.radarList button:nth-child(3) strong{color:#38e4a7}.radarList button:nth-child(4) strong{color:#bd67ff}.radarList button:nth-child(5) strong{color:#ff5c65}
+.allTopicsList{max-height:500px!important;overflow:auto!important}.allTopicsList .topicShare{display:block;font-size:7px;color:#6f7894;font-weight:500}.allTopicsList button{grid-template-columns:32px 1fr auto auto!important}.allTopicTrends{max-height:500px!important;overflow:auto!important}.allTopicTrends button{grid-template-columns:40px minmax(80px,1fr) minmax(100px,1.6fr) auto auto!important;align-items:center}.allTopicTrends .topicShare{font-size:7px;color:#707a96;white-space:nowrap}.infiniteCreatorList{max-height:500px!important;overflow-y:auto!important;overscroll-behavior:contain}.creatorLoading{padding:12px;text-align:center;color:#62ddff;font-size:9px} .radarList{display:grid;gap:4px}.radarList button,.topicList button{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;border:0;border-top:1px solid rgba(255,255,255,.055);background:transparent;padding:7px 0;color:#d8d8e7;text-align:left;cursor:pointer}.radarRank,.topicRank{display:grid;place-items:center;width:20px;height:20px;border:1px solid #ffffff1a;border-radius:6px;color:#a9adbf;font-size:8px}.radarList b,.topicList b{font-size:8px;font-weight:700}.radarList strong,.topicList strong{font-size:8px;color:#ff536e}.radarList button:nth-child(2) strong{color:#35aaff}.radarList button:nth-child(3) strong{color:#38e4a7}.radarList button:nth-child(4) strong{color:#bd67ff}.radarList button:nth-child(5) strong{color:#ff5c65}
 .topicList{display:grid;margin-top:12px}.topicList button{grid-template-columns:22px 1fr 105px auto}.topicList b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.topicList strong{color:#43e6a5}.spark{height:18px;display:flex;align-items:center;gap:4px;padding:0 4px}.spark em{display:block;width:15px;border-top:2px solid #bc4dff;transform:skewY(-7deg)}.spark-1 em:nth-child(2){transform:skewY(10deg)}.spark-2 em{border-color:#35c8ad}.spark-3 em{border-color:#e0a135}.spark-4 em{border-color:#a955ff}.spark-5 em{border-color:#8f9a55}.topicList button strong{min-width:38px;text-align:right}
 .spotlightList{display:grid;margin-top:12px}.spotlightList button{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:9px;padding:8px 0;border:0;border-top:1px solid rgba(255,255,255,.055);background:transparent;color:#eee;text-align:left;cursor:pointer}.spotlightList img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,.12)}.spotlightList span{min-width:0}.spotlightList b{display:block;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.spotlightList small{display:block;margin-top:3px;color:#7f849c;font-size:7px}.spotlightList em{font-style:normal;padding:6px 10px;border:1px solid #72a8ff66;border-radius:15px;color:#b9d4ff;font-size:7px}
 @media(max-width:1250px){.pulseStrip{grid-template-columns:1.2fr repeat(4,1fr)}.pulseWorld{display:none}.pulseCards{grid-template-columns:repeat(3,1fr)}.radarSection{grid-template-columns:1fr 1fr}.spotlightPanel{grid-column:1/-1}.spotlightList{grid-template-columns:repeat(3,1fr);gap:12px}.spotlightList button{border:1px solid rgba(255,255,255,.055);padding:9px;border-radius:10px}}
