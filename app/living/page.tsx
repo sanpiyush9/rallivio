@@ -43,18 +43,16 @@ type Platform = { id: string; name: string; kind: string; connected: boolean; x:
 const DiscoverGlobe = dynamic(() => import("../../components/DiscoverGlobe"), { ssr: false });
 
 const platforms: Platform[] = [
-  { id: "youtube", name: "YouTube", kind: "youtube", x: 50.0, y: 13.0, connected: true },
-  { id: "tiktok", name: "TikTok", kind: "tiktok", x: 71.0, y: 13.6, connected: false },
-  { id: "linkedin", name: "LinkedIn", kind: "linkedin", x: 86.4, y: 29.0, connected: false },
-  { id: "reddit", name: "Reddit", kind: "reddit", x: 92.0, y: 50.0, connected: false },
-  { id: "discord", name: "Discord", kind: "discord", x: 86.4, y: 71.0, connected: false },
-  { id: "snapchat", name: "Snapchat", kind: "snapchat", x: 71.0, y: 86.4, connected: false },
-  { id: "pinterest", name: "Pinterest", kind: "pinterest", x: 50.0, y: 92.0, connected: false },
-  { id: "spotify", name: "Spotify", kind: "spotify", x: 29.0, y: 86.4, connected: false },
-  { id: "twitch", name: "Twitch", kind: "twitch", x: 13.6, y: 71.0, connected: false },
-  { id: "facebook", name: "Facebook", kind: "facebook", x: 8.0, y: 50.0, connected: false },
-  { id: "x", name: "X", kind: "x", x: 13.6, y: 29.0, connected: false },
-  { id: "instagram", name: "Instagram", kind: "instagram", x: 29.0, y: 13.6, connected: false },
+  { id: "youtube", name: "YouTube", kind: "youtube", x: 50.0, y: 8.5, connected: true },
+  { id: "tiktok", name: "TikTok", kind: "tiktok", x: 71.5, y: 14.5, connected: false },
+  { id: "linkedin", name: "LinkedIn", kind: "linkedin", x: 86.0, y: 32.0, connected: false },
+  { id: "reddit", name: "Reddit", kind: "reddit", x: 89.0, y: 53.0, connected: false },
+  { id: "discord", name: "Discord", kind: "discord", x: 82.0, y: 72.5, connected: false },
+  { id: "pinterest", name: "Pinterest", kind: "pinterest", x: 50.0, y: 87.0, connected: false },
+  { id: "spotify", name: "Spotify", kind: "spotify", x: 29.0, y: 82.0, connected: false },
+  { id: "twitch", name: "Twitch", kind: "twitch", x: 17.0, y: 68.0, connected: false },
+  { id: "x", name: "X", kind: "x", x: 15.0, y: 31.0, connected: false },
+  { id: "instagram", name: "Instagram", kind: "instagram", x: 29.0, y: 14.0, connected: false },
 ];
 
 const categories: Category[] = [
@@ -138,7 +136,7 @@ export default function LivingDiscover() {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [pulse, setPulse] = useState(0);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [theme, setTheme] = useState("aurora");
+  const [theme, setTheme] = useState("nebula");
   const [showThemes, setShowThemes] = useState(false);
   const [pulseOffset, setPulseOffset] = useState(0);
   const [radarOffset, setRadarOffset] = useState(0);
@@ -526,6 +524,7 @@ export default function LivingDiscover() {
 
     <section className="hero">
       <div className="heroCopy">
+        <div className="pill">LIVE <span>The Creator Economy is Moving Right Now</span></div>
         <div className="heroHeadlineWrap" onMouseEnter={() => setHeroPaused(true)} onMouseLeave={() => setHeroPaused(false)}>
           <h1 className="heroDynamicTitle"><span>See what&apos;s</span><em>moving.</em><span>Shape what&apos;s next.</span></h1>
         </div>
