@@ -162,6 +162,7 @@ export default function LivingDiscover() {
   const [globalRegions, setGlobalRegions] = useState<string[]>([]);
   const [topicCounts, setTopicCounts] = useState<Record<string, number>>({});
   const [topicMomentumWindows, setTopicMomentumWindows] = useState<Record<string, number[]>>({});
+  const [topicTrendMeta, setTopicTrendMeta] = useState<Record<string, { firstWindow: string | null; latestWindow: string | null; windows: number; firstVideos: number; latestVideos: number; minVideos: number; maxVideos: number }>>({});
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const [liveFieldIndex, setLiveFieldIndex] = useState(0);
@@ -243,6 +244,7 @@ export default function LivingDiscover() {
         setGlobalRegions(Array.isArray(b.regions) ? b.regions : []);
         setTopicCounts(b.topicCounts && typeof b.topicCounts === "object" ? b.topicCounts : {});
          setTopicMomentumWindows(b.topicMomentumWindows && typeof b.topicMomentumWindows === "object" ? b.topicMomentumWindows : {});
+        setTopicTrendMeta(b.topicTrendMeta && typeof b.topicTrendMeta === "object" ? b.topicTrendMeta : {});
         setNextCursor(Number.isFinite(Number(b.nextCursor)) ? Number(b.nextCursor) : null);
         setNotice("");
     } catch (e) { setNotice(e instanceof Error ? e.message : "DATA_UNAVAILABLE"); }
@@ -735,7 +737,20 @@ export default function LivingDiscover() {
         </div>
       </div>
       <div className="topicsPanel">
-        <div className="radarPanelHead"><div><h3>What’s Rising or Falling</h3><p>{categoryPulse.length ? "The line shows movement over time · the percentage compares the latest window with the first" : "No measured topic movement yet"}</p></div><span className="scanState">{categoryPulse.length ? <><i/> LIVE TRENDS</> : "No data yet"}</span></div>
+        <div className="radarPanelHead"><div><h3>What’s Rising or Falling</h3><p>{topicRows.length ? "YouTube view velocity, normalized per observed video · 12 hourly windows when data quality allows" : categoryPulse.length ? "Trend is withheld until RALLIVIO has enough consecutive hourly observations to make a fair comparison." : "No measured topic movement yet"}</p></div><span className="scanState">{topicRows.length ? <><i/> LIVE TRENDS</> : categoryPulse.length ? "BUILDING BASELINE" : "No data yet"}</span></div>
+        <div className="trendAudit">
+          <button type="button" className="trendAuditToggle" onClick={() => setShowTrendMethod(v => !v)} aria-expanded={showTrendMethod}>
+            <span>ⓘ How RALLIVIO measures this</span><b>{showTrendMethod ? "Hide" : "Explain"}</b>
+          </button>
+          {showTrendMethod && <div className="trendAuditBody">
+            <div><b>Source</b><span>YouTube public video statistics</span></div>
+            <div><b>Observation</b><span>Repeated view counts are stored with timestamps; YouTube exposes public video statistics such as views, likes and comments. citeturn0search0</span></div>
+            <div><b>Hourly metric</b><span>For each video, RALLIVIO calculates views gained per hour between consecutive hourly observations.</span></div>
+            <div><b>Topic metric</b><span>RALLIVIO uses the median hourly view velocity across observed videos in that topic, so a topic with more videos does not automatically look bigger just because it has more samples.</span></div>
+            <div><b>Quality gate</b><span>A trend needs at least 6 consecutive hourly windows with at least 20 observed videos per window. If that evidence is not available, RALLIVIO does not publish a trend percentage.</span></div>
+            <div><b>Percentage</b><span>Latest eligible window compared with the first eligible window in the current continuous run. This is a RALLIVIO measurement, not a claim about all YouTube or the whole internet.</span></div>
+          </div>}
+        </div>
         <div className="topicList allTopicTrends">
           {topicRows.length ? topicRows.map((c, i) => (
             <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); }}>
@@ -749,9 +764,10 @@ export default function LivingDiscover() {
                 <span className={"sparkDirection " + (momentumChange(c.windows) != null && momentumChange(c.windows)! >= 0 ? "up" : "down")} aria-hidden="true">{momentumChange(c.windows) == null ? "•" : momentumChange(c.windows)! >= 0 ? "↗" : "↘"}</span>
               </i>
               <small className="topicShare"><strong>{c.count.toLocaleString()} signals</strong> · {globalTopicTotal ? ((c.count / globalTopicTotal) * 100).toFixed(1) : "0.0"}% of all verified signals</small>
-              <strong title="Latest tracked window compared with the first tracked window">{(() => { const change = momentumChange(c.windows); return change == null ? "—" : (change >= 0 ? "▲ " : "▼ ") + Math.abs(change).toFixed(0) + "% vs first tracked window"; })()}</strong>
+              <strong title="Latest eligible hourly window compared with the first eligible hourly window">{(() => { const change = momentumChange(c.windows); return change == null ? "—" : (change >= 0 ? "▲ " : "▼ ") + Math.abs(change).toFixed(0) + "% vs baseline"; })()}</strong>
+              {topicTrendMeta[c.name] && <small className="trendEvidence">{topicTrendMeta[c.name].windows} hourly windows · {topicTrendMeta[c.name].minVideos.toLocaleString()}–{topicTrendMeta[c.name].maxVideos.toLocaleString()} videos/window</small>}
 </button>
-          )) : <div className="radarEmpty">No data yet.</div>}
+          )) : <div className="radarEmpty">{categoryPulse.length ? "Reliable trend is still building. RALLIVIO needs 6 consecutive hourly windows before publishing a percentage." : "No data yet."}</div>}
         </div>
       </div>
       <div className="spotlightPanel">
@@ -1081,7 +1097,7 @@ footer{margin-top:8px!important}
 
 .themeButtonGlyph svg,.notificationButton svg{width:19px!important;height:19px!important;display:block!important;fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;stroke-linecap:round!important;stroke-linejoin:round!important}
 .themeButtonGlyph svg circle{fill:none!important}
-.radarPlainNote{font-size:8px!important;color:#6f879f!important;font-style:normal!important;text-align:right!important;white-space:nowrap!important}.radarList button .topicShare strong,.topicList button .topicShare strong{color:#dff8ff!important;font-weight:800!important}.topicList button>strong{white-space:nowrap!important}.radarPanelHead p,.topicsPanel .radarPanelHead p,.spotlightPanel .radarPanelHead p{max-width:92%!important;line-height:1.45!important}.radarRank{width:40px!important;height:40px!important;border-radius:12px!important;display:grid!important;place-items:center!important;background:linear-gradient(145deg,rgba(38,128,220,.22),rgba(20,52,88,.7))!important;border:1px solid rgba(85,196,255,.16)!important;color:#68dfff!important;font-size:15px!important}
+.trendAudit{margin:0 0 8px;padding:0 2px}.trendAuditToggle{width:100%;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(90,200,255,.16);background:rgba(35,90,145,.08);color:#cfefff;border-radius:10px;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}.trendAuditToggle b{font-size:9px;color:#69ddff}.trendAuditBody{margin-top:6px;border:1px solid rgba(90,200,255,.12);border-radius:10px;padding:8px 10px;background:rgba(5,18,35,.55);display:grid;gap:6px}.trendAuditBody div{display:grid;grid-template-columns:78px 1fr;gap:8px;align-items:start}.trendAuditBody b{font-size:8px;color:#69ddff;text-transform:uppercase;letter-spacing:.5px}.trendAuditBody span{font-size:9px;line-height:1.35;color:#9fb2c7}.trendEvidence{grid-column:2 / 5;font-size:8px;color:#6f879f;white-space:nowrap;align-self:end}.radarPlainNote{font-size:8px!important;color:#6f879f!important;font-style:normal!important;text-align:right!important;white-space:nowrap!important}.radarList button .topicShare strong,.topicList button .topicShare strong{color:#dff8ff!important;font-weight:800!important}.topicList button>strong{white-space:nowrap!important}.radarPanelHead p,.topicsPanel .radarPanelHead p,.spotlightPanel .radarPanelHead p{max-width:92%!important;line-height:1.45!important}.radarRank{width:40px!important;height:40px!important;border-radius:12px!important;display:grid!important;place-items:center!important;background:linear-gradient(145deg,rgba(38,128,220,.22),rgba(20,52,88,.7))!important;border:1px solid rgba(85,196,255,.16)!important;color:#68dfff!important;font-size:15px!important}
 .radarList button{grid-template-columns:40px 1fr auto!important;min-height:58px!important}
 .topicRank{width:48px!important;height:48px!important;border-radius:13px!important;display:grid!important;place-items:center!important;background:rgba(40,124,210,.14)!important;border:1px solid rgba(91,204,255,.14)!important;color:#6fe3ff!important;font-size:17px!important}
 .topicList button{grid-template-columns:48px minmax(80px,1fr) 90px auto!important;min-height:66px!important}
