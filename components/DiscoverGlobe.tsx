@@ -5,9 +5,10 @@
 
 import { useEffect, useRef } from "react";
 
-const EARTH_ALBEDO = "/textures/earth-albedo.svg";
-const EARTH_NIGHT = "/textures/earth-night.svg";
-const EARTH_CLOUDS = "/textures/earth-clouds.svg";
+// High-resolution photographic Earth textures from the official Three.js examples.
+const EARTH_ALBEDO = "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg";
+const EARTH_NIGHT = "https://threejs.org/examples/textures/planets/earth_lights_2048.png";
+const EARTH_CLOUDS = "https://threejs.org/examples/textures/planets/earth_clouds_1024.png";
 
 export default function DiscoverGlobe() {
   const hostRef = useRef<HTMLDivElement>(null);
