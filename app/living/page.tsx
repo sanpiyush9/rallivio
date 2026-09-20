@@ -400,6 +400,7 @@ export default function LivingDiscover() {
     if (c) { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField(`RALLIVIO tuned the field to ${c.name}.`); return; }
     const p = platforms.find(x => l.includes(x.name.toLowerCase()));
     if (p) { activatePlatform(p); return; }
+    if (/^https?:\\/\\//i.test(s.trim())) { router.push("/promote?url=" + encodeURIComponent(s.trim())); return; }
     if (l.includes("creator") || l.includes("profile")) { go("/creators"); return; }
     if (l.includes("brand")) { go("/opportunities"); return; }
     if (l.includes("opportun")) { go("/opportunities"); return; }
@@ -413,7 +414,7 @@ export default function LivingDiscover() {
     <header className="topbar">
       <button className="brand" type="button" onClick={() => go("/")}>RALL<span>IVIO</span><small>CREATORS. BRANDS. A BRIGHTER TOMORROW.</small></button>
       <nav>{nav.map(([n, p]) => <button key={p} className={p === "/" ? "active" : ""} type="button" onClick={() => go(p)}>{n}</button>)}</nav>
-      <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span aria-hidden="true">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search anything: creators, brands, videos, trends…" aria-label="Search creators, brands, videos, and trends"/><button type="submit" aria-label="Open search">↗</button></form>
+      <form className="search" onSubmit={e => { e.preventDefault(); command(q); }}><span aria-hidden="true">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search or paste a content link to promote…" aria-label="Search creators, brands, videos, trends, or promotion links"/><button type="submit" aria-label="Open search">↗</button></form>
       <div className="topActions">
         <button className="round signalButton" type="button" onClick={() => setNotice("Signals are sourced from the verified discovery pool.")}><i/>LIVE</button>
       <div className="themePickerWrap">
@@ -458,7 +459,7 @@ export default function LivingDiscover() {
           <h1 className="heroDynamicTitle"><span>See what&apos;s moving.</span><br/><strong key={heroSignal?.id ?? "waiting"}>{heroHeadline}</strong></h1>
         </div>
         <p>RALLIVIO turns the creator internet into a living field — people, culture, signals and opportunities moving together in one place.</p>
-        <form className="heroSearch" onSubmit={e => { e.preventDefault(); command(q); }}><span className="searchMark">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="What do you want to discover?" aria-label="Universal discovery search"/><button type="submit" aria-label="Search">→</button></form>
+        <form className="heroSearch" onSubmit={e => { e.preventDefault(); command(q); }}><span className="searchMark">⌕</span><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search or paste a link to start RALLIVIO promotion…" aria-label="Search or paste a content link"/><button type="submit" aria-label="Search">→</button></form>
         <div className="categoryRail" aria-label="Discovery categories">
           {visibleCategories.map(c => <button key={c.name} className={filter === c.name ? "active" : ""} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField(`Field tuned to ${c.name}.`); }}>{c.name}</button>)}
           <button className="more" type="button" onClick={() => setShowAllCategories(v => !v)}>{showAllCategories ? "Less ↑" : `+${categories.length - 10} more`}</button>
@@ -616,7 +617,10 @@ export default function LivingDiscover() {
 
     <footer><b>RALL<span>IVIO</span></b><small>Discover People. Power What’s Next.</small><p>Source observations drive discovery. Motion responds to state; factual activity is never fabricated.</p></footer>
     {notice && <div className="toast" role="status"><b>RALLIVIO</b><span>{notice}</span></div>}
-    {modal && <div className="backdrop" onClick={() => setModal(null)}><div className="modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}><button className="close" type="button" onClick={() => setModal(null)}>×</button><div className="player">{modal.embeddable ? <iframe src={`https://www.youtube.com/embed/${modal.id}?autoplay=1&rel=0`} title={modal.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen/> : <img src={modal.thumbnail} alt=""/>}</div><span className="eyebrow">{modal.metadata?.signal || "Observed"} · VERIFIED OBSERVATION</span><h2>{modal.title}</h2><p>{modal.channel_title} · {fmt(modal.views)} views · {age(modal.published_at)}</p><button className="primary" type="button" onClick={() => window.open(modal.url, "_blank", "noopener,noreferrer")}>Watch on source ↗</button></div></div>}
+    {modal && <div className="backdrop" onClick={() => setModal(null)}><div className="modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}><button className="close" type="button" onClick={() => setModal(null)}>×</button><div className="player">{modal.embeddable ? <iframe src={`https://www.youtube.com/embed/${modal.id}?autoplay=1&rel=0`} title={modal.title} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen/> : <img src={modal.thumbnail} alt=""/>}</div><span className="eyebrow">{modal.metadata?.signal || "Observed"} · VERIFIED OBSERVATION</span><h2>{modal.title}</h2><p>{modal.channel_title} · {fmt(modal.views)} views · {age(modal.published_at)}</p><div className="detailActions">
+<button className="primary" type="button" onClick={() => window.open(modal.url, "_blank", "noopener,noreferrer")}>Watch on source ↗</button>
+<button className="promoteButton" type="button" onClick={() => router.push("/promote?url=" + encodeURIComponent(modal.url))}>Start RALLIVIO promotion →</button>
+</div></div></div>}
   </main>;
 }
 
@@ -697,6 +701,7 @@ footer{padding:55px 5vw 65px}
 .pulseStripLabel{display:flex;flex-direction:column;justify-content:center}.pulseStripLabel small{font-size:8px;letter-spacing:1.2px;color:#8b8fa8}.pulseStripLabel strong{font-size:11px;margin-top:5px;color:#67e5ad}.pulseStripLabel i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#67e5ad;box-shadow:0 0 10px #67e5ad;margin-right:6px}
 .pulseMetric{display:grid;grid-template-columns:20px 1fr;grid-template-rows:1fr 1fr;align-items:center}.pulseMetric>span{grid-row:1/3;color:#ff557b;font-size:17px;text-align:center}.pulseMetric:nth-child(3)>span{color:#ff4b61}.pulseMetric:nth-child(4)>span{color:#f5a63b}.pulseMetric:nth-child(5)>span{color:#bc62ff}.pulseMetric b{font-size:16px;line-height:1;color:#e9e7f4}.pulseMetric small{font-size:7px;color:#777c98;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pulseWorld{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-right:18px}.pulseWorld b{display:block;font-size:8px;color:#c8c7d8}.pulseWorld small{display:block;font-size:7px;line-height:1.35;color:#73778f;margin-top:4px}.worldDots{position:relative;width:150px;height:48px;opacity:.7;background:radial-gradient(ellipse at 28% 50%,#2e7ab055 0 12%,transparent 13%),radial-gradient(ellipse at 53% 42%,#2e7ab055 0 13%,transparent 14%),radial-gradient(ellipse at 75% 58%,#2e7ab055 0 10%,transparent 11%),radial-gradient(ellipse at 45% 70%,#2e7ab055 0 9%,transparent 10%)}.worldDots i{position:absolute;width:3px;height:3px;border-radius:50%;background:#3a96ff;box-shadow:0 0 8px #3a96ff}.worldDots i:nth-child(1){left:20%;top:40%}.worldDots i:nth-child(2){left:27%;top:30%}.worldDots i:nth-child(3){left:35%;top:58%}.worldDots i:nth-child(4){left:45%;top:22%}.worldDots i:nth-child(5){left:52%;top:52%}.worldDots i:nth-child(6){left:62%;top:34%}.worldDots i:nth-child(7){left:69%;top:63%}.worldDots i:nth-child(8){left:76%;top:28%}.worldDots i:nth-child(9){left:83%;top:48%}.worldDots i:nth-child(10){left:42%;top:75%}.worldDots i:nth-child(11){left:58%;top:78%}.worldDots i:nth-child(12){left:12%;top:55%}
+.detailActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.promoteButton{border:1px solid #8e65ff88;border-radius:10px;background:linear-gradient(135deg,#6f42d8,#315da8);color:#fff;padding:9px 12px;font-size:9px;font-weight:850;cursor:pointer}.promoteButton:hover{filter:brightness(1.12);transform:translateY(-1px)}
 .pulseSection{position:relative;z-index:2;margin:0 5vw;padding:20px 22px 18px;border:1px solid rgba(85,125,205,.38);border-top:0;border-radius:0 0 20px 20px;background:linear-gradient(145deg,#0c1834,#071022);box-shadow:0 25px 70px rgba(0,0,0,.25)}
 .pulseSectionHead{display:flex;align-items:center;justify-content:space-between;gap:20px}.pulseTitle{display:flex;align-items:center;gap:12px}.pulseWave{font-size:38px;line-height:1;color:#54cfff;text-shadow:0 0 18px #3b9fff}.pulseTitle h2{margin:0;font-size:24px;color:#42a8ff;letter-spacing:.3px}.pulseTitle p{margin:3px 0 0;font-size:9px;color:#858ba6}.pulseSectionHead>button,.radarPanelHead>button{border:0;background:transparent;color:#55aaff;font-size:9px;font-weight:800;cursor:pointer}
 .pulseTabs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:16px}.pulseTabs button{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:6px;min-width:0;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:20px;background:rgba(255,255,255,.045);color:#d8d7e6;text-align:left;cursor:pointer}.pulseTabs button.active{border-color:#4c9fff;background:linear-gradient(90deg,#145dc8aa,#182c54aa);box-shadow:0 0 20px #338cff18}.pulseTabs button.empty{opacity:.65}.pulseTabIcon{font-size:13px}.pulseTabs b{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pulseTabs small{font-size:8px;color:#8c92ad}
@@ -825,5 +830,4 @@ footer{padding:55px 5vw 65px}
 @media(max-width:950px){.topbar{height:auto!important;min-height:72px!important;flex-wrap:wrap!important;padding:10px 16px!important}.topbar nav{order:3;width:100%;overflow:auto;gap:20px!important}.topbar .search{flex:1 1 220px!important;width:auto!important;margin-right:0!important}.topActions{margin-left:auto!important}}
 
 `;
-
 
