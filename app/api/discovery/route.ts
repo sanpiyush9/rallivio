@@ -102,7 +102,7 @@ async function getPromotedItems() {
         promotion_title: campaign.title || item.title,
       },
     };
-  }).filter((item): item is DiscoveryRow & { metadata: Record<string, unknown> } => Boolean(item));
+  }).filter(Boolean) as Array<DiscoveryRow & { metadata: Record<string, unknown> }>;
 }
 
 export async function GET(request: Request) {
