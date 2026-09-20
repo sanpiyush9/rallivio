@@ -33,9 +33,8 @@ type DiscoveryPoolItem = {
   live_broadcast_content?: string | null;
   topic?: string;
   region?: string;
-  metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number };
-  stats_refreshed_at?: string | null;
   metadata?: { subscriber_count?: number | null; signal?: string; signals?: string[]; momentum_score?: number; promoted?: boolean; promotion_campaign_id?: string; promotion_label?: string };
+  stats_refreshed_at?: string | null;
 };
 
 type Category = { name: string; icon: string; keywords: string[] };
