@@ -47,6 +47,10 @@ export default function DiscoverGlobe() {
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.setClearColor(0x000000, 0);
         renderer.domElement.className = "discoverGlobeCanvas";
+        // Keep the photographic Earth visibly bright in the dashboard: the source texture
+        // is naturally dark in several regions, so lift the rendered surface without
+        // changing the surrounding orbital UI.
+        renderer.domElement.style.filter = "brightness(1.42) saturate(1.16) contrast(1.04)";
         renderer.domElement.setAttribute("aria-hidden", "true");
         host.appendChild(renderer.domElement);
 
@@ -115,7 +119,7 @@ export default function DiscoverGlobe() {
               vec3 viewDir = normalize(cameraPosition - vWorldPosition);
               float fresnel = pow(1.0 - max(dot(viewDir, normalize(vWorldNormal)), 0.0), 3.6);
               float innerFade = smoothstep(0.0, 0.82, fresnel);
-              gl_FragColor = vec4(glowColor, innerFade * 0.72);
+              gl_FragColor = vec4(glowColor, innerFade * 0.82);
             }
           `,
           side: THREE.BackSide,
@@ -135,7 +139,7 @@ export default function DiscoverGlobe() {
           const cloudMaterial = new THREE.MeshPhongMaterial({
             map: clouds,
             transparent: true,
-            opacity: 0.22,
+            opacity: 0.30,
             depthWrite: false,
           });
           const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
@@ -252,7 +256,7 @@ export default function DiscoverGlobe() {
   return (
     <div ref={hostRef} className="globeStage" aria-label="Animated 3D Earth">
       <div className="globeFallback" aria-hidden="true">
-        <img src={EARTH_ALBEDO} alt="" />
+        <img src={EARTH_ALBEDO} alt="" style={{ filter: "brightness(1.42) saturate(1.16) contrast(1.04)" }} />
       </div>
     </div>
   );
