@@ -400,15 +400,20 @@ export default function LivingDiscover() {
   [signalCounts, activeSignal, ranked]);
   const globalTopicTotal = useMemo(() => Object.values(topicCounts).reduce((sum, value) => sum + Number(value || 0), 0), [topicCounts]);
 
-  const categoryPulse = useMemo(() => categories.slice(1).map(c => {
-    const matches = ranked.filter(x => categoryFor(x) === c.name);
-    const momentum = matches.length ? Math.round(matches.reduce((sum, x) => sum + (x.metadata?.momentum_score || 0), 0) / matches.length) : 0;
-    const windows = topicMomentumWindows[c.name] || [];
-    const change = windows.length >= 2 && windows[0] > 0
-      ? ((windows[windows.length - 1] - windows[0]) / windows[0]) * 100
-      : null;
-    return { ...c, count: Number(topicCounts[c.name] || 0), momentum, change };
-  }).filter(c => c.count > 0).sort((a, b) => b.count - a.count || b.momentum - a.momentum), [ranked, topicCounts, topicMomentumWindows]);
+  const categoryPulse = useMemo(() => {
+    const known = new Map(categories.slice(1).map(c => [c.name, c]));
+    const topicNames = new Set(Object.keys(topicCounts));
+    return Array.from(topicNames).map(name => {
+      const base = known.get(name) || { name, icon: "•", keywords: [] };
+      const matches = ranked.filter(x => categoryFor(x) === name);
+      const momentum = matches.length ? Math.round(matches.reduce((sum, x) => sum + (x.metadata?.momentum_score || 0), 0) / matches.length) : 0;
+      const windows = topicMomentumWindows[name] || [];
+      const change = windows.length >= 2 && windows[0] > 0
+        ? ((windows[windows.length - 1] - windows[0]) / windows[0]) * 100
+        : null;
+      return { ...base, count: Number(topicCounts[name] || 0), momentum, change };
+    }).filter(c => c.count > 0).sort((a, b) => b.count - a.count || b.momentum - a.momentum);
+  }, [ranked, topicCounts, topicMomentumWindows]);
 
   const radarCategories = useMemo(() => {
     if (!categoryPulse.length) return [];
@@ -724,13 +729,13 @@ export default function LivingDiscover() {
           {categoryPulse.length ? categoryPulse.map(c => {
             const pct = globalTopicTotal ? (c.count / globalTopicTotal) * 100 : 0;
             return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}>
-              <span className="radarRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b><span className="topicShare">{pct.toFixed(1)}% of verified global signals</span><strong>{c.change == null ? "—" : (c.change >= 0 ? "▲ " : "▼ ") + Math.abs(c.change).toFixed(0) + "%"}</strong>
+              <span className="radarRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b><span className="topicShare">{pct.toFixed(1)}% of RALLIVIO verified signals</span><strong>{c.change == null ? "—" : (c.change >= 0 ? "▲ " : "▼ ") + Math.abs(c.change).toFixed(0) + "%"}</strong>
             </button>;
           }) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
       <div className="topicsPanel">
-        <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>{categoryPulse.length ? "Worldwide verified topic movement · refreshed continuously" : "No measured topic movement yet"}</p></div><span className="scanState">{categoryPulse.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
+        <div className="radarPanelHead"><div><h3>Trending Topics</h3><p>{categoryPulse.length ? "Verified topic movement · refreshed continuously" : "No measured topic movement yet"}</p></div><span className="scanState">{categoryPulse.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
         <div className="topicList allTopicTrends">
           {topicRows.length ? topicRows.map((c, i) => (
             <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); }}>
@@ -745,7 +750,7 @@ export default function LivingDiscover() {
         </div>
       </div>
       <div className="spotlightPanel">
-        <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>{spotlightCreators.length ? "Worldwide creator momentum · keep scrolling for more" : "Waiting for verified creator observations"}</p></div><span className="scanState">{spotlightCreators.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
+        <div className="radarPanelHead"><div><h3>Creator Spotlight</h3><p>{spotlightCreators.length ? "Verified creator momentum · keep scrolling for more" : "Waiting for verified creator observations"}</p></div><span className="scanState">{spotlightCreators.length ? <><i/> ROTATING</> : "No data yet"}</span></div>
         <div className="spotlightList infiniteCreatorList" onScroll={(e) => {
           const el = e.currentTarget;
           if (el.scrollTop + el.clientHeight >= el.scrollHeight - 120) void loadMoreDiscovery();
@@ -851,8 +856,8 @@ footer{padding:55px 5vw 65px}
 .allTopicsList{max-height:500px!important;overflow:auto!important}.allTopicsList .topicShare{display:block;font-size:7px;color:#6f7894;font-weight:500}.allTopicsList button{grid-template-columns:32px 1fr auto auto!important}.allTopicTrends{max-height:500px!important;overflow:auto!important}.allTopicTrends button{grid-template-columns:40px minmax(80px,1fr) minmax(100px,1.6fr) auto auto!important;align-items:center}.allTopicTrends .topicShare{font-size:7px;color:#707a96;white-space:nowrap}.infiniteCreatorList{max-height:500px!important;overflow-y:auto!important;overscroll-behavior:contain}.creatorLoading{padding:12px;text-align:center;color:#62ddff;font-size:9px} .radarList{display:grid;gap:4px}.radarList button,.topicList button{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;border:0;border-top:1px solid rgba(255,255,255,.055);background:transparent;padding:7px 0;color:#d8d8e7;text-align:left;cursor:pointer}.radarRank,.topicRank{display:grid;place-items:center;width:20px;height:20px;border:1px solid #ffffff1a;border-radius:6px;color:#a9adbf;font-size:8px}.radarList b,.topicList b{font-size:8px;font-weight:700}.radarList strong,.topicList strong{font-size:8px;color:#ff536e}.radarList button:nth-child(2) strong{color:#35aaff}.radarList button:nth-child(3) strong{color:#38e4a7}.radarList button:nth-child(4) strong{color:#bd67ff}.radarList button:nth-child(5) strong{color:#ff5c65}
 .topicList{display:grid;margin-top:12px}.topicList button{grid-template-columns:22px 1fr 105px auto}.topicList b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.topicList strong{color:#43e6a5}.spark{height:18px;display:flex;align-items:center;gap:4px;padding:0 4px}.spark em{display:block;width:15px;border-top:2px solid #bc4dff;transform:skewY(-7deg)}.spark-1 em:nth-child(2){transform:skewY(10deg)}.spark-2 em{border-color:#35c8ad}.spark-3 em{border-color:#e0a135}.spark-4 em{border-color:#a955ff}.spark-5 em{border-color:#8f9a55}.topicList button strong{min-width:38px;text-align:right}
 .spotlightList{display:grid;margin-top:12px}.spotlightList button{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:9px;padding:8px 0;border:0;border-top:1px solid rgba(255,255,255,.055);background:transparent;color:#eee;text-align:left;cursor:pointer}.spotlightList img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,.12)}.spotlightList span{min-width:0}.spotlightList b{display:block;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.spotlightList small{display:block;margin-top:3px;color:#7f849c;font-size:7px}.spotlightList em{font-style:normal;padding:6px 10px;border:1px solid #72a8ff66;border-radius:15px;color:#b9d4ff;font-size:7px}
-@media(max-width:1250px){.pulseStrip{grid-template-columns:1.2fr repeat(4,1fr)}.pulseWorld{display:none}.pulseCards{grid-template-columns:repeat(3,1fr)}.radarSection{grid-template-columns:1fr 1fr}.spotlightPanel{grid-column:1/-1}.spotlightList{grid-template-columns:repeat(3,1fr);gap:12px}.spotlightList button{border:1px solid rgba(255,255,255,.055);padding:9px;border-radius:10px}}
-@media(max-width:800px){.pulseStrip{grid-template-columns:repeat(2,1fr);padding:10px 16px}.pulseStripLabel{grid-column:1/-1}.pulseSection,.radarSection{margin-left:16px;margin-right:16px}.pulseTabs{grid-template-columns:repeat(3,1fr)}.pulseCards{grid-template-columns:repeat(2,1fr)}.radarSection{grid-template-columns:1fr}.spotlightPanel{grid-column:auto}.spotlightList{grid-template-columns:1fr}.pulseSectionHead{align-items:flex-start}.pulseSectionHead>button{display:none}}
+@media(max-width:1250px){.radarPanel,.topicsPanel,.spotlightPanel{height:560px!important;min-height:560px!important}.radarVisual{flex-basis:145px!important}.pulseStrip{grid-template-columns:1.2fr repeat(4,1fr)}.pulseWorld{display:none}.pulseCards{grid-template-columns:repeat(3,1fr)}.radarSection{grid-template-columns:1fr 1fr}.spotlightPanel{grid-column:1/-1}.spotlightList{grid-template-columns:repeat(3,1fr);gap:12px}.spotlightList button{border:1px solid rgba(255,255,255,.055);padding:9px;border-radius:10px}}
+@media(max-width:800px){.radarPanel,.topicsPanel,.spotlightPanel{height:auto!important;min-height:390px!important}.allTopicsList,.allTopicTrends,.infiniteCreatorList{max-height:310px!important;flex:none!important}.pulseStrip{grid-template-columns:repeat(2,1fr);padding:10px 16px}.pulseStripLabel{grid-column:1/-1}.pulseSection,.radarSection{margin-left:16px;margin-right:16px}.pulseTabs{grid-template-columns:repeat(3,1fr)}.pulseCards{grid-template-columns:repeat(2,1fr)}.radarSection{grid-template-columns:1fr}.spotlightPanel{grid-column:auto}.spotlightList{grid-template-columns:1fr}.pulseSectionHead{align-items:flex-start}.pulseSectionHead>button{display:none}}
 @media(max-width:520px){.pulseTabs{grid-template-columns:repeat(2,1fr)}.pulseCards{grid-template-columns:1fr}.pulseSection{padding:16px 12px}.pulseTitle h2{font-size:20px}.pulseMetric b{font-size:14px}}
 
 
@@ -926,7 +931,7 @@ footer{padding:55px 5vw 65px}
 .spark em{width:7px!important;min-height:4px!important;border:0!important;border-radius:2px 2px 0 0!important;background:linear-gradient(180deg,#c55cff,#5d9dff)!important;transform:none!important;animation:sparkDance 1.7s ease-in-out infinite alternate!important}
 .spark em:nth-child(2){animation-delay:.12s!important}.spark em:nth-child(3){animation-delay:.24s!important}.spark em:nth-child(4){animation-delay:.36s!important}.spark em:nth-child(5){animation-delay:.48s!important}.spark em:nth-child(6){animation-delay:.6s!important}.spark em:nth-child(7){animation-delay:.72s!important}
 @keyframes sparkDance{to{transform:scaleY(.55);opacity:.65}}
-.spotlightList{max-height:310px;overflow:auto;scrollbar-width:thin;padding-right:3px}
+.spotlightList{min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:thin;padding-right:3px}
 .spotlightList button{min-height:54px!important}
 .spotlightList button:hover{background:#ffffff05;border-radius:10px}
 @media(max-width:800px){.pulseSelected{grid-template-columns:1fr}.pulseSelectedInfo h3{font-size:15px}.pulseSelectedPlayer,.pulseSelectedPlayer iframe,.pulseSelectedPlayer img{min-height:220px}.pulseHeadActions>button.viewSignalsButton{padding:8px 10px}.worldMap{width:145px!important}.radarVisual{height:145px!important}}
@@ -1007,7 +1012,7 @@ footer{padding:55px 5vw 65px}
 .pulseCards{scroll-snap-type:x proximity!important}
 .pulseCard{scroll-snap-align:start!important}
 .radarSection{align-items:stretch!important}
-.radarPanel,.topicsPanel,.spotlightPanel{min-height:390px!important}
+.radarPanel,.topicsPanel,.spotlightPanel{height:634px!important;min-height:634px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}.radarPanelHead{flex:0 0 auto!important}.radarVisual{flex:0 0 150px!important}.allTopicsList,.allTopicTrends,.infiniteCreatorList{height:auto!important;max-height:none!important;min-height:0!important;flex:1 1 auto!important;overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:thin!important;scrollbar-color:rgba(66,217,255,.35) transparent!important}.allTopicsList::-webkit-scrollbar,.allTopicTrends::-webkit-scrollbar,.infiniteCreatorList::-webkit-scrollbar{width:5px!important}.allTopicsList::-webkit-scrollbar-thumb,.allTopicTrends::-webkit-scrollbar-thumb,.infiniteCreatorList::-webkit-scrollbar-thumb{background:rgba(66,217,255,.35)!important;border-radius:6px!important}.allTopicsList::-webkit-scrollbar-track,.allTopicTrends::-webkit-scrollbar-track,.infiniteCreatorList::-webkit-scrollbar-track{background:transparent!important}.allTopicsList button,.allTopicTrends button,.infiniteCreatorList button{flex:0 0 auto!important}
 .radarList,.topicList,.spotlightList{max-height:310px!important;overflow-y:auto!important}
 .radarList::-webkit-scrollbar,.topicList::-webkit-scrollbar,.spotlightList::-webkit-scrollbar{width:4px}
 .radarList::-webkit-scrollbar-thumb,.topicList::-webkit-scrollbar-thumb,.spotlightList::-webkit-scrollbar-thumb{background:rgba(66,217,255,.25);border-radius:4px}
