@@ -61,24 +61,27 @@ export default function DiscoverGlobe() {
         const geometry = new THREE.SphereGeometry(1.08, 64, 64);
         const loader = new THREE.TextureLoader();
 
-        const [albedo, night, clouds] = await Promise.all([
-          loader.loadAsync(EARTH_ALBEDO),
-          loader.loadAsync(EARTH_NIGHT),
-          loader.loadAsync(EARTH_CLOUDS).catch(() => null),
-        ]);
+        // Load the photographic daytime Earth first so the real globe appears immediately.
+        // Night lights and clouds enhance it progressively without blocking first paint.
+        const albedo = await loader.loadAsync(EARTH_ALBEDO);
         if (disposed) {
           geometry.dispose();
           albedo.dispose();
-          night.dispose();
-          clouds?.dispose();
           renderer.dispose();
           return;
         }
 
         albedo.colorSpace = THREE.SRGBColorSpace;
-        night.colorSpace = THREE.SRGBColorSpace;
         albedo.anisotropy = 2;
-        night.anisotropy = 2;
+
+        const night = new THREE.DataTexture(
+          new Uint8Array([0, 0, 0, 255]),
+          1,
+          1,
+          THREE.RGBAFormat,
+        );
+        night.needsUpdate = true;
+        night.colorSpace = THREE.SRGBColorSpace;
 
         const earthMaterial = new THREE.ShaderMaterial({
           uniforms: {
@@ -153,7 +156,11 @@ export default function DiscoverGlobe() {
         });
         group.add(new THREE.Mesh(atmosphereGeometry, atmosphereMaterial));
 
-        if (clouds) {
+        const addClouds = (clouds: import("three").Texture) => {
+          if (disposed) {
+            clouds.dispose();
+            return;
+          }
           clouds.colorSpace = THREE.SRGBColorSpace;
           const cloudGeometry = new THREE.SphereGeometry(1.095, 48, 48);
           const cloudMaterial = new THREE.MeshPhongMaterial({
@@ -165,7 +172,17 @@ export default function DiscoverGlobe() {
           const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
           group.add(cloudMesh);
           cloudMesh.userData.isCloudLayer = true;
-        }
+        };
+
+        loader.load(EARTH_NIGHT, (texture) => {
+          if (disposed) { texture.dispose(); return; }
+          texture.colorSpace = THREE.SRGBColorSpace;
+          texture.anisotropy = 2;
+          earthMaterial.uniforms.nightMap.value = texture;
+          night.dispose();
+        });
+
+        loader.load(EARTH_CLOUDS, addClouds);
 
         const keyLight = new THREE.DirectionalLight(0xffffff, 3.8);
         keyLight.position.set(-4.2, 3.2, 4.6);
