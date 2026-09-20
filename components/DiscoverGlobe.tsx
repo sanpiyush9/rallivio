@@ -83,43 +83,12 @@ export default function DiscoverGlobe() {
         night.needsUpdate = true;
         night.colorSpace = THREE.SRGBColorSpace;
 
-        const earthMaterial = new THREE.ShaderMaterial({
-          uniforms: {
-            dayMap: { value: albedo },
-            nightMap: { value: night },
-            lightDirection: { value: new THREE.Vector3(0.35, 0.55, 0.95).normalize() },
-          },
-          vertexShader: `
-            varying vec2 vUv;
-            varying vec3 vWorldNormal;
-            varying vec3 vWorldPosition;
-            void main() {
-              vUv = uv;
-              vWorldNormal = normalize(mat3(modelMatrix) * normal);
-              vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-              vWorldPosition = worldPosition.xyz;
-              gl_Position = projectionMatrix * viewMatrix * worldPosition;
-            }
-          `,
-          fragmentShader: `
-            uniform sampler2D dayMap;
-            uniform sampler2D nightMap;
-            uniform vec3 lightDirection;
-            varying vec2 vUv;
-            varying vec3 vWorldNormal;
-            varying vec3 vWorldPosition;
-            void main() {
-              vec3 normal = normalize(vWorldNormal);
-              float ndl = dot(normal, normalize(lightDirection));
-              float day = smoothstep(-0.18, 0.28, ndl);
-              vec3 daylight = texture2D(dayMap, vUv).rgb;
-              vec3 cityGlow = texture2D(nightMap, vUv).rgb;
-              float rim = pow(1.0 - max(dot(normal, normalize(cameraPosition - vWorldPosition)), 0.0), 3.0);
-              vec3 color = mix(daylight * 0.72 + cityGlow * 0.38, daylight * 2.05 + cityGlow * 0.22, day);
-              color += vec3(0.08, 0.52, 0.95) * rim * 0.48;
-              gl_FragColor = vec4(color, 1.0);
-            }
-          `,
+        // Use the photographic daytime Earth directly. This avoids shader shadowing
+        // that was making the real map appear like a mostly-night globe.
+        const earthMaterial = new THREE.MeshBasicMaterial({
+          map: albedo,
+          color: new THREE.Color(0xffffff),
+          toneMapped: false,
         });
 
         const earth = new THREE.Mesh(geometry, earthMaterial);
@@ -178,8 +147,8 @@ export default function DiscoverGlobe() {
           if (disposed) { texture.dispose(); return; }
           texture.colorSpace = THREE.SRGBColorSpace;
           texture.anisotropy = 2;
-          earthMaterial.uniforms.nightMap.value = texture;
-          night.dispose();
+          // Night lights are intentionally not composited into the daytime Earth.
+          texture.dispose();
         });
 
         loader.load(EARTH_CLOUDS, addClouds);
