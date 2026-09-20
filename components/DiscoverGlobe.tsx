@@ -5,9 +5,9 @@
 
 import { useEffect, useRef } from "react";
 
-const EARTH_ALBEDO = "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg";
-const EARTH_NIGHT = "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_lights_2048.png";
-const EARTH_CLOUDS = "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_clouds_1024.png";
+const EARTH_ALBEDO = "/textures/earth-albedo.svg";
+const EARTH_NIGHT = "/textures/earth-night.svg";
+const EARTH_CLOUDS = "/textures/earth-clouds.svg";
 
 export default function DiscoverGlobe() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -107,12 +107,12 @@ export default function DiscoverGlobe() {
             void main() {
               vec3 normal = normalize(vWorldNormal);
               float ndl = dot(normal, normalize(lightDirection));
-              float day = smoothstep(-0.16, 0.28, ndl);
+              float day = smoothstep(-0.38, 0.10, ndl);
               vec3 daylight = texture2D(dayMap, vUv).rgb;
               vec3 cityGlow = texture2D(nightMap, vUv).rgb;
               float rim = pow(1.0 - max(dot(normal, normalize(cameraPosition - vWorldPosition)), 0.0), 3.0);
-              vec3 color = mix(cityGlow * 1.55, daylight * 1.15, day);
-              color += vec3(0.10, 0.28, 0.55) * rim * 0.22;
+              vec3 color = mix(cityGlow * 2.25, daylight * 1.75, day);
+              color += vec3(0.08, 0.52, 0.95) * rim * 0.48;
               gl_FragColor = vec4(color, 1.0);
             }
           `,
@@ -166,10 +166,52 @@ export default function DiscoverGlobe() {
           cloudMesh.userData.isCloudLayer = true;
         }
 
-        const keyLight = new THREE.DirectionalLight(0xffffff, 2.7);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 3.8);
         keyLight.position.set(-4.2, 3.2, 4.6);
         scene.add(keyLight);
-        scene.add(new THREE.AmbientLight(0x1a2c4c, 0.18));
+        scene.add(new THREE.AmbientLight(0x3977aa, 0.48));
+
+        // Thin cyan orbital rings naturally occlude behind/in front of the Earth.
+        const ringMaterial = new THREE.MeshBasicMaterial({
+          color: 0x57dcff,
+          transparent: true,
+          opacity: 0.62,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const ring1 = new THREE.Mesh(new THREE.TorusGeometry(1.30, 0.006, 8, 160), ringMaterial);
+        ring1.rotation.x = THREE.MathUtils.degToRad(66);
+        ring1.rotation.z = THREE.MathUtils.degToRad(18);
+        group.add(ring1);
+        const ring2 = new THREE.Mesh(
+          new THREE.TorusGeometry(1.37, 0.004, 8, 160),
+          ringMaterial.clone(),
+        );
+        ring2.material.opacity = 0.42;
+        ring2.rotation.x = THREE.MathUtils.degToRad(108);
+        ring2.rotation.z = THREE.MathUtils.degToRad(-24);
+        group.add(ring2);
+
+        // Sparse starfield surrounding the globe.
+        const starPositions = new Float32Array(240 * 3);
+        for (let i = 0; i < 240; i++) {
+          const radius = 2.7 + Math.random() * 2.2;
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(2 * Math.random() - 1);
+          starPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+          starPositions[i * 3 + 1] = radius * Math.cos(phi);
+          starPositions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+        }
+        const starGeometry = new THREE.BufferGeometry();
+        starGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
+        const starMaterial = new THREE.PointsMaterial({
+          color: 0x9deaff,
+          size: 0.018,
+          transparent: true,
+          opacity: 0.75,
+          depthWrite: false,
+        });
+        scene.add(new THREE.Points(starGeometry, starMaterial));
 
         const resize = () => {
           if (!renderer) return;
