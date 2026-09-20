@@ -156,7 +156,6 @@ export async function GET(request: Request) {
     const topTopicNames = Object.entries(overview.topicCounts ?? {})
       .filter(([, count]) => Number(count) > 0)
       .sort((a, b) => Number(b[1]) - Number(a[1]))
-      .slice(0, 8)
       .map(([topic]) => topic);
     const momentumResponse = topTopicNames.length
       ? await supabase("rpc/get_topic_momentum_windows", {
