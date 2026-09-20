@@ -194,6 +194,29 @@ export async function GET(request: Request) {
     const poolItems = (await poolResponse.json()) as DiscoveryRow[];
     const poolById = new Map(poolItems.map((item) => [item.id, item]));
 
+    // Signal evidence is persisted by the authoritative signal engine. Fetch it
+    // separately so the UI can display real velocity/audience-relative evidence
+    // without manufacturing presentation numbers.
+    const signalEvidenceResponse = await supabase(
+      "discovery_signals?select=video_id,observed_at,signal_type,evidence&video_id=in.(" + ids.join(",") + ")&order=observed_at.desc&limit=1000",
+    );
+    const signalEvidenceRows = signalEvidenceResponse.ok
+      ? (await signalEvidenceResponse.json()) as Array<{
+          video_id: string;
+          observed_at: string;
+          signal_type: string;
+          evidence: Record<string, unknown> | null;
+        }>
+      : [];
+    const evidenceByVideo = new Map<string, {
+      signal_type: string;
+      observed_at: string;
+      evidence: Record<string, unknown> | null;
+    }>();
+    for (const row of signalEvidenceRows) {
+      if (!evidenceByVideo.has(row.video_id)) evidenceByVideo.set(row.video_id, row);
+    }
+
     const enriched = rankings
       .map((ranking) => {
         const item = poolById.get(ranking.video_id);
@@ -216,7 +239,9 @@ export async function GET(request: Request) {
           ? (requestedSignal && matchingSignals.includes(requestedSignal) ? requestedSignal : ranking.signal_type)
           : null;
         metadata.signals = matchingSignals;
+        const signalEvidence = signalFreshEnough ? evidenceByVideo.get(item.id) : undefined;
         metadata.momentum_score = signalFreshEnough ? ranking.momentum_score : null;
+        metadata.signal_evidence = signalEvidence?.evidence ?? null;
 
         return { ...item, metadata };
       })
