@@ -1207,81 +1207,12 @@ footer{margin-top:8px!important}
 .theme-nebula{--panel:rgba(10,14,34,.82);--line:rgba(117,139,255,.22)}.theme-aurora{--panel:rgba(5,24,31,.84);--line:rgba(53,210,193,.23)}.theme-neon{--panel:rgba(28,12,11,.86);--line:rgba(255,133,78,.24)}.theme-lunar{--panel:rgba(17,24,32,.88);--line:rgba(181,211,230,.24)}
 .theme-nebula .topbar,.theme-nebula .search,.theme-nebula .themePicker,.theme-nebula .discoveryPanel,.theme-nebula .spotlightPanel,.theme-nebula .panel{background:var(--panel)!important;border-color:var(--line)!important}.theme-aurora .topbar,.theme-aurora .search,.theme-aurora .themePicker,.theme-aurora .discoveryPanel,.theme-aurora .spotlightPanel,.theme-aurora .panel{background:var(--panel)!important;border-color:var(--line)!important}.theme-neon .topbar,.theme-neon .search,.theme-neon .themePicker,.theme-neon .discoveryPanel,.theme-neon .spotlightPanel,.theme-neon .panel{background:var(--panel)!important;border-color:var(--line)!important}.theme-lunar .topbar,.theme-lunar .search,.theme-lunar .themePicker,.theme-lunar .discoveryPanel,.theme-lunar .spotlightPanel,.theme-lunar .panel{background:var(--panel)!important;border-color:var(--line)!important}
 .theme-aurora .rv{background:radial-gradient(circle at 70% 20%,#0bb6a82b,transparent 32%),linear-gradient(135deg,#061a20,#061316 60%,#08252a)!important}.theme-neon .rv{background:radial-gradient(circle at 70% 20%,#ff70402b,transparent 32%),linear-gradient(135deg,#1b0b08,#100708 60%,#24100c)!important}.theme-lunar .rv{background:radial-gradient(circle at 70% 20%,#9cc9e52b,transparent 32%),linear-gradient(135deg,#111820,#070b10 60%,#18232c)!important}.theme-aurora .radarVisual{background:radial-gradient(circle,#0c5860,#04151c 70%)!important}.theme-neon .radarVisual{background:radial-gradient(circle,#71301f,#170b09 70%)!important}.theme-lunar .radarVisual{background:radial-gradient(circle,#465968,#111a22 70%)!important}.theme-aurora .core{filter:hue-rotate(35deg) saturate(1.2)}.theme-neon .core{filter:hue-rotate(320deg) saturate(1.3)}.theme-lunar .core{filter:grayscale(.45) brightness(1.12)}.theme-aurora .platformNode{filter:hue-rotate(50deg)}.theme-neon .platformNode{filter:hue-rotate(300deg) saturate(1.3)}.theme-lunar .platformNode{filter:grayscale(.5)}
-/* Approved header lock — keep desktop geometry stable across field-theme changes. */
-.topbar{
-  display:grid!important;
-  grid-template-columns:250px minmax(0,1fr) 375px max-content!important;
-  align-items:center!important;
-  column-gap:24px!important;
-  padding:0 34px!important;
-  height:72px!important;
-  min-height:72px!important;
-  overflow:visible!important;
-}
-.topbar nav{
-  grid-column:2!important;
-  min-width:0!important;
-  width:100%!important;
-  display:flex!important;
-  justify-content:flex-start!important;
-  gap:31px!important;
-  overflow:visible!important;
-}
-.topbar nav button{
-  flex:0 0 auto!important;
-  white-space:nowrap!important;
-  font-size:15px!important;
-}
-.topbar .search{
-  grid-column:3!important;
-  width:375px!important;
-  min-width:375px!important;
-  max-width:375px!important;
-  height:44px!important;
-  margin:0!important;
-  justify-self:stretch!important;
-}
-.topbar .search button{
-  width:50px!important;
-  height:100%!important;
-  background:linear-gradient(135deg,#1f78ff,#46dfff)!important;
-  color:#fff!important;
-  box-shadow:none!important;
-}
-.topActions{
-  grid-column:4!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-end!important;
-  gap:14px!important;
-  min-width:max-content!important;
-  margin:0!important;
-}
-.plansButton{width:72px!important;min-width:72px!important;height:40px!important}
-.themeButton{display:inline-flex!important;width:auto!important;min-width:78px!important;height:40px!important;padding:0 12px!important;gap:7px!important}
-.notificationButton{width:40px!important;min-width:40px!important;height:40px!important}
-.loginTextButton{width:92px!important;min-width:92px!important;height:40px!important;border-radius:21px!important}
-.profileButton{width:40px!important;min-width:40px!important;height:40px!important}
-@media(max-width:1500px){
-  .topbar{grid-template-columns:220px minmax(0,1fr) 320px max-content!important;column-gap:18px!important;padding:0 24px!important}
-  .topbar nav{gap:20px!important}
-  .topbar nav button{font-size:13px!important}
-  .topbar .search{width:320px!important;min-width:320px!important;max-width:320px!important}
-}
-@media(max-width:1250px){
-  .topbar{grid-template-columns:190px minmax(0,1fr) 290px max-content!important;column-gap:16px!important;padding:0 22px!important}
-  .topbar nav{gap:16px!important}
-  .topbar nav button{font-size:13px!important}
-  .topbar .search{width:290px!important;min-width:220px!important;max-width:290px!important}
-  .themeButton{min-width:40px!important;width:40px!important;padding:0!important;justify-content:center!important}
-  .themeButtonLabel,.themeButtonDot{display:none!important}
-  .loginTextButton{width:76px!important;min-width:76px!important}
-}
-@media(max-width:950px){
-  .topbar{display:flex!important;flex-wrap:wrap!important;height:auto!important;min-height:72px!important;padding:10px 16px!important}
-  .topbar nav{order:3!important;width:100%!important;overflow:auto!important;gap:18px!important}
-  .topbar .search{order:2!important;flex:1 1 220px!important;width:auto!important;min-width:180px!important;max-width:none!important}
-  .topActions{order:4!important;margin-left:auto!important}
-  .brand{flex:0 0 auto!important}
-}
-`;
+/* Final header geometry lock — prevent nav/search overlap. */
+.topbar{display:grid!important;grid-template-columns:250px minmax(500px,1fr) 340px max-content!important;align-items:center!important;column-gap:20px!important;padding:0 28px!important;height:72px!important;min-height:72px!important;overflow:visible!important}
+.topbar nav{grid-column:2!important;min-width:0!important;width:100%!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:20px!important;overflow:visible!important;padding-right:10px!important}
+.topbar nav button{flex:0 0 auto!important;white-space:nowrap!important;font-size:14px!important}
+.topbar .search{grid-column:3!important;width:340px!important;min-width:340px!important;max-width:340px!important;height:44px!important;margin:0!important;justify-self:stretch!important}
+.topActions{grid-column:4!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:12px!important;min-width:max-content!important;margin:0!important}
+@media(max-width:1500px){.topbar{grid-template-columns:220px minmax(460px,1fr) 320px max-content!important;column-gap:16px!important;padding:0 22px!important}.topbar nav{gap:17px!important;padding-right:8px!important}.topbar nav button{font-size:13px!important}.topbar .search{width:320px!important;min-width:320px!important;max-width:320px!important}}
+@media(max-width:1250px){.topbar{grid-template-columns:190px minmax(0,1fr) 280px max-content!important;column-gap:14px!important;padding:0 18px!important}.topbar nav{gap:14px!important;padding-right:4px!important}.topbar nav button{font-size:12px!important}.topbar .search{width:280px!important;min-width:220px!important;max-width:280px!important}.themeButton{min-width:40px!important;width:40px!important;padding:0!important;justify-content:center!important}.themeButtonLabel,.themeButtonDot{display:none!important}.loginTextButton{width:76px!important;min-width:76px!important}}
+@media(max-width:950px){.topbar{display:flex!important;flex-wrap:wrap!important;height:auto!important;min-height:72px!important;padding:10px 16px!important}.topbar nav{order:3!important;width:100%!important;overflow:auto!important;gap:18px!important;padding-right:0!important}.topbar .search{order:2!important;flex:1 1 220px!important;width:auto!important;min-width:180px!important;max-width:none!important}.topActions{order:4!important;margin-left:auto!important}.brand{flex:0 0 auto!important}}
