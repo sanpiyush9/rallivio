@@ -458,7 +458,7 @@ export default function LivingDiscover() {
         <button className="round plansButton" type="button" onClick={() => router.push("/pricing")}>Plans</button>
       <div className="themePickerWrap">
         <button className="round themeButton" type="button" aria-label="Choose field theme" aria-expanded={showThemes} onClick={() => setShowThemes(v => !v)}>
-          <span className={"themeButtonGlyph " + theme}>☼</span><span className="themeButtonLabel">{themeDefinitions.find(x => x.id === theme)?.short || "Theme"}</span><i className={"themeButtonDot " + theme}/>
+          <span className={"themeButtonGlyph " + theme} aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span><span className="themeButtonLabel">{themeDefinitions.find(x => x.id === theme)?.short || "Theme"}</span><i className={"themeButtonDot " + theme}/>
         </button>
         {showThemes && <div className="themeMenu" role="menu" aria-label="Field theme selector">
           <div className="themeMenuHead">
@@ -482,7 +482,7 @@ export default function LivingDiscover() {
           <div className="themeMenuFoot"><i/> Theme is saved on this device</div>
         </div>}
       </div>
-      <button className="round notificationButton" type="button" aria-label="Notifications" onClick={() => setNotice("Notifications are coming soon.")}>◌</button>
+      <button className="round notificationButton" type="button" aria-label="Notifications" onClick={() => setNotice("Notifications are coming soon.")}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button>
       {userEmail ? (
         <button className="loginButton avatarButton" type="button" aria-label="Account" onClick={() => router.push("/account")}>
           {userEmail.split("@")[0]}
@@ -661,7 +661,7 @@ export default function LivingDiscover() {
         <div className="radarList">
           {radarCategories.length ? radarCategories.map((c, i) => {
             const pct = verifiedSignalCount ? Math.round((c.count / verifiedSignalCount) * 100) : 0;
-            return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank">{i + 1}</span><b>{c.name}</b><strong>{c.count ? pct + "%" : "—"}</strong></button>;
+            return <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); pulseField("Field tuned to " + c.name + "."); }}><span className="radarRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b><strong>{c.count ? pct + "%" : "—"}</strong></button>;
           }) : <div className="radarEmpty">No data yet.</div>}
         </div>
       </div>
@@ -670,7 +670,7 @@ export default function LivingDiscover() {
         <div className="topicList">
           {topicRows.length ? topicRows.map((c, i) => (
             <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); }}>
-              <span className="topicRank">{i + 1}</span><b>{c.name}</b>
+              <span className="topicRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b>
               <i className={"spark spark-" + (i + 1)} aria-label={`${c.name} momentum ${c.momentum || 0}`}>
                 {Array.from({ length: 7 }, (_, j) => <em key={j} style={{ height: `${4 + ((c.momentum || 0) + j * 7 + topicOffset * 3) % 14}px` }}/>)}
               </i>
@@ -979,5 +979,14 @@ footer{margin-top:8px!important}
 .theme-nebula{--accent:#4fcfff!important;--accent2:#2d7dff!important;--glow:#2d7dff!important}.theme-neon{--accent:#4fcfff!important;--accent2:#2d7dff!important;--glow:#2d7dff!important}.theme-aurora{--accent:#42dfff!important;--accent2:#2d8fff!important;--glow:#12bfe8!important}
 @media(max-width:1100px){.heroStatsPanel{right:0!important;width:190px!important}.heroScript{right:0!important}}
 @media(max-width:950px){.heroStatsPanel{position:relative!important;top:auto!important;right:auto!important;width:min(100%,360px)!important;margin:18px auto 0!important}.heroScript{position:relative!important;right:auto!important;bottom:auto!important;margin:22px auto 0!important;width:max-content!important;max-width:100%!important}.heroScript i{width:150px!important}.liveStripItems{grid-template-columns:1fr!important}.liveStripItems>button:nth-child(n+3){display:none!important}}
+
+.themeButtonGlyph svg,.notificationButton svg{width:19px!important;height:19px!important;display:block!important;fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+.themeButtonGlyph svg circle{fill:none!important}
+.radarRank{width:40px!important;height:40px!important;border-radius:12px!important;display:grid!important;place-items:center!important;background:linear-gradient(145deg,rgba(38,128,220,.22),rgba(20,52,88,.7))!important;border:1px solid rgba(85,196,255,.16)!important;color:#68dfff!important;font-size:15px!important}
+.radarList button{grid-template-columns:40px 1fr auto!important;min-height:58px!important}
+.topicRank{width:48px!important;height:48px!important;border-radius:13px!important;display:grid!important;place-items:center!important;background:rgba(40,124,210,.14)!important;border:1px solid rgba(91,204,255,.14)!important;color:#6fe3ff!important;font-size:17px!important}
+.topicList button{grid-template-columns:48px minmax(80px,1fr) 90px auto!important;min-height:66px!important}
+.spotlightList button img{width:56px!important;height:56px!important;border-radius:50%!important}
+.spotlightList button{min-height:68px!important}
 `;
 
