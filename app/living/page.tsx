@@ -137,6 +137,7 @@ export default function LivingDiscover() {
   const [activePlatform, setActivePlatform] = useState("YouTube");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [pulse, setPulse] = useState(0);
+  const [electricBurst, setElectricBurst] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
@@ -486,7 +487,16 @@ export default function LivingDiscover() {
     if (l.includes("opportun")) { go("/opportunities"); return; }
     setFilter("Trending"); setQ(s); pulseField(`Searching the verified discovery pool for “${s}”.`);
   };
-  const activateCore = () => { setActivePlatform("YouTube"); setActiveSignal(null); setFilter("Trending"); setQ(""); void loadDiscovery(null, null); pulseField("RALLIVIO re-centered. The living field is listening."); };
+  const activateCore = () => {
+    setActivePlatform("YouTube");
+    setActiveSignal(null);
+    setFilter("Trending");
+    setQ("");
+    void loadDiscovery(null, null);
+    setElectricBurst(true);
+    window.setTimeout(() => setElectricBurst(false), 1800);
+    pulseField("RALLIVIO re-centered. Signals are propagating across the living field.");
+  };
 
   return <main className={`rv theme-${theme}`}>
     <button className="themeScrim" type="button" aria-label="Close theme picker" onClick={() => setShowThemes(false)} style={{ display: showThemes ? "block" : "none" }} />
@@ -566,12 +576,17 @@ export default function LivingDiscover() {
         </div>     </div>
 
       <div className="ecosystem">
-        <div className={`field ${pulse ? "responding" : ""}`} aria-label="RALLIVIO living platform field" style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", flexShrink: 0 }}>
+        <div className={`field ${pulse ? "responding" : ""} ${electricBurst ? "electricBurst" : ""}`} aria-label="RALLIVIO living platform field" style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", flexShrink: 0 }}>
           <div className="fieldSpace">
             <div className="fieldGrid"/><div className="nebula n1"/><div className="nebula n2"/>
             <div className="energyRing er1"/><div className="energyRing er2"/><div className="energyRing er3"/>
             <div className="orbit o1"/><div className="orbit o2"/><div className="orbit o3"/>
             <div className="energyArc arc1"/><div className="energyArc arc2"/><div className="energyArc arc3"/>
+            <svg className="electricNetwork" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <defs><linearGradient id="electricSignal" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#5fe8ff"/><stop offset="50%" stopColor="#a45cff"/><stop offset="100%" stopColor="#5fe8ff"/></linearGradient></defs>
+              {platforms.map((p, i) => <line key={p.id} x1="50" y1="50" x2={p.x} y2={p.y} style={{ "--delay": `${i * 70}ms` } as React.CSSProperties} />)}
+            </svg>
+            <div className="electricShockwave electricShockwaveOne" aria-hidden="true"/><div className="electricShockwave electricShockwaveTwo" aria-hidden="true"/>
             {Array.from({ length: 22 }, (_, i) => <i key={i} className={`particle particle${i + 1}`}/>) }
             {platforms.map(p => <button key={p.id} className={`platform ${activePlatform === p.name ? "selected" : ""}`} style={{ position: "absolute", left: `${p.x}%`, top: `${p.y}%`, transform: "translate(-50%, -50%)", width: 110, textAlign: "center" }} type="button" aria-label={`${p.name} platform`} onClick={() => activatePlatform(p)} onPointerEnter={() => setActivePlatform(p.name)} onFocus={() => setActivePlatform(p.name)}>
               <span className={`platformMark ${p.kind}`}><PlatformIcon kind={p.kind}/></span><b>{p.name}</b><small>{p.connected ? "Creators · Videos" : "Explore"}</small>
@@ -928,6 +943,15 @@ footer{padding:55px 5vw 65px}
 .globeStage.globeReady .globeFallback{opacity:0!important}.globeStage.globeReady .discoverGlobeCanvas{opacity:1!important}
 /* Spherical platform badges: one shared light direction with the globe. */
 .platformMark{position:relative!important;border-radius:50%!important;overflow:hidden!important;transition:transform .2s ease,box-shadow .2s ease!important;box-shadow:inset 5px 5px 10px rgba(255,255,255,.18),inset -8px -10px 14px rgba(0,0,0,.34),0 10px 22px rgba(0,0,0,.42),0 0 20px rgba(130,100,255,.18)!important;transform:translateZ(0)!important}.platformMark:before{content:""!important;display:block!important;position:absolute!important;left:12%!important;top:8%!important;width:48%!important;height:32%!important;border-radius:50%!important;background:linear-gradient(145deg,rgba(255,255,255,.55),rgba(255,255,255,0))!important;filter:blur(2px)!important;z-index:2!important;pointer-events:none!important}.platformMark:after{content:""!important;display:block!important;position:absolute!important;inset:0!important;border-radius:50%!important;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.16),transparent 34%),linear-gradient(145deg,transparent 52%,rgba(0,0,0,.22) 100%)!important;z-index:1!important;pointer-events:none!important}.platformMark svg{position:relative!important;z-index:3!important;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))!important}.platform:hover .platformMark,.platform:focus-visible .platformMark,.platform.selected .platformMark{transform:scale(1.05)!important}.platform.youtube .platformMark{background:linear-gradient(145deg,#ff4b4b,#d90000)!important}.platform.instagram .platformMark{background:linear-gradient(145deg,#ff9a45 0%,#e1306c 45%,#8a2be2 100%)!important}.platform.tiktok .platformMark,.platform.x .platformMark{background:#000!important}.platform.linkedin .platformMark{background:linear-gradient(145deg,#42a5ff,#0a66c2)!important}.platform.facebook .platformMark{background:linear-gradient(145deg,#4ea0ff,#1877f2)!important}.platform.reddit .platformMark{background:linear-gradient(145deg,#ff8a3d,#ff4500)!important}.platform.discord .platformMark{background:linear-gradient(145deg,#8f9bff,#5865f2)!important}.platform.snapchat .platformMark{background:#FFFC00!important;color:#000!important}.platform.pinterest .platformMark{background:linear-gradient(145deg,#ff4a64,#e60023)!important}.platform.spotify .platformMark{background:linear-gradient(145deg,#5cff8d,#1db954)!important;color:#000!important}.platform.twitch .platformMark{background:linear-gradient(145deg,#bf7bff,#9146ff)!important}.platform.snapchat .platformMark{background:linear-gradient(145deg,#fff86a,#fffc00)!important;color:#000!important}
+.electricNetwork{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;z-index:24!important;pointer-events:none!important;overflow:visible!important;opacity:0!important}
+.electricNetwork line{stroke:url(#electricSignal);stroke-width:.45;stroke-linecap:round;stroke-dasharray:1.2 5;filter:drop-shadow(0 0 2px #5fe8ff) drop-shadow(0 0 6px #8b4fff);opacity:0}
+.electricBurst .electricNetwork{opacity:1!important}.electricBurst .electricNetwork line{animation:electricTravel 1.05s cubic-bezier(.2,.75,.25,1) var(--delay) both}
+.electricShockwave{position:absolute;left:50%;top:50%;width:220px;height:220px;border-radius:50%;border:2px solid #61e8ff;transform:translate(-50%,-50%) scale(.4);opacity:0;z-index:29;pointer-events:none;box-shadow:0 0 24px #5fe8ff,0 0 55px #7d4cff}
+.electricBurst .electricShockwaveOne{animation:shockwave 1.1s ease-out both}.electricBurst .electricShockwaveTwo{animation:shockwave 1.35s .16s ease-out both}
+.electricBurst .platformMark{animation:platformSignal 1.25s cubic-bezier(.2,.8,.2,1) var(--delay) both}
+@keyframes electricTravel{0%{stroke-dashoffset:14;opacity:0}12%{opacity:1}55%{opacity:1}100%{stroke-dashoffset:-18;opacity:0}}
+@keyframes shockwave{0%{transform:translate(-50%,-50%) scale(.35);opacity:.95}100%{transform:translate(-50%,-50%) scale(2.9);opacity:0}}
+@keyframes platformSignal{0%{filter:brightness(1)}25%{filter:brightness(1.9) saturate(1.4);box-shadow:0 0 22px #62e8ff,0 0 45px #9b5cff,0 0 70px #5fdcff}100%{filter:brightness(1)}}
 .field.responding .orbit{animation-duration:1.2s!important}.energyArc{display:none!important}.field.responding .energyRing{animation-duration:1.1s!important}.field.responding .core{animation:coreResponse .55s ease-out!important}
 @keyframes coreResponse{50%{transform:translate(-50%,-50%) scale(1.08);box-shadow:0 0 120px #58dfff99,0 0 190px #2d82ff55,0 0 0 34px #42cfff18}}
 
