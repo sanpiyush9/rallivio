@@ -84,7 +84,7 @@ export default function DiscoverGlobe() {
           uniforms: {
             dayMap: { value: albedo },
             nightMap: { value: night },
-            lightDirection: { value: new THREE.Vector3(-0.62, 0.48, 0.62).normalize() },
+            lightDirection: { value: new THREE.Vector3(0.35, 0.55, 0.95).normalize() },
           },
           vertexShader: `
             varying vec2 vUv;
@@ -108,11 +108,11 @@ export default function DiscoverGlobe() {
             void main() {
               vec3 normal = normalize(vWorldNormal);
               float ndl = dot(normal, normalize(lightDirection));
-              float day = smoothstep(-0.38, 0.10, ndl);
+              float day = smoothstep(-0.18, 0.28, ndl);
               vec3 daylight = texture2D(dayMap, vUv).rgb;
               vec3 cityGlow = texture2D(nightMap, vUv).rgb;
               float rim = pow(1.0 - max(dot(normal, normalize(cameraPosition - vWorldPosition)), 0.0), 3.0);
-              vec3 color = mix(cityGlow * 2.25, daylight * 1.75, day);
+              vec3 color = mix(daylight * 0.72 + cityGlow * 0.38, daylight * 2.05 + cityGlow * 0.22, day);
               color += vec3(0.08, 0.52, 0.95) * rim * 0.48;
               gl_FragColor = vec4(color, 1.0);
             }
