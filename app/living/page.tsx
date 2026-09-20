@@ -741,10 +741,15 @@ export default function LivingDiscover() {
             <button key={c.name} type="button" onClick={() => { setActiveSignal(null); setFilter(c.name); setQ(""); void loadDiscovery(null, c.name); }}>
               <span className="topicRank" aria-hidden="true">{c.icon}</span><b>{c.name}</b>
               <i className={"spark spark-" + (i + 1)} aria-label={`${c.name} momentum over the last ${c.windows.length} measured windows`}>
-                <svg viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline points={sparkPoints(c.windows)} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke"/></svg>
+                <svg viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true">
+                  <polyline points={sparkPoints(c.windows)} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke"/>
+                  {c.windows.length > 0 && <circle cx="2" cy={sparkPoints(c.windows).split(" ")[0]?.split(",")[1]} r="1.6" fill="currentColor" opacity=".55"/>}
+                  {c.windows.length > 1 && <circle cx="98" cy={sparkPoints(c.windows).split(" ").slice(-1)[0]?.split(",")[1]} r="2.2" fill="currentColor"/>}
+                </svg>
+                <span className={"sparkDirection " + (momentumChange(c.windows) != null && momentumChange(c.windows)! >= 0 ? "up" : "down")} aria-hidden="true">{momentumChange(c.windows) == null ? "•" : momentumChange(c.windows)! >= 0 ? "↗" : "↘"}</span>
               </i>
-              <small className="topicShare">{c.count.toLocaleString()} verified signals · {globalTopicTotal ? ((c.count / globalTopicTotal) * 100).toFixed(1) : "0.0"}% global share</small>
-              <strong>{(() => { const change = momentumChange(c.windows); return change == null ? "—" : (change >= 0 ? "+" : "") + change.toFixed(0) + "%"; })()}</strong>
+              <small className="topicShare">{c.count.toLocaleString()} verified signals · {globalTopicTotal ? ((c.count / globalTopicTotal) * 100).toFixed(1) : "0.0"}% RALLIVIO verified share</small>
+              <strong>{(() => { const change = momentumChange(c.windows); return change == null ? "—" : (change >= 0 ? "▲ " : "▼ ") + Math.abs(change).toFixed(0) + "% momentum change"; })()}</strong>
 </button>
           )) : <div className="radarEmpty">No data yet.</div>}
         </div>
@@ -1016,7 +1021,7 @@ footer{padding:55px 5vw 65px}
 .radarList,.topicList,.spotlightList{max-height:310px!important;overflow-y:auto!important}
 .radarList::-webkit-scrollbar,.topicList::-webkit-scrollbar,.spotlightList::-webkit-scrollbar{width:4px}
 .radarList::-webkit-scrollbar-thumb,.topicList::-webkit-scrollbar-thumb,.spotlightList::-webkit-scrollbar-thumb{background:rgba(66,217,255,.25);border-radius:4px}
-.spark{opacity:.72!important}
+.spark{opacity:.72!important}.sparkDirection{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:15px!important;height:15px!important;margin-left:2px!important;border-radius:50%!important;font-size:11px!important;font-weight:900!important;line-height:1!important}.sparkDirection.up{color:#62e6ad!important;background:rgba(98,230,173,.08)!important}.sparkDirection.down{color:#ff657b!important;background:rgba(255,101,123,.08)!important}
 /* Equalize the three discovery panel content areas — final override */
 .radarPanel,.topicsPanel,.spotlightPanel{height:634px!important;min-height:634px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
 .radarPanelHead{flex:0 0 auto!important}
