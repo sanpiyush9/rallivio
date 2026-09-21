@@ -6,7 +6,7 @@ export async function GET() {
   return NextResponse.json({
     name: "RALLIVIO Distribution Network",
     version: 2,
-    deployment_revision: "campaign-only-2026-09-21",
+    deployment_revision: "campaign-only-2026-09-21-preview",
     status: "active",
     model: "authorized_campaign_syndication",
     automatic_updates: true,
