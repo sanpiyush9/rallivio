@@ -103,11 +103,11 @@ function SignalField({signals,selected,setSelected}:{signals:Signal[];selected:s
     if(pulse.current)pulse.current.instanceMatrix.needsUpdate=true;
   });
   return <>
-    <instancedMesh ref={pulse} args={[undefined as any,undefined as any,Math.max(1,data.length)}}
+    <instancedMesh ref={pulse} args={[undefined as any,undefined as any,Math.max(1,data.length)]}
       onPointerDown={(e)=>{e.stopPropagation();const i=(e as any).instanceId;if(i!=null&&data[i])setSelected(data[i].id)}}>
       <sphereGeometry args={[1,6,6]}/><meshBasicMaterial vertexColors transparent opacity={.055} blending={THREE.AdditiveBlending}/>
     </instancedMesh>
-    <instancedMesh ref={mesh} args={[undefined as any,undefined as any,Math.max(1,data.length)}}
+    <instancedMesh ref={mesh} args={[undefined as any,undefined as any,Math.max(1,data.length)]}
       onPointerDown={(e)=>{e.stopPropagation();const i=(e as any).instanceId;if(i!=null&&data[i])setSelected(data[i].id)}}>
       <sphereGeometry args={[1,8,8]}/><meshBasicMaterial vertexColors transparent opacity={.95}/>
     </instancedMesh>
