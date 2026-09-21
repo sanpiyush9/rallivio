@@ -3,7 +3,8 @@
 import {useEffect,useState} from "react";
 import {useParams,useRouter} from "next/navigation";
 
-type Campaign={id:string;source_url:string;source_host:string|null;content_type:string|null;title:string|null;status:string;distribution_mode:string;trial_started_at:string|null;trial_ends_at:string|null;created_at:string;impressions:number|null;clicks:number|null;youtube_video_id:string|null};\ntype Analytics={campaign:Campaign;summary:{impressions:number;clicks:number;ctr:number;publishers:number};publishers:Array<{host:string;impressions:number;clicks:number;lastSeen:string|null}>;timeline:Array<{date:string;impressions:number;clicks:number}>};
+type Campaign={id:string;source_url:string;source_host:string|null;content_type:string|null;title:string|null;status:string;distribution_mode:string;trial_started_at:string|null;trial_ends_at:string|null;created_at:string;impressions:number|null;clicks:number|null;youtube_video_id:string|null};
+type Analytics={campaign:Campaign;summary:{impressions:number;clicks:number;ctr:number;publishers:number};publishers:Array<{host:string;impressions:number;clicks:number;lastSeen:string|null}>;timeline:Array<{date:string;impressions:number;clicks:number}>};
 
 export default function CampaignAnalytics(){
  // Campaign analytics route redeploy marker: keep this page on the feature branch preview.
