@@ -82,6 +82,9 @@ export default function RallivioWorld(){
     <div className="rw-grid"/>
     <div className="rw-aura rw-aura-a" style={{transform:`translate3d(${cursor.x*28}px,${cursor.y*18}px,0)`}}/>
     <div className="rw-aura rw-aura-b" style={{transform:`translate3d(${cursor.x*-20}px,${cursor.y*-12}px,0)`}}/>
+    <div className="rw-particle-field" aria-hidden="true">
+      {Array.from({length:42},(_,i)=><i key={i} style={{"--i":i} as React.CSSProperties}/>)}
+    </div>
 
     <header className="rw-nav">
       <Link href="/" className="rw-logo">RALL<span>IVIO</span></Link>
@@ -100,8 +103,10 @@ export default function RallivioWorld(){
         </div>
       </div>
 
-      <div className="rw-hero-world" style={{transform:`perspective(1400px) rotateX(${cursor.y*-2}deg) rotateY(${cursor.x*3}deg)`}}>
-        <div className="rw-ring ring-1"/><div className="rw-ring ring-2"/><div className="rw-ring ring-3"/>
+      <div className="rw-hero-camera" style={{transform:`translate3d(${cursor.x*18}px,${cursor.y*12}px,0)`}}>
+        <div className="rw-hero-world">
+          <div className="rw-energy energy-a"/><div className="rw-energy energy-b"/><div className="rw-energy energy-c"/>
+          <div className="rw-ring ring-1"/><div className="rw-ring ring-2"/><div className="rw-ring ring-3"/>
         <div className="rw-core">
           <div className="rw-core-orb"/>
           <span>RALLIVIO</span><small>DISCOVERY OS</small>
@@ -109,12 +114,16 @@ export default function RallivioWorld(){
         {orbit.map((x,i)=><button key={x.id} className={`rw-node n${i}`} onClick={()=>setSelected(x)} title={x.title}>
           <span className="rw-node-pulse"/><b>{x.metadata?.signal||"SIGNAL"}</b><small>{x.topic||"WORLD"}</small>
         </button>)}
-        <div className="rw-axis x"/><div className="rw-axis y"/>
+          <div className="rw-axis x"/><div className="rw-axis y"/>
+          <div className="rw-scanline"/>
+        </div>
       </div>
 
       <div className="rw-floating rw-float-a"><span>WORLDWIDE</span><strong>{stats.pool.toLocaleString()}</strong><small>DISCOVERY POOL</small></div>
       <div className="rw-floating rw-float-b"><span>LIVE</span><strong>{stats.signals.toLocaleString()}</strong><small>VERIFIED SIGNALS</small></div>
     </section>
+
+    <div className="rw-motion-ticker" aria-hidden="true"><span>LIVE SIGNALS</span><i/><span>VELOCITY</span><i/><span>ATTENTION</span><i/><span>CREATOR FLOW</span><i/><span>GLOBAL NOW</span><i/></div>
 
     <section className="rw-metrics">
       <div><strong>{stats.signals.toLocaleString()}</strong><span>signals in motion</span></div>
@@ -136,6 +145,7 @@ export default function RallivioWorld(){
       <div className="rw-stage">
         <div className="rw-stage-sky"/>
         <div className="rw-stage-grid"/>
+        <div className="rw-stage-trails" aria-hidden="true"><i/><i/><i/><i/><i/></div>
         <div className="rw-stage-title"><span>ATTENTION NETWORK</span><strong>{filtered.length||items.length}</strong><small>VISIBLE NODES</small></div>
         {filtered.slice(0,18).map((x,i)=><button key={x.id} className={`rw-card c${i%9}`} onClick={()=>setSelected(x)}>
           <img src={x.thumbnail} alt=""/>
