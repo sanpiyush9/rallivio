@@ -36,6 +36,7 @@ function compact(n?: number) {
 
 function Field({ items, active, onSelect, scene }: { items: Item[]; active: Item | null; onSelect: (x: Item) => void; scene: number }) {
   const group = useRef<THREE.Group>(null);
+  const lineRef = useRef<THREE.Line>(null);
   const nodes = useMemo(() => {
     const source = items.slice(0, 18);
     return source.map((item, i) => {
@@ -230,12 +231,8 @@ export default function RallivioMotionWorld() {
       </section>
 
       <section id="promote" className="rmw-section rmw-topics">
-        <div className="rmw-scene-heading"><span>02 / PROMOTE</span><h2>Put your<br /><em>content in motion.</em></h2><p>Promote a video, post, product, website or creator profile through the RALLIVIO discovery workflow.</p></div>
-        <div className="rmw-promo-steps">
-          <div><span>01</span><b>PASTE A LINK</b><small>YouTube · Instagram · TikTok · X · Web</small></div>
-          <div><span>02</span><b>RALLIVIO DISCOVERS</b><small>Signal · topic · audience · movement</small></div>
-          <div><span>03</span><b>GET DISCOVERED</b><small>Put the right content in front of the right attention.</small></div>
-        </div>
+        <div className="rmw-scene-heading"><span>02 / PROMOTE</span><h2>Put your<br /><em>content in motion.</em></h2><p>Promote a video, post, product, website or creator profile through RALLIVIO.</p></div>
+        <div className="rmw-promo-steps"><div><span>01</span><b>PASTE A LINK</b><small>YouTube · Instagram · TikTok · X · Web</small></div><div><span>02</span><b>RALLIVIO DISCOVERS</b><small>Signal · topic · audience · movement</small></div><div><span>03</span><b>GET DISCOVERED</b><small>Put the right content in front of the right attention.</small></div></div>
         <button className="rmw-primary" onClick={() => setPromote(true)}>START PROMOTING ↗</button>
       </section>
 
@@ -243,37 +240,20 @@ export default function RallivioMotionWorld() {
         <div className="rmw-scene-heading"><span>03 / CREATOR NETWORK</span><h2>People become<br /><em>nodes.</em></h2><p>Content travels through creators, topics and audiences. The network is the product.</p></div>
         <div className="rmw-network">
           <div className="rmw-network-core"><i /><b>{compact(stats.creators)}</b><span>CREATOR NODES</span></div>
-          {display.slice(0, 9).map((x, i) => <button key={x.id + i} className="rmw-creator-node" onClick={() => setSelected(x)}><img src={x.thumbnail} alt="" /><span>{x.channel_title}</span><b>{x.topic || "WORLD"}</b></button>)}
+          {display.slice(0, 9).map((x, i) => <button key={x.id + i} className="rmw-creator-node" style={{ "--i": i } as React.CSSProperties} onClick={() => setSelected(x)}><img src={x.thumbnail} alt="" /><span>{x.channel_title}</span><b>{x.topic || "WORLD"}</b></button>)}
         </div>
       </section>
 
       <section id="opportunities" className="rmw-section rmw-opportunities">
-        <div><span>04 / BRANDS & OPPORTUNITIES</span><h2>Brands need.<br /><em>Creators deliver.</em></h2><p>Brands can publish requirements. Creators can discover opportunities. RALLIVIO connects both sides and takes a 10% commission when a deal is completed through the platform.</p></div>
-        <div className="rmw-market-grid">
-          <div className="rmw-market-card"><span>FOR BRANDS</span><h3>Find the right creator.</h3><p>Define your audience, niche, platform and campaign need.</p><button className="rmw-primary">POST A REQUIREMENT ↗</button></div>
-          <div className="rmw-market-card"><span>FOR CREATORS</span><h3>Find the right opportunity.</h3><p>Browse brand requirements and apply for work that fits your audience.</p><button className="rmw-primary">VIEW OPPORTUNITIES ↗</button></div>
-          <div className="rmw-commission"><b>10%</b><span>RALLIVIO DEAL COMMISSION</span></div>
-        </div>
+        <div><span>04 / BRANDS & OPPORTUNITIES</span><h2>Brands need.<br /><em>Creators deliver.</em></h2><p>Brands publish requirements. Creators discover opportunities. RALLIVIO connects both sides and takes a 10% commission when a deal is completed through the platform.</p></div>
+        <div className="rmw-market-grid"><div className="rmw-market-card"><span>FOR BRANDS</span><h3>Find the right creator.</h3><p>Define audience, niche, platform and campaign need.</p><button className="rmw-primary">POST A REQUIREMENT ↗</button></div><div className="rmw-market-card"><span>FOR CREATORS</span><h3>Find the right opportunity.</h3><p>Browse brand requirements and apply for work that fits.</p><button className="rmw-primary">VIEW OPPORTUNITIES ↗</button></div><div className="rmw-commission"><b>10%</b><span>RALLIVIO DEAL COMMISSION</span></div></div>
       </section>
 
-      <section id="community" className="rmw-section rmw-simple-section">
-        <div className="rmw-scene-heading"><span>05 / COMMUNITY</span><h2>People behind<br /><em>the attention.</em></h2><p>Creators, brands and people building, discovering and sharing what's moving.</p></div>
-        <div className="rmw-simple-grid">
-          <div><b>DISCUSS</b><span>Talk about trends, creator growth and ideas.</span></div>
-          <div><b>SHOWCASE</b><span>Share your work and discoveries.</span></div>
-          <div><b>CONNECT</b><span>Meet creators, brands and people building the future.</span></div>
-        </div>
-      </section>
+      <section id="community" className="rmw-section rmw-simple-section"><div className="rmw-scene-heading"><span>05 / COMMUNITY</span><h2>People behind<br /><em>the attention.</em></h2><p>Creators, brands and people building, discovering and sharing what is moving.</p></div><div className="rmw-simple-grid"><div><b>DISCUSS</b><span>Talk about trends and creator growth.</span></div><div><b>SHOWCASE</b><span>Share your work and discoveries.</span></div><div><b>CONNECT</b><span>Meet creators and brands.</span></div></div></section>
 
-      <section id="about" className="rmw-section rmw-simple-section">
-        <div className="rmw-scene-heading"><span>06 / ABOUT RALLIVIO</span><h2>The platform for<br /><em>moving attention.</em></h2><p>RALLIVIO discovers what is moving across the internet, gives people a way to promote what matters, helps brands and creators find each other, and turns attention into opportunity.</p></div>
-        <div className="rmw-about-words"><span>DISCOVER</span><span>PROMOTE</span><span>CONNECT</span><span>CREATE</span><span>GROW</span></div>
-      </section>
+      <section id="about" className="rmw-section rmw-simple-section"><div className="rmw-scene-heading"><span>06 / ABOUT RALLIVIO</span><h2>The platform for<br /><em>moving attention.</em></h2><p>RALLIVIO discovers what is moving across the internet, helps people promote what matters, connects brands and creators, and turns attention into opportunity.</p></div><div className="rmw-about-words"><span>DISCOVER</span><span>PROMOTE</span><span>CONNECT</span><span>CREATE</span><span>GROW</span></div></section>
 
-      <section id="creator-pro" className="rmw-section rmw-simple-section rmw-pro-section">
-        <div className="rmw-scene-heading"><span>07 / CREATOR PRO</span><h2>Grow inside<br /><em>the creator pool.</em></h2><p>Creator Pro: ₹99/month. Annual billing: ₹594/year, 50% off the normal annual price.</p></div>
-        <div className="rmw-pro-card"><b>₹99</b><span>PER MONTH</span><small>YEARLY · 50% OFF</small><strong>₹594 / YEAR</strong><ul><li>Creator Pool profile</li><li>Enhanced visibility</li><li>Advanced analytics</li><li>Priority opportunity matching</li><li>Featured creator placement</li></ul><a href="/pricing">VIEW CREATOR PRO ↗</a></div>
-      </section>
+      <section id="creator-pro" className="rmw-section rmw-simple-section rmw-pro-section"><div className="rmw-scene-heading"><span>07 / CREATOR PRO</span><h2>Grow inside<br /><em>the creator pool.</em></h2><p>Creator Pro is ₹99/month. Annual billing is ₹594/year — 50% off the normal annual price.</p></div><div className="rmw-pro-card"><b>₹99</b><span>PER MONTH</span><small>YEARLY · 50% OFF</small><strong>₹594 / YEAR</strong><ul><li>Creator Pool profile</li><li>Enhanced visibility</li><li>Advanced analytics</li><li>Priority opportunity matching</li><li>Featured creator placement</li></ul><a href="/pricing">VIEW CREATOR PRO ↗</a></div></section>
 
       <footer className="rmw-footer"><strong>RALL<span>IVIO</span></strong><div>DISCOVER / MOVE / CONNECT</div><small>THE LIVING INTERNET</small></footer>
 
