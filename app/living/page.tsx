@@ -307,7 +307,7 @@ export default function LivingDiscover() {
       void loadDiscovery(activeSignal, filter === "Trending" ? null : filter);
     }, 60000);
     return () => window.clearInterval(id);
-  }, [activeSignal, filter]);
+  }, [activeSignal, filter, timeframe]);
 
   useEffect(() => { if (!notice) return; const id = window.setTimeout(() => setNotice(""), 4200); return () => window.clearTimeout(id); }, [notice]);
 
