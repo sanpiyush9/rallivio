@@ -59,6 +59,19 @@ function parseCursor(request: Request) {
   return Number.isInteger(value) && value >= 0 ? value : null;
 }
 
+function parseTimeframe(request: Request) {
+  const value = new URL(request.url).searchParams.get("timeframe") || "15m";
+  const windows: Record<string, number> = {
+    "15m": 15 * 60 * 1000,
+    "1h": 60 * 60 * 1000,
+    "1d": 24 * 60 * 60 * 1000,
+    "1w": 7 * 24 * 60 * 60 * 1000,
+    "1m": 30 * 24 * 60 * 60 * 1000,
+  };
+  const ms = windows[value] ?? windows["15m"];
+  return { id: windows[value] ? value : "15m", since: new Date(Date.now() - ms).toISOString() };
+}
+
 function applyRankingFilters(params: URLSearchParams, request: Request) {
   const search = new URL(request.url).searchParams;
   const region = search.get("region")?.trim().slice(0, 32);
@@ -113,23 +126,64 @@ export async function GET(request: Request) {
   try {
     const limit = parseLimit(request);
     const cursor = parseCursor(request);
+    const timeframe = parseTimeframe(request);
     const promotedItems = await getPromotedItems();
 
-    const feedParams = applyRankingFilters(
-      new URLSearchParams({
-        select: "video_id,channel_id,region,topic,category_id,format,signal_type,signal_labels,momentum_score,observed_at,expires_at,global_rank",
-        order: "global_rank.asc",
-        limit: String(limit),
-      }),
-      request,
-    );
-    if (cursor !== null) feedParams.set("global_rank", `gt.${cursor}`);
-
-    const feedResponse = await supabase(`feed_rankings?${feedParams}`);
-    if (!feedResponse.ok) {
-      return NextResponse.json({ ok: false, state: "DATA_UNAVAILABLE" }, { status: 503 });
+    let rankings: RankingRow[];
+    if (timeframe.id === "15m" || timeframe.id === "1h" || timeframe.id === "1d" || timeframe.id === "1w" || timeframe.id === "1m") {
+      // Timeframe feeds read the observation history directly. The database does
+      // the window filter and ordering, so even a million-row history never
+      // reaches the browser; only the top slice needed by the UI is returned.
+      const search = new URL(request.url).searchParams;
+      const signal = search.get("signal")?.trim().slice(0, 40);
+      const signalParams = new URLSearchParams({
+        select: "video_id,channel_id,signal_type,signal_labels,momentum_score,observed_at,expires_at",
+        observed_at: `gte.${timeframe.since}`,
+        order: "momentum_score.desc.nullslast,observed_at.desc",
+        limit: String(Math.min(1000, Math.max(250, limit * 8))),
+      });
+      if (signal) signalParams.set("signal_type", `eq.${signal}`);
+      if (cursor !== null) signalParams.set("offset", String(cursor));
+      const signalResponse = await supabase(`discovery_signals?${signalParams}`);
+      if (!signalResponse.ok) {
+        return NextResponse.json({ ok: false, state: "DATA_UNAVAILABLE" }, { status: 503 });
+      }
+      const rows = await signalResponse.json() as Array<{
+        video_id: string; channel_id: string; signal_type: string; signal_labels: string[];
+        momentum_score: number | null; observed_at: string; expires_at: string | null;
+      }>;
+      const seen = new Set<string>();
+      rankings = rows
+        .filter(row => {
+          if (seen.has(row.video_id)) return false;
+          seen.add(row.video_id);
+          return true;
+        })
+        .slice(0, limit)
+        .map((row, index) => ({
+          ...row,
+          region: null,
+          topic: null,
+          category_id: null,
+          format: null,
+          global_rank: (cursor ?? 0) + index + 1,
+        }));
+    } else {
+      const feedParams = applyRankingFilters(
+        new URLSearchParams({
+          select: "video_id,channel_id,region,topic,category_id,format,signal_type,signal_labels,momentum_score,observed_at,expires_at,global_rank",
+          order: "global_rank.asc",
+          limit: String(limit),
+        }),
+        request,
+      );
+      if (cursor !== null) feedParams.set("global_rank", `gt.${cursor}`);
+      const feedResponse = await supabase(`feed_rankings?${feedParams}`);
+      if (!feedResponse.ok) {
+        return NextResponse.json({ ok: false, state: "DATA_UNAVAILABLE" }, { status: 503 });
+      }
+      rankings = (await feedResponse.json()) as RankingRow[];
     }
-    const rankings = (await feedResponse.json()) as RankingRow[];
 
     const overviewResponse = await supabase("rpc/get_discovery_overview", {
       method: "POST",
@@ -150,8 +204,19 @@ export async function GET(request: Request) {
     };
 
     const verifiedSignalCount = Number(overview.verifiedSignals ?? 0);
-    const signalCounts = overview.signalCounts ?? {};
+    let signalCounts = overview.signalCounts ?? {};
     const poolCount = Number(overview.poolCount ?? 0);
+
+    // Counts are computed in Postgres for the selected observation window.
+    // They are never derived from the 100-card UI slice.
+    const timeframeCountsResponse = await supabase("rpc/get_discovery_timeframe_signal_counts", {
+      method: "POST",
+      body: JSON.stringify({ p_since: timeframe.since }),
+    });
+    if (timeframeCountsResponse.ok) {
+      const counts = await timeframeCountsResponse.json() as Record<string, number>;
+      signalCounts = counts;
+    }
 
     const topTopicNames = Object.entries(overview.topicCounts ?? {})
       .filter(([, count]) => Number(count) > 0)
