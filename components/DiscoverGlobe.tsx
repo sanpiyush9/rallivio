@@ -120,37 +120,6 @@ export default function DiscoverGlobe() {
         earthLift.scale.setScalar(1.002);
         group.add(earthLift);
 
-        const atmosphereGeometry = new THREE.SphereGeometry(1.13, 48, 48);
-        const atmosphereMaterial = new THREE.ShaderMaterial({
-          uniforms: { glowColor: { value: new THREE.Color(0x58cfff) } },
-          vertexShader: `
-            varying vec3 vWorldNormal;
-            varying vec3 vWorldPosition;
-            void main() {
-              vWorldNormal = normalize(mat3(modelMatrix) * normal);
-              vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-              vWorldPosition = worldPosition.xyz;
-              gl_Position = projectionMatrix * viewMatrix * worldPosition;
-            }
-          `,
-          fragmentShader: `
-            uniform vec3 glowColor;
-            varying vec3 vWorldNormal;
-            varying vec3 vWorldPosition;
-            void main() {
-              vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-              float fresnel = pow(1.0 - max(dot(viewDir, normalize(vWorldNormal)), 0.0), 3.6);
-              float innerFade = smoothstep(0.0, 0.82, fresnel);
-              gl_FragColor = vec4(glowColor, innerFade * 0.90);
-            }
-          `,
-          side: THREE.BackSide,
-          transparent: true,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        });
-        group.add(new THREE.Mesh(atmosphereGeometry, atmosphereMaterial));
-
         const addClouds = (clouds: import("three").Texture) => {
           if (disposed) {
             clouds.dispose();
@@ -225,20 +194,6 @@ export default function DiscoverGlobe() {
         resizeObserver = new ResizeObserver(resize);
         resizeObserver.observe(host);
 
-        let lastFrame = 0;
-        const renderFrame = (now: number) => {
-          if (disposed || !renderer) return;
-          if (!visible.current) return;
-          if (!lastFrame) lastFrame = now;
-          if (now - lastFrame >= 33.33) {
-            const delta = Math.min((now - lastFrame) / 1000, 0.1);
-            void delta; // Step 1 is intentionally static; rotation starts only after visual approval.
-            renderer.render(scene, camera);
-            if (renderer.info.render.frame <= 3 || renderer.info.render.frame % 60 === 0) console.log("[globe] frame", renderer.info.render.frame);
-            lastFrame = now;
-          }
-          frame = window.requestAnimationFrame(renderFrame);
-        };
         renderer.render(scene, camera);
         ready();
 
@@ -246,18 +201,12 @@ export default function DiscoverGlobe() {
           (entries) => {
             const entry = entries[0];
             visible.current = Boolean(entry?.isIntersecting);
-            if (visible.current && !reducedMotion.matches) {
-              window.cancelAnimationFrame(frame);
-              frame = window.requestAnimationFrame(renderFrame);
-            } else {
-              window.cancelAnimationFrame(frame);
-            }
+            if (visible.current) renderer?.render(scene, camera);
           },
           { threshold: 0.01 },
         );
         intersectionObserver.observe(host);
 
-        if (visible.current) frame = window.requestAnimationFrame(renderFrame);
       } catch (error) {
         console.error("[globe] initialization failed", error);
         fallback();
