@@ -1317,3 +1317,11 @@ footer{margin-top:8px!important}
 @media(prefers-reduced-motion:reduce){.rvWorldCursor{display:none}.rvWorldCenter{opacity:.08}}
 
 `;
+
+<style id="rallivio-metaverse-interaction">
+.globeStage3d{cursor:crosshair!important}
+.rvWorldPanel{position:fixed;right:28px;top:110px;width:260px;padding:18px;border:1px solid rgba(96,225,255,.3);border-radius:16px;background:linear-gradient(145deg,rgba(4,24,40,.88),rgba(7,9,24,.72));backdrop-filter:blur(20px);box-shadow:0 25px 80px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.08);z-index:20;color:#dff9ff;display:grid;gap:7px}
+.rvWorldPanel button{position:absolute;right:9px;top:7px;border:0;background:none;color:#83b6c9;font-size:20px;cursor:pointer}
+.rvWorldPanel small{font-size:7px;letter-spacing:1.8px;color:#64ddff}.rvWorldPanel strong{font-size:22px;letter-spacing:-.5px}.rvWorldPanel span{font-size:9px;line-height:1.5;color:#89a8ba}
+@media(max-width:767px){.rvWorldPanel{right:12px;left:12px;top:auto;bottom:58px;width:auto}}
+</style>
