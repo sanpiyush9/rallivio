@@ -1,7 +1,7 @@
 "use client";
 
-import RallivioMotionWorld from "../../components/RallivioMotionWorld";
+import RallivioImmersiveWorld from "../../components/RallivioImmersiveWorld";
 
 export default function LivingDiscover() {
-  return <RallivioMotionWorld />;
+  return <RallivioImmersiveWorld />;
 }
