@@ -200,9 +200,9 @@ export default function RallivioMotionWorld() {
       <header className="rmw-header">
         <Link href="/" className="rmw-logo">RALL<span>IVIO</span></Link>
         <nav>
-          <a href="#discover">Discover</a><a href="#signals">Signals</a><a href="#topics">Topics</a><a href="#creators">Creators</a><a href="#opportunities">Opportunities</a>
+          <a href="#discover">Discover</a><a href="#promote">Promote</a><a href="#creators">Creators</a><a href="#opportunities">Brands & Opportunities</a><a href="#community">Community</a><a href="#about">About</a>
         </nav>
-        <button className="rmw-header-action" onClick={() => setPromote(true)}>ADD CONTENT ↗</button>
+        <button className="rmw-header-action" onClick={() => setPromote(true)}>PROMOTE ↗</button>
       </header>
 
       <div className="rmw-scroll-progress"><i style={{ transform: `scaleX(${Math.min(1, (scene + 1) / 5)})` }} /></div>
@@ -210,8 +210,8 @@ export default function RallivioMotionWorld() {
       <section id="discover" className="rmw-section rmw-hero">
         <div className="rmw-hero-copy">
           <span className="rmw-kicker"><i /> THE LIVING INTERNET / {new Date().getFullYear()}</span>
-          <h1>SEE WHAT<br /><em>WANTS TO MOVE.</em></h1>
-          <p>RALLIVIO turns global attention into a living visual system — content, creators, topics and signals moving together in real time.</p>
+          <h1>SEE WHAT<br /><em>IS MOVING.</em></h1>
+          <p>Discover what is moving across YouTube, Instagram, TikTok, X, Reddit and more. Promote what matters. Find creators. Find opportunities.</p>
           <div className="rmw-hero-actions"><button onClick={() => document.getElementById("signals")?.scrollIntoView({ behavior: "smooth" })}>ENTER THE FIELD ↓</button><button className="ghost" onClick={() => setPromote(true)}>PASTE A LINK ↗</button></div>
         </div>
         <div className="rmw-hero-meta"><span>WORLDWIDE</span><b>LIVE</b><small>{stats.signals.toLocaleString()} signals · {stats.pool.toLocaleString()} discovered</small></div>
@@ -230,14 +230,14 @@ export default function RallivioMotionWorld() {
         </div>
       </section>
 
-      <section id="topics" className="rmw-section rmw-topics">
-        <div className="rmw-scene-heading"><span>02 / WORLDS</span><h2>Enter a<br /><em>topic.</em></h2><p>Choose an attention field and the network reconfigures around it.</p></div>
-        <div className="rmw-topic-orbit">
-          {TOPICS.map((t, i) => {
-            const count = items.filter(x => x.topic === t).length;
-            return <button key={t} className={topic === t ? "active" : ""} style={{ "--i": i } as React.CSSProperties} onClick={() => setTopic(topic === t ? "ALL" : t)}><small>{String(count).padStart(2,"0")}</small><b>{t}</b><span>↗</span></button>;
-          })}
+      <section id="promote" className="rmw-section rmw-topics">
+        <div className="rmw-scene-heading"><span>02 / PROMOTE</span><h2>Put your<br /><em>content in motion.</em></h2><p>Promote a video, post, product, website or creator profile through the RALLIVIO discovery workflow.</p></div>
+        <div className="rmw-promo-steps">
+          <div><span>01</span><b>PASTE A LINK</b><small>YouTube · Instagram · TikTok · X · Web</small></div>
+          <div><span>02</span><b>RALLIVIO DISCOVERS</b><small>Signal · topic · audience · movement</small></div>
+          <div><span>03</span><b>GET DISCOVERED</b><small>Put the right content in front of the right attention.</small></div>
         </div>
+        <button className="rmw-primary" onClick={() => setPromote(true)}>START PROMOTING ↗</button>
       </section>
 
       <section id="creators" className="rmw-section rmw-creators">
@@ -249,8 +249,31 @@ export default function RallivioMotionWorld() {
       </section>
 
       <section id="opportunities" className="rmw-section rmw-opportunities">
-        <div><span>04 / OPPORTUNITY LAYER</span><h2>Discovery is<br /><em>the beginning.</em></h2><p>Build a workflow around what is moving: analyze content, track momentum and connect the right audience to the right opportunity.</p><button onClick={() => setPromote(true)}>START WITH A LINK ↗</button></div>
-        <div className="rmw-opportunity-visual"><div className="rmw-ring r1" /><div className="rmw-ring r2" /><div className="rmw-ring r3" /><b>RALLIVIO</b><span>GLOBAL ATTENTION ENGINE</span></div>
+        <div><span>04 / BRANDS & OPPORTUNITIES</span><h2>Brands need.<br /><em>Creators deliver.</em></h2><p>Brands can publish requirements. Creators can discover opportunities. RALLIVIO connects both sides and takes a 10% commission when a deal is completed through the platform.</p></div>
+        <div className="rmw-market-grid">
+          <div className="rmw-market-card"><span>FOR BRANDS</span><h3>Find the right creator.</h3><p>Define your audience, niche, platform and campaign need.</p><button className="rmw-primary">POST A REQUIREMENT ↗</button></div>
+          <div className="rmw-market-card"><span>FOR CREATORS</span><h3>Find the right opportunity.</h3><p>Browse brand requirements and apply for work that fits your audience.</p><button className="rmw-primary">VIEW OPPORTUNITIES ↗</button></div>
+          <div className="rmw-commission"><b>10%</b><span>RALLIVIO DEAL COMMISSION</span></div>
+        </div>
+      </section>
+
+      <section id="community" className="rmw-section rmw-simple-section">
+        <div className="rmw-scene-heading"><span>05 / COMMUNITY</span><h2>People behind<br /><em>the attention.</em></h2><p>Creators, brands and people building, discovering and sharing what's moving.</p></div>
+        <div className="rmw-simple-grid">
+          <div><b>DISCUSS</b><span>Talk about trends, creator growth and ideas.</span></div>
+          <div><b>SHOWCASE</b><span>Share your work and discoveries.</span></div>
+          <div><b>CONNECT</b><span>Meet creators, brands and people building the future.</span></div>
+        </div>
+      </section>
+
+      <section id="about" className="rmw-section rmw-simple-section">
+        <div className="rmw-scene-heading"><span>06 / ABOUT RALLIVIO</span><h2>The platform for<br /><em>moving attention.</em></h2><p>RALLIVIO discovers what is moving across the internet, gives people a way to promote what matters, helps brands and creators find each other, and turns attention into opportunity.</p></div>
+        <div className="rmw-about-words"><span>DISCOVER</span><span>PROMOTE</span><span>CONNECT</span><span>CREATE</span><span>GROW</span></div>
+      </section>
+
+      <section id="creator-pro" className="rmw-section rmw-simple-section rmw-pro-section">
+        <div className="rmw-scene-heading"><span>07 / CREATOR PRO</span><h2>Grow inside<br /><em>the creator pool.</em></h2><p>Creator Pro: ₹99/month. Annual billing: ₹594/year, 50% off the normal annual price.</p></div>
+        <div className="rmw-pro-card"><b>₹99</b><span>PER MONTH</span><small>YEARLY · 50% OFF</small><strong>₹594 / YEAR</strong><ul><li>Creator Pool profile</li><li>Enhanced visibility</li><li>Advanced analytics</li><li>Priority opportunity matching</li><li>Featured creator placement</li></ul><a href="/pricing">VIEW CREATOR PRO ↗</a></div>
       </section>
 
       <footer className="rmw-footer"><strong>RALL<span>IVIO</span></strong><div>DISCOVER / MOVE / CONNECT</div><small>THE LIVING INTERNET</small></footer>
