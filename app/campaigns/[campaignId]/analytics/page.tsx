@@ -6,6 +6,7 @@ import {useParams,useRouter} from "next/navigation";
 type Analytics={campaign:any;summary:{impressions:number;clicks:number;ctr:number;publishers:number};publishers:Array<{host:string;impressions:number;clicks:number;lastSeen:string|null}>;timeline:Array<{date:string;impressions:number;clicks:number}>};
 
 export default function CampaignAnalytics(){
+ // Campaign analytics route redeploy marker: keep this page on the feature branch preview.
  const params=useParams<{campaignId:string}>(),router=useRouter();
  const [data,setData]=useState<Analytics|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(true);
  async function load(){try{const r=await fetch("/api/campaigns/"+params.campaignId+"/analytics",{cache:"no-store"});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.state||"Unable to load analytics");setData(j)}catch(e){setError(e instanceof Error?e.message:"Unable to load analytics")}finally{setLoading(false)}}
