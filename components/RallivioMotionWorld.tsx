@@ -36,7 +36,6 @@ function compact(n?: number) {
 
 function Field({ items, active, onSelect, scene }: { items: Item[]; active: Item | null; onSelect: (x: Item) => void; scene: number }) {
   const group = useRef<THREE.Group>(null);
-  const lineRef = useRef<THREE.Line>(null);
   const nodes = useMemo(() => {
     const source = items.slice(0, 18);
     return source.map((item, i) => {
@@ -244,7 +243,7 @@ export default function RallivioMotionWorld() {
         <div className="rmw-scene-heading"><span>03 / CREATOR NETWORK</span><h2>People become<br /><em>nodes.</em></h2><p>Content travels through creators, topics and audiences. The network is the product.</p></div>
         <div className="rmw-network">
           <div className="rmw-network-core"><i /><b>{compact(stats.creators)}</b><span>CREATOR NODES</span></div>
-          {display.slice(0, 9).map((x, i) => <button key={x.id + i} className="rmw-creator-node" style={{ "--i": i } as React.CSSProperties} onClick={() => setSelected(x)}><img src={x.thumbnail} alt="" /><span>{x.channel_title}</span><b>{x.topic || "WORLD"}</b></button>)}
+          {display.slice(0, 9).map((x, i) => <button key={x.id + i} className="rmw-creator-node" onClick={() => setSelected(x)}><img src={x.thumbnail} alt="" /><span>{x.channel_title}</span><b>{x.topic || "WORLD"}</b></button>)}
         </div>
       </section>
 
