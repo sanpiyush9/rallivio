@@ -61,7 +61,7 @@ function PromotionPageInner() {
         <div><b>04 · Optimize</b><small>Shift future distribution toward measured relevance.</small></div>
       </div>
       {notice && <div className="notice">{notice}</div>}
-      {campaign && <div className="success"><b>CAMPAIGN ACTIVE</b><p><strong>{campaign.title}</strong><br/>Type: {campaign.content_type}<br/>30-day trial ends: {new Date(campaign.trial_ends_at).toLocaleDateString()}</p><div className="link">{campaign.source_url}</div><button className="back" type="button" onClick={()=>router.push("/living")}>Open RALLIVIO Discover →</button></div>}
+      {campaign && <div className="success"><b>CAMPAIGN ACTIVE</b><p><strong>{campaign.title}</strong><br/>Type: {campaign.content_type}<br/>30-day trial ends: {new Date(campaign.trial_ends_at).toLocaleDateString()}</p><div className="link">{campaign.source_url}</div><button className="back" type="button" onClick={()=>router.push("/campaigns/" + campaign.id + "/analytics")}>View Campaign Analytics →</button><button className="back" type="button" onClick={()=>router.push("/living")}>Open RALLIVIO Discover →</button></div>}
     </div>
   </main>;
 }
