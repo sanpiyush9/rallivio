@@ -203,19 +203,36 @@ export async function GET(request: Request) {
       topicCounts?: Record<string, number>;
     };
 
-    const verifiedSignalCount = Number(overview.verifiedSignals ?? 0);
+    let verifiedSignalCount = Number(overview.verifiedSignals ?? 0);
+    let trackedCreators = Number(overview.trackedCreators ?? 0);
+    let risingCreators = Number(overview.risingCreators ?? 0);
+    let activeTopics = Number(overview.activeTopics ?? 0);
     let signalCounts = overview.signalCounts ?? {};
-    const poolCount = Number(overview.poolCount ?? 0);
+    let poolCount = Number(overview.poolCount ?? 0);
 
-    // Counts are computed in Postgres for the selected observation window.
-    // They are never derived from the 100-card UI slice.
+    // Dashboard metrics and signal counts are scoped to the same selected
+    // observation window. Postgres calculates them before the UI receives data.
+    const timeframeMetricsResponse = await supabase("rpc/get_discovery_timeframe_metrics", {
+      method: "POST",
+      body: JSON.stringify({ p_since: timeframe.since }),
+    });
+    if (timeframeMetricsResponse.ok) {
+      const metrics = await timeframeMetricsResponse.json() as {
+        verifiedSignals?: number; trackedCreators?: number; risingCreators?: number; activeTopics?: number;
+      };
+      verifiedSignalCount = Number(metrics.verifiedSignals ?? 0);
+      trackedCreators = Number(metrics.trackedCreators ?? 0);
+      risingCreators = Number(metrics.risingCreators ?? 0);
+      activeTopics = Number(metrics.activeTopics ?? 0);
+      poolCount = verifiedSignalCount;
+    }
+
     const timeframeCountsResponse = await supabase("rpc/get_discovery_timeframe_signal_counts", {
       method: "POST",
       body: JSON.stringify({ p_since: timeframe.since }),
     });
     if (timeframeCountsResponse.ok) {
-      const counts = await timeframeCountsResponse.json() as Record<string, number>;
-      signalCounts = counts;
+      signalCounts = await timeframeCountsResponse.json() as Record<string, number>;
     }
 
     const topTopicNames = Object.entries(overview.topicCounts ?? {})
@@ -278,11 +295,11 @@ export async function GET(request: Request) {
           ok: true, source: "RALLIVIO_DISCOVERY_POOL", refreshedAt: null,
           apiUsageLatestAt: usageRows[0]?.created_at ?? null,
           apiUsageLatestEndpoint: usageRows[0]?.endpoint ?? null,
-          poolCount: Number(overview.poolCount ?? poolCount),
-          verifiedSignalCount: Number(overview.verifiedSignals ?? verifiedSignalCount),
-          trackedCreators: Number(overview.trackedCreators ?? 0),
-          risingCreators: Number(overview.risingCreators ?? 0),
-          activeTopics: Number(overview.activeTopics ?? 0),
+          poolCount,
+          verifiedSignalCount,
+          trackedCreators,
+          risingCreators,
+          activeTopics,
           regions: Array.isArray(overview.regions) ? overview.regions : [],
           signalCounts: overview.signalCounts ?? signalCounts,
           topicCounts: overview.topicCounts ?? {},
