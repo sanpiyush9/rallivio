@@ -13,6 +13,21 @@ function boot(){
  function load(){var q=new URLSearchParams();if(topic)q.set("topic",topic);if(region)q.set("region",region);q.set("limit",String(limit));
  fetch(b+"/api/distribution/feed?"+q,{mode:"cors",credentials:"omit",cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){var items=d.items||[];grid.innerHTML=items.length?items.map(function(i){return'<a class="item" href="'+esc(i.url)+'" target="_blank" rel="noopener"><img class="thumb" src="'+esc(i.thumbnail)+'" alt="" loading="lazy"><div><div class="title">'+esc(i.title)+'</div><div class="meta"><span>'+esc(i.channel)+'</span><span class="badge">'+esc(i.tier||"PROMOTED")+'</span><span>'+esc(i.contentType||"link")+'</span></div></div></a>'}).join(""):'<div class="empty">No active RALLIVIO promotion is available for this filter yet.</div>'}).catch(function(){grid.innerHTML=""})}
  load();setInterval(load,300000);
+ function impression(items){
+   try{items.forEach(function(i){
+     if(!i.campaignId)return;
+     fetch(b+"/api/promotion-events",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+       campaignId:i.campaignId,eventType:"impression",publisherHost:location.hostname,publisherPath:location.pathname,referrer:document.referrer
+     }),keepalive:true}).catch(function(){});
+   })}catch(_){}
+ }
+ var oldLoad=load;
+ load=function(){var q=new URLSearchParams();if(topic)q.set("topic",topic);if(region)q.set("region",region);q.set("limit",String(limit));
+   fetch(b+"/api/distribution/feed?"+q,{mode:"cors",credentials:"omit",cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){
+     var items=d.items||[]; impression(items);
+     grid.innerHTML=items.length?items.map(function(i){return'<a class="item" href="'+esc(i.url)+'" target="_blank" rel="noopener"><img class="thumb" src="'+esc(i.thumbnail)+'" alt="" loading="lazy"><div><div class="title">'+esc(i.title)+'</div><div class="meta"><span>'+esc(i.channel)+'</span><span class="badge">'+esc(i.tier||"PROMOTED")+'</span><span>'+esc(i.contentType||"link")+'</span></div></div></a>'}).join(""):'<div class="empty">No active RALLIVIO promotion is available for this filter yet.</div>'
+   }).catch(function(){grid.innerHTML=""})};
+ load();setInterval(load,300000);
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();
 }catch(_){}})();
