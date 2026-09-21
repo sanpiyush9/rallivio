@@ -38,6 +38,7 @@ type DiscoveryPoolItem = {
 };
 
 type Category = { name: string; icon: string; keywords: string[] };
+type Timeframe = { id: string; label: string; window: string };
 type Platform = { id: string; name: string; kind: string; connected: boolean; x: number; y: number };
 
 const DiscoverGlobe = dynamic(() => import("../../components/DiscoverGlobe"), { ssr: false });
@@ -89,6 +90,13 @@ const themeDefinitions = [
   { id: "lunar", name: "Frosted Steel", short: "Steel", desc: "steel / ice", mode: "PRECISION", accent: "steel" },
 ] as const;
 const nav = [["Discover", "/"], ["Creators", "/creators"], ["Brands & Opportunities", "/opportunities"], ["Community", "/community"], ["About", "/about"]] as const;
+const timeframes: Timeframe[] = [
+  { id: "15m", label: "15 Min", window: "15 minutes" },
+  { id: "1h", label: "1 Hour", window: "1 hour" },
+  { id: "1d", label: "1 Day", window: "1 day" },
+  { id: "1w", label: "1 Week", window: "1 week" },
+  { id: "1m", label: "1 Month", window: "1 month" },
+];
 const signalKey = (s?: string) => (s || "").toLowerCase().replace(/[_-]/g, " ").trim();
 const signalMatches = (item: Item, signal: string) => signalKey(item.metadata?.signal) === signalKey(signal);
 const fmt = (n: number) => n >= 1e9 ? `${(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${(n / 1e3).toFixed(1)}K` : n.toLocaleString();
@@ -155,6 +163,7 @@ export default function LivingDiscover() {
   const [verifiedSignalCount, setVerifiedSignalCount] = useState(0);
   const [signalCounts, setSignalCounts] = useState<Record<string, number>>({});
   const [activeSignal, setActiveSignal] = useState<string | null>(null);
+  const [timeframe, setTimeframe] = useState("15m");
   const [poolCount, setPoolCount] = useState(0);
   const [trackedCreators, setTrackedCreators] = useState(0);
   const [risingCreatorCount, setRisingCreatorCount] = useState(0);
@@ -199,7 +208,7 @@ export default function LivingDiscover() {
 
   const loadDiscovery = async (signal: string | null = null, topic: string | null = null, cursor: number | null = null, append = false) => {
     try {
-      const params = new URLSearchParams({ limit: "100" });
+      const params = new URLSearchParams({ limit: "100", timeframe });
       if (cursor !== null) params.set("cursor", String(cursor));
       if (signal) params.set("signal", signal);
       if (topic && topic !== "Trending") params.set("topic", topic);
@@ -284,13 +293,13 @@ export default function LivingDiscover() {
       .catch(() => undefined);
 
     return () => { cancelled = true; };
-  }, []);
+  }, [timeframe]);
 
   // Signal/topic changes replace the feed with the requested slice only.
   useEffect(() => {
     if (activeSignal === null && filter === "Trending") return;
     void loadDiscovery(activeSignal, filter === "Trending" ? null : filter);
-  }, [activeSignal, filter]);
+  }, [activeSignal, filter, timeframe]);
 
   // Refresh the currently selected slice without resetting its filter.
   useEffect(() => {
@@ -694,10 +703,18 @@ export default function LivingDiscover() {
       </div>
     </section>}
 
+    <section className="timeframeBar" aria-label="Signal timeframe">
+      <div className="timeframeLabel"><small>TIME FRAME</small><span>Signals are ranked inside the selected observation window.</span></div>
+      <div className="timeframeOptions">
+        {timeframes.map(t => <button key={t.id} type="button" className={timeframe === t.id ? "active" : ""} onClick={() => { setTimeframe(t.id); setActiveSignal(null); setSelectedPulse(null); setPulseOffset(0); }}><i/> {t.label}</button>)}
+      </div>
+      <div className="timeframeMeta"><span><i/> WORLDWIDE</span><small>Database-side window · no million-row client load</small></div>
+    </section>
+
     <section className="pulseSection">
       <div className="pulseSectionHead">
-        <div className="pulseTitle"><span className="pulseWave">⌁</span><div><h2>RALLIVIO PULSE</h2><p>Real signals. Real movement. Rotating continuously from the verified discovery pool.</p></div></div>
-        <div className="pulseHeadActions"><span className="pulseLive"><i/> {sourceLive ? "Live" : "Idle"}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</span><button className="viewSignalsButton" type="button" onClick={() => document.getElementById("pulse-stream")?.scrollIntoView({ behavior: "smooth", block: "center" })}>View all signals&nbsp; →</button></div>
+        <div className="pulseTitle"><span className="pulseWave">⌁</span><div><h2>RALLIVIO PULSE</h2><p>Real signals. Real movement. Ranked inside the selected observation window from the verified discovery pool.</p></div></div>
+        <div className="pulseHeadActions"><span className="timeframeShowing">Showing: {timeframes.find(t => t.id === timeframe)?.label} signals</span><span className="pulseLive"><i/> {sourceLive ? "Live" : "Idle"}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</span><button className="viewSignalsButton" type="button" onClick={() => document.getElementById("pulse-stream")?.scrollIntoView({ behavior: "smooth", block: "center" })}>View all signals&nbsp; →</button></div>
       </div>
       <div className="pulseTabs">
         {signalGroups.map((g, i) => (
@@ -1226,6 +1243,8 @@ footer{margin-top:8px!important}
 @media(max-width:1180px){.topbar{grid-template-columns:190px minmax(0,1fr) 280px max-content!important;column-gap:14px!important}.topbar nav{gap:16px!important}.topbar .search{width:280px!important;min-width:280px!important;max-width:280px!important}.topActions{gap:8px!important}.themeButton{min-width:40px!important;width:40px!important;padding:0!important;justify-content:center!important}.themeButtonLabel,.themeButtonDot{display:none!important}}
 @media(max-width:950px){.topbar{display:flex!important;flex-wrap:wrap!important;height:auto!important;min-height:72px!important;padding:10px 16px!important}.topbar nav{order:3!important;width:100%!important;overflow:auto!important}.topbar .search{order:2!important;flex:1 1 220px!important;width:auto!important;min-width:180px!important;max-width:none!important}.topActions{order:4!important;margin-left:auto!important}.brand{flex:0 0 auto!important}}
 
+.timeframeBar{position:relative;z-index:3;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;margin:0 5vw;padding:14px 18px;border:1px solid rgba(86,125,215,.28);border-top:0;background:linear-gradient(90deg,rgba(8,16,36,.96),rgba(8,12,28,.98));box-shadow:0 14px 40px rgba(0,0,0,.18)}
+.timeframeLabel small{display:block;font-size:8px;letter-spacing:2px;font-weight:900;color:#8d94b2}.timeframeLabel span{display:block;margin-top:4px;font-size:8px;color:#69718f}.timeframeOptions{display:flex;align-items:center;gap:8px;min-width:0}.timeframeOptions button{display:flex;align-items:center;gap:7px;border:1px solid rgba(117,139,255,.22);background:rgba(255,255,255,.035);color:#aeb4cd;border-radius:999px;padding:9px 16px;font-size:9px;font-weight:850;cursor:pointer;white-space:nowrap;transition:.18s}.timeframeOptions button i{width:6px;height:6px;border-radius:50%;background:#5c6685}.timeframeOptions button:hover{border-color:#5edcff66;color:#eaf5ff;transform:translateY(-1px)}.timeframeOptions button.active{border-color:#36cfff;background:linear-gradient(135deg,rgba(48,211,255,.22),rgba(126,77,255,.18));color:#fff;box-shadow:0 0 24px rgba(43,197,255,.14),inset 0 0 18px rgba(77,130,255,.08)}.timeframeOptions button.active i{background:#5ee8ff;box-shadow:0 0 10px #5ee8ff}.timeframeMeta{text-align:right}.timeframeMeta span{display:block;color:#6fe0ae;font-size:8px;font-weight:850;letter-spacing:.7px}.timeframeMeta span i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#67e5ad;box-shadow:0 0 9px #67e5ad;margin-right:5px}.timeframeMeta small{display:block;margin-top:4px;color:#666d88;font-size:7px}.timeframeShowing{font-size:8px;color:#7f88a6;font-weight:800;white-space:nowrap}@media(max-width:950px){.timeframeBar{grid-template-columns:1fr;gap:10px;margin:0 16px}.timeframeOptions{overflow:auto;padding-bottom:2px}.timeframeMeta{text-align:left}.timeframeShowing{display:none}}
 /* Full-surface theme treatment */
 .theme-nebula{--panel:rgba(10,14,34,.82);--line:rgba(117,139,255,.22)}.theme-aurora{--panel:rgba(5,24,31,.84);--line:rgba(53,210,193,.23)}.theme-neon{--panel:rgba(28,12,11,.86);--line:rgba(255,133,78,.24)}.theme-lunar{--panel:rgba(17,24,32,.88);--line:rgba(181,211,230,.24)}
 .theme-nebula .topbar,.theme-nebula .search,.theme-nebula .themePicker,.theme-nebula .discoveryPanel,.theme-nebula .spotlightPanel,.theme-nebula .panel{background:var(--panel)!important;border-color:var(--line)!important}.theme-aurora .topbar,.theme-aurora .search,.theme-aurora .themePicker,.theme-aurora .discoveryPanel,.theme-aurora .spotlightPanel,.theme-aurora .panel{background:var(--panel)!important;border-color:var(--line)!important}.theme-neon .topbar,.theme-neon .search,.theme-neon .themePicker,.theme-neon .discoveryPanel,.theme-neon .spotlightPanel,.theme-neon .panel{background:var(--panel)!important;border-color:var(--line)!important}.theme-lunar .topbar,.theme-lunar .search,.theme-lunar .themePicker,.theme-lunar .discoveryPanel,.theme-lunar .spotlightPanel,.theme-lunar .panel{background:var(--panel)!important;border-color:var(--line)!important}
