@@ -47,6 +47,7 @@ export async function GET(req:Request,{params}:{params:Promise<{campaignId:strin
     if (!campaign?.source_url) return new Response("Not Found",{status:404});
 
     const nextClicks = Number(campaign.clicks || 0) + 1;
+    await sb("rpc/record_promotion_event",{method:"POST",body:JSON.stringify({p_campaign_id:campaign.id,p_event_type:"click",p_publisher_host:source(req),p_publisher_path:new URL(req.url).pathname,p_referrer:req.headers.get("referer")||"",p_user_agent:req.headers.get("user-agent")||""})});
     const update = await sb(`promotion_campaigns?id=eq.${encodeURIComponent(campaign.id)}`, {
       method:"PATCH",
       headers:{Prefer:"return=minimal"},
