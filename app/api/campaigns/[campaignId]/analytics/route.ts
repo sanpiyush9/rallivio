@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic="force-dynamic";
 
-export async function GET(req:Request,{params}:{params:Promise<{campaignId:string}>}){
+export async function GET(_req:Request,{params}:{params:Promise<{campaignId:string}>}){
+  void _req;
   const {campaignId}=await params;
   if(!/^[0-9a-f-]{20,80}$/i.test(campaignId)) return NextResponse.json({ok:false},{status:400});
   const supabase=await createClient();
