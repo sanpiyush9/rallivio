@@ -33,7 +33,7 @@ export async function GET(req:Request,{params}:{params:Promise<{campaignId:strin
     const now = new Date().toISOString();
     const response = await sb([
       "promotion_campaigns",
-      "select=id,source_url,status,distribution_mode,trial_ends_at,clicks",
+      "select=id,source_url,status,distribution_mode,trial_ends_at",
       `id=eq.${encodeURIComponent(campaignId)}`,
       "status=eq.active",
       "distribution_mode=eq.rallivio_owned",
