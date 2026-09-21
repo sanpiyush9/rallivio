@@ -5,16 +5,18 @@ const BASE = (process.env.RALLIVIO_BASE_URL || "https://rallivio.com").replace(/
 export async function GET() {
   return NextResponse.json({
     name: "RALLIVIO Distribution Network",
-    version: 1,
+    version: 2,
     status: "active",
-    model: "authorized_syndication",
+    model: "authorized_campaign_syndication",
     automatic_updates: true,
     refresh_seconds: 300,
-    feed: `${BASE}/api/embed`,
+    feed: `${BASE}/api/distribution/feed`,
     network_script: `${BASE}/rallivio-network.js`,
-    redirect: `${BASE}/r/{videoId}`,
+    redirect: `${BASE}/go/{campaignId}`,
     publisher_installation: "one_time",
     publisher_action_required: "one_time_install",
+    eligibility: "registered_user_submitted_active_promotion_only",
+    discovery_pool_distribution: false,
     prohibited: ["spam", "fake_engagement", "unauthorized_posting", "paid_placement"],
     supported_surfaces: ["custom_html", "wordpress", "shopify", "webflow", "cms", "owned_sites", "authorized_partner_sites"]
   }, {
