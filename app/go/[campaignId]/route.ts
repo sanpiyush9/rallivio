@@ -42,17 +42,15 @@ export async function GET(req:Request,{params}:{params:Promise<{campaignId:strin
     ].join("?"));
 
     if (!response.ok) return new Response("Not Found",{status:404});
-    const rows = await response.json() as Array<{id:string;source_url:string;status:string;distribution_mode:string;trial_ends_at:string;clicks:number}>;
+    const rows = await response.json() as Array<{id:string;source_url:string;status:string;distribution_mode:string;trial_ends_at:string}>;
     const campaign = rows[0];
     if (!campaign?.source_url) return new Response("Not Found",{status:404});
 
-    const nextClicks = Number(campaign.clicks || 0) + 1;
     await sb("rpc/record_promotion_event",{method:"POST",body:JSON.stringify({p_campaign_id:campaign.id,p_event_type:"click",p_publisher_host:source(req),p_publisher_path:new URL(req.url).pathname,p_referrer:req.headers.get("referer")||"",p_user_agent:req.headers.get("user-agent")||""})});
     const update = await sb(`promotion_campaigns?id=eq.${encodeURIComponent(campaign.id)}`, {
       method:"PATCH",
       headers:{Prefer:"return=minimal"},
       body:JSON.stringify({
-        clicks: nextClicks,
         last_distributed_at: new Date().toISOString()
       })
     });
