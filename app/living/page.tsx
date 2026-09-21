@@ -469,10 +469,21 @@ export default function LivingDiscover() {
   const risingCreators = risingCreatorCount;
 
   const pulseCards = useMemo(() => {
-    if (!ranked.length) return [];
-    const count = Math.min(120, Math.max(24, ranked.length * 3));
-    return Array.from({ length: count }, (_, i) => ranked[(pulseOffset + i) % ranked.length]);
-  }, [ranked, pulseOffset]);
+    // The pulse carousel must always represent the selected signal.
+    // Previously it rotated over the full ranked pool even after a signal tab
+    // was selected, which made (for example) "Breaking Out" show "Now Moving"
+    // videos. Keep the authoritative API filter as the source of truth and
+    // apply a defensive client-side filter as well.
+    const source = activeSignal
+      ? ranked.filter(item =>
+          (item.metadata?.signals || []).some(label => signalKey(label) === signalKey(activeSignal))
+          || signalMatches(item, activeSignal),
+        )
+      : ranked;
+    if (!source.length) return [];
+    const count = Math.min(120, Math.max(24, source.length * 3));
+    return Array.from({ length: count }, (_, i) => source[(pulseOffset + i) % source.length]);
+  }, [ranked, activeSignal, pulseOffset]);
 
   const scrollPulse = (direction: -1 | 1) => {
     const el = pulseViewportRef.current;
@@ -483,6 +494,10 @@ export default function LivingDiscover() {
   };
 
   const selectPulse = (item: Item) => {
+    // Never allow a stale card from another signal group to remain selected.
+    if (activeSignal && !((item.metadata?.signals || []).some(label => signalKey(label) === signalKey(activeSignal)) || signalMatches(item, activeSignal))) {
+      return;
+    }
     setSelectedPulse(item);
     window.requestAnimationFrame(() => document.getElementById("pulse-selected")?.scrollIntoView({ behavior: "smooth", block: "center" }));
   };
@@ -685,6 +700,8 @@ export default function LivingDiscover() {
             setActiveSignal(g.name);
             setFilter("Trending");
             setQ("");
+            setSelectedPulse(null);
+            setPulseOffset(0);
             void loadDiscovery(g.name);
             window.requestAnimationFrame(() => document.getElementById("pulse-stream")?.scrollIntoView({ behavior: "smooth", block: "center" }));
           }}>
