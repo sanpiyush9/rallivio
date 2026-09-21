@@ -1236,4 +1236,15 @@ footer{margin-top:8px!important}
  .topActions{order:4!important;margin-left:auto!important}
  .brand{flex:0 0 auto!important}
 }
+
+/* RALLIVIO immersive 3D spine */
+.globeStage3d{position:fixed!important;inset:72px 0 0!important;z-index:1!important;pointer-events:none!important;overflow:hidden!important;opacity:.98!important}
+.globeStage3d>div{width:100%!important;height:100%!important}
+.globeStage3d canvas{width:100%!important;height:100%!important;display:block!important}
+.globeFallback3d{position:fixed!important;inset:72px 0 0!important;z-index:1!important;pointer-events:none!important;overflow:hidden!important}
+.globeFallback3d>div{position:absolute!important;width:min(56vw,760px)!important;aspect-ratio:1!important;right:8vw!important;top:8vh!important;border-radius:50%!important;background:radial-gradient(circle at 35% 25%,#4ecfff 0,#1769bf 20%,#0b2d6b 48%,#06132b 72%,#020611 100%)!important;box-shadow:inset -40px -30px 70px #000b,0 0 70px #42cfff55!important}
+@media(max-width:767px){.globeStage3d{inset:72px 0 0!important;opacity:.48!important}.globeFallback3d>div{width:82vw!important;right:9vw!important;top:7vh!important}}
+@media(prefers-reduced-motion:reduce){.globeStage3d{display:none!important}.globeFallback3d{display:block!important}}
+.pulseCard{transform-style:preserve-3d;perspective:1000px}
+.pulseCard:hover{transform:perspective(1000px) rotateX(var(--tilt-y,0deg)) rotateY(var(--tilt-x,0deg)) translateZ(12px) translateY(-4px)}
 `;
