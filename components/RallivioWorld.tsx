@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { Html, Float, Line, OrbitControls } from "@react-three/drei";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import * as THREE from "three";
 
 type Item = {
   id: string;
@@ -11,198 +14,253 @@ type Item = {
   url: string;
   topic?: string;
   region?: string;
-  published_at?: string;
   views?: number;
   metadata?: { signal?: string; momentum_score?: number; subscriber_count?: number | null };
 };
 
 const SIGNALS = ["Now Moving", "Breaking Out", "On the Rise", "Under the Radar", "Just Dropped"];
+const SOURCES = ["ALL", "YOUTUBE", "INSTAGRAM", "TIKTOK", "X", "REDDIT"];
+const TOPICS = ["AI & Tech","Gaming","Music","Sports","Entertainment","Food","News","Pets","Beauty","Travel","Business","Finance","Fitness","Fashion","Science","Education","Automotive"];
 
-const topics = [
-  "AI & Tech","Gaming","Music","Sports","Entertainment","Food","News","Pets","Beauty",
-  "Travel","Business","Finance","Fitness","Fashion","Science","Education","Automotive"
-];
-
-function compact(n:number|undefined){
-  if(!n) return "—";
-  if(n>=1e9) return (n/1e9).toFixed(1)+"B";
-  if(n>=1e6) return (n/1e6).toFixed(1)+"M";
-  if(n>=1e3) return (n/1e3).toFixed(1)+"K";
+function compact(n?: number) {
+  if (!n) return "—";
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + "B";
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
   return n.toLocaleString();
 }
 
-export default function RallivioWorld(){
-  const [items,setItems]=useState<Item[]>([]);
-  const [selected,setSelected]=useState<Item|null>(null);
-  const [topic,setTopic]=useState("ALL");
-  const [signal,setSignal]=useState("ALL");
-  const [activeRoom,setActiveRoom]=useState("DISCOVER");
-  const [cursor,setCursor]=useState({x:0,y:0});
-  const [stats,setStats]=useState({pool:0,signals:0,creators:0,topics:0});
+function Spiral({ items, selected, onSelect }: { items: Item[]; selected: Item | null; onSelect: (x: Item) => void }) {
+  const group = useRef<THREE.Group>(null);
+  const points = useMemo(() => {
+    const count = Math.max(items.length, 28);
+    return Array.from({ length: count }, (_, i) => {
+      const t = i / Math.max(1, count - 1);
+      const angle = t * Math.PI * 7.5;
+      const radius = 1.2 + t * 7.2;
+      return new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius * 0.58, -t * 7);
+    });
+  }, [items.length]);
 
-  useEffect(()=>{
-    const move=(e:MouseEvent)=>setCursor({x:(e.clientX/innerWidth-.5)*2,y:(e.clientY/innerHeight-.5)*2});
-    addEventListener("mousemove",move,{passive:true});
-    return()=>removeEventListener("mousemove",move);
-  },[]);
+  useFrame((state, delta) => {
+    if (!group.current) return;
+    group.current.rotation.z += delta * 0.035;
+    group.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.18) * 0.08;
+    group.current.position.y = Math.sin(state.clock.elapsedTime * 0.28) * 0.08;
+  });
 
-  useEffect(()=>{
-    let live=true;
-    const load=async()=>{
-      try{
-        const endpoint=new URL("/api/discovery?limit=60",window.location.origin).toString();
-        const r=await fetch(endpoint,{cache:"no-store",headers:{accept:"application/json"}});
-        const text=await r.text();
-        let b: Record<string, unknown>;
-        try{ b=JSON.parse(text); }catch(parseError){
-          console.error("RALLIVIO discovery: invalid JSON",{status:r.status,contentType:r.headers.get("content-type"),text:text.slice(0,500),parseError});
-          return;
-        }
-        const rawItems = Array.isArray(b.items) ? b.items : [];
-        console.log("RALLIVIO discovery RAW",Object.keys(b),b.poolCount,rawItems.length);
-        if(!live) return;
-        if(!r.ok || b?.ok!==true){
-          console.error("RALLIVIO discovery: API rejected",{status:r.status,payload:b});
-          return;
-        }
-        const nextItems=rawItems as Item[];
-        setItems(nextItems);
+  return (
+    <group ref={group}>
+      <Line points={points} color="#62eaff" transparent opacity={0.22} lineWidth={1} />
+      {points.map((p, i) => {
+        const item = items[i % Math.max(1, items.length)];
+        if (!item) return null;
+        const scale = selected?.id === item.id ? 1.22 : 1;
+        return (
+          <Float key={i} speed={1.2 + (i % 4) * 0.2} rotationIntensity={0.15} floatIntensity={0.25}>
+            <group position={p} scale={scale} onClick={(e) => { e.stopPropagation(); onSelect(item); }}>
+              <mesh>
+                <sphereGeometry args={[0.11 + (i % 5) * 0.025, 16, 16]} />
+                <meshStandardMaterial color={selected?.id === item.id ? "#ffffff" : i % 5 === 0 ? "#b66cff" : "#5fe2ff"} emissive={selected?.id === item.id ? "#ffffff" : "#1685b5"} emissiveIntensity={2.5} />
+              </mesh>
+              <Html distanceFactor={11} center transform sprite>
+                <button className="rv3-node" onClick={(e) => { e.stopPropagation(); onSelect(item); }}>
+                  <span>{item.metadata?.signal || "SIGNAL"}</span>
+                  <b>{item.title}</b>
+                  <small>{item.channel_title} · {item.topic || "WORLD"}</small>
+                </button>
+              </Html>
+            </group>
+          </Float>
+        );
+      })}
+      <mesh position={[0, 0, -7.5]}>
+        <sphereGeometry args={[0.75, 32, 32]} />
+        <meshStandardMaterial color="#0b2d42" emissive="#1f9dca" emissiveIntensity={2.8} transparent opacity={0.9} />
+      </mesh>
+      <Html position={[0, 0, -6.6]} center>
+        <div className="rv3-core">
+          <strong>RALLIVIO</strong>
+          <span>LIVE ATTENTION FIELD</span>
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+function World({ items, selected, onSelect }: { items: Item[]; selected: Item | null; onSelect: (x: Item) => void }) {
+  const stars = useMemo(() => Array.from({ length: 700 }, () => [
+    (Math.random() - 0.5) * 34,
+    (Math.random() - 0.5) * 20,
+    -Math.random() * 26
+  ] as [number, number, number]), []);
+
+  const starRef = useRef<THREE.Points>(null);
+  useFrame((_, delta) => {
+    if (starRef.current) starRef.current.rotation.z += delta * 0.006;
+  });
+
+  return (
+    <>
+      <ambientLight intensity={0.28} />
+      <pointLight position={[0, 0, 3]} intensity={20} color="#5fe2ff" distance={18} />
+      <pointLight position={[7, 3, -4]} intensity={12} color="#9b62ff" distance={15} />
+      <points ref={starRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[new Float32Array(stars.flat()), 3]} count={stars.length} array={new Float32Array(stars.flat())} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial size={0.025} color="#8defff" transparent opacity={0.6} />
+      </points>
+      <Spiral items={items} selected={selected} onSelect={onSelect} />
+    </>
+  );
+}
+
+export default function RallivioWorld() {
+  const [items, setItems] = useState<Item[]>([]);
+  const [selected, setSelected] = useState<Item | null>(null);
+  const [source, setSource] = useState("ALL");
+  const [topic, setTopic] = useState("ALL");
+  const [signal, setSignal] = useState("ALL");
+  const [query, setQuery] = useState("");
+  const [stats, setStats] = useState({ pool: 0, signals: 0, creators: 0, topics: 0 });
+  const [promote, setPromote] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      try {
+        const r = await fetch("/api/discovery?limit=100", { cache: "no-store" });
+        const b: Record<string, unknown> = await r.json();
+        if (!alive || !r.ok || b.ok !== true) return;
+        const next = Array.isArray(b.items) ? b.items as Item[] : [];
+        setItems(next);
         setStats({
-          pool:Number(b.poolCount ?? 0),
-          signals:Number(b.verifiedSignalCount ?? 0),
-          creators:Number(b.trackedCreators ?? 0),
-          topics:Number(b.activeTopics ?? 0)
+          pool: Number(b.poolCount ?? 0),
+          signals: Number(b.verifiedSignalCount ?? 0),
+          creators: Number(b.trackedCreators ?? 0),
+          topics: Number(b.activeTopics ?? 0),
         });
-      }catch(error){
-        console.error("RALLIVIO discovery: fetch failed",error);
-      }
+      } catch {}
     };
     void load();
-    const id=setInterval(()=>void load(),60000);
-    return()=>{live=false;clearInterval(id)};
-  },[]);
+    const id = setInterval(load, 60000);
+    return () => { alive = false; clearInterval(id); };
+  }, []);
 
-  const filtered=useMemo(()=>items.filter(x=>
-    (topic==="ALL"||x.topic===topic) &&
-    (signal==="ALL"||x.metadata?.signal===signal)
-  ),[items,topic,signal]);
+  const filtered = useMemo(() => items.filter(x =>
+    (topic === "ALL" || x.topic === topic) &&
+    (signal === "ALL" || x.metadata?.signal === signal) &&
+    (!query || x.title.toLowerCase().includes(query.toLowerCase()) || x.channel_title.toLowerCase().includes(query.toLowerCase()))
+  ), [items, topic, signal, query]);
 
-  const hero=filtered[0]||items[0];
-  const orbit=filtered.slice(0,10);
-  const creators=Array.from(new Map(filtered.map(x=>[x.channel_title,x])).values()).slice(0,7);
-  const rooms=["DISCOVER","LIVE","TOPICS","CREATORS","OPPORTUNITIES"];
+  const spiralItems = filtered.length ? filtered.slice(0, 34) : items.slice(0, 34);
 
-  return <main className="rw">
-    <div className="rw-noise"/>
-    <div className="rw-grid"/>
-    <div className="rw-aura rw-aura-a" style={{transform:`translate3d(${cursor.x*28}px,${cursor.y*18}px,0)`}}/>
-    <div className="rw-aura rw-aura-b" style={{transform:`translate3d(${cursor.x*-20}px,${cursor.y*-12}px,0)`}}/>
-    <div className="rw-particle-field" aria-hidden="true">
-      {Array.from({length:42},(_,i)=><i key={i} style={{"--i":i} as React.CSSProperties}/>)}
-    </div>
+  return (
+    <main className="rv3">
+      <div className="rv3-canvas">
+        <Canvas camera={{ position: [0, 0, 13], fov: 52 }} dpr={[1, 1.6]}>
+          <World items={spiralItems} selected={selected} onSelect={setSelected} />
+          <OrbitControls enablePan={false} enableZoom={false} autoRotate autoRotateSpeed={0.22} dampingFactor={0.04} enableDamping />
+        </Canvas>
+      </div>
 
-    <header className="rw-nav">
-      <Link href="/" className="rw-logo">RALL<span>IVIO</span></Link>
-      <nav>{rooms.map(r=><button key={r} className={activeRoom===r?"active":""} onClick={()=>setActiveRoom(r)}>{r}</button>)}</nav>
-      <div className="rw-nav-right"><span className="rw-live"><i/>LIVE INTELLIGENCE</span><button className="rw-search">⌕ <span>Search the field</span></button><Link href="/pricing" className="rw-pro">PRO</Link></div>
-    </header>
+      <div className="rv3-vignette" />
+      <header className="rv3-header">
+        <Link href="/" className="rv3-logo">RALL<span>IVIO</span></Link>
+        <nav>
+          <a className="active" href="#discover">DISCOVER</a>
+          <a href="#trending">TRENDING</a>
+          <a href="#topics">TOPICS</a>
+          <a href="#creators">CREATORS</a>
+          <a href="#opportunities">OPPORTUNITIES</a>
+        </nav>
+        <button className="rv3-search-trigger" onClick={() => document.getElementById("rv3-search")?.focus()}>⌕ SEARCH</button>
+      </header>
 
-    <section className="rw-hero">
-      <div className="rw-hero-copy">
-        <div className="rw-kicker"><i/> GLOBAL SIGNAL FIELD <b>REAL DATA</b></div>
-        <h1>THE INTERNET<br/><em>IS MOVING.</em></h1>
-        <p>RALLIVIO turns the live internet into a navigable world — signals, creators, topics and opportunities connected in one spatial experience.</p>
-        <div className="rw-actions">
-          <button className="rw-primary" onClick={()=>document.getElementById("rw-field")?.scrollIntoView({behavior:"smooth"})}>ENTER THE FIELD <span>↗</span></button>
-          <button className="rw-ghost" onClick={()=>setSignal("Breaking Out")}>FIND BREAKOUTS <span>⌁</span></button>
+      <section id="discover" className="rv3-hero">
+        <div className="rv3-eyebrow"><i /> GLOBAL ATTENTION NETWORK · LIVE DATA</div>
+        <h1>WATCH THE<br /><em>INTERNET MOVE.</em></h1>
+        <p>Real content enters the field. Signals accelerate. Topics form worlds. Move through the network instead of browsing another static feed.</p>
+        <div className="rv3-actions">
+          <button onClick={() => setPromote(true)} className="rv3-primary">PASTE CONTENT / PROMOTE ↗</button>
+          <a href="#trending" className="rv3-secondary">ENTER TRENDING ↓</a>
         </div>
-      </div>
+      </section>
 
-      <div className="rw-hero-camera" style={{transform:`translate3d(${cursor.x*18}px,${cursor.y*12}px,0)`}}>
-        <div className="rw-hero-world">
-          <div className="rw-energy energy-a"/><div className="rw-energy energy-b"/><div className="rw-energy energy-c"/>
-          <div className="rw-ring ring-1"/><div className="rw-ring ring-2"/><div className="rw-ring ring-3"/>
-        <div className="rw-core">
-          <div className="rw-core-orb"/>
-          <span>RALLIVIO</span><small>DISCOVERY OS</small>
+      <section className="rv3-console">
+        <div className="rv3-searchbox">
+          <span>⌕</span>
+          <input id="rv3-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search any content, creator or topic..." />
+          <button onClick={() => setPromote(true)}>PROMOTE</button>
         </div>
-        {orbit.map((x,i)=><button key={x.id} className={`rw-node n${i}`} onClick={()=>setSelected(x)} title={x.title}>
-          <span className="rw-node-pulse"/><b>{x.metadata?.signal||"SIGNAL"}</b><small>{x.topic||"WORLD"}</small>
-        </button>)}
-          <div className="rw-axis x"/><div className="rw-axis y"/>
-          <div className="rw-scanline"/>
+        <div className="rv3-source-row">
+          {SOURCES.map(s => <button key={s} className={source === s ? "on" : ""} onClick={() => setSource(s)}>{s}</button>)}
+          <span className="rv3-separator" />
+          {SIGNALS.map(s => <button key={s} className={signal === s ? "on" : ""} onClick={() => setSignal(signal === s ? "ALL" : s)}>{s}</button>)}
         </div>
-      </div>
+      </section>
 
-      <div className="rw-floating rw-float-a"><span>WORLDWIDE</span><strong>{stats.pool.toLocaleString()}</strong><small>DISCOVERY POOL</small></div>
-      <div className="rw-floating rw-float-b"><span>LIVE</span><strong>{stats.signals.toLocaleString()}</strong><small>VERIFIED SIGNALS</small></div>
-    </section>
+      <section className="rv3-overlay-stats">
+        <div><b>{stats.pool.toLocaleString()}</b><span>DISCOVERY POOL</span></div>
+        <div><b>{stats.signals.toLocaleString()}</b><span>LIVE SIGNALS</span></div>
+        <div><b>{stats.creators.toLocaleString()}</b><span>CREATOR NODES</span></div>
+        <div><b>{stats.topics.toLocaleString()}</b><span>ACTIVE TOPICS</span></div>
+      </section>
 
-    <div className="rw-motion-ticker" aria-hidden="true"><span>LIVE SIGNALS</span><i/><span>VELOCITY</span><i/><span>ATTENTION</span><i/><span>CREATOR FLOW</span><i/><span>GLOBAL NOW</span><i/></div>
+      <section id="trending" className="rv3-panel-section">
+        <div className="rv3-section-label">01 / TRENDING WORLDWIDE</div>
+        <div className="rv3-section-title"><h2>Attention has <em>velocity.</em></h2><p>Real discovery signals become moving objects in the field above. Select one to inspect its source and momentum.</p></div>
+        <div className="rv3-trend-grid">
+          {filtered.slice(0, 8).map((x, i) => (
+            <button key={x.id} className="rv3-trend-card" onClick={() => setSelected(x)}>
+              <img src={x.thumbnail} alt="" />
+              <div><span>{x.metadata?.signal || "SIGNAL"} · {x.topic || "WORLD"}</span><b>{x.title}</b><small>{x.channel_title} · {compact(x.views)} views</small></div>
+              <strong>0{i + 1}</strong>
+            </button>
+          ))}
+        </div>
+      </section>
 
-    <section className="rw-metrics">
-      <div><strong>{stats.signals.toLocaleString()}</strong><span>signals in motion</span></div>
-      <div><strong>{stats.creators.toLocaleString()}</strong><span>creator nodes</span></div>
-      <div><strong>{stats.topics.toLocaleString()}</strong><span>active worlds</span></div>
-      <div><strong>60s</strong><span>refresh cycle</span></div>
-    </section>
+      <section id="topics" className="rv3-panel-section">
+        <div className="rv3-section-label">02 / TOPIC WORLDS</div>
+        <div className="rv3-section-title"><h2>Choose a <em>world.</em></h2><p>Topics are not folders. They are living attention fields.</p></div>
+        <div className="rv3-topic-row">
+          {TOPICS.map(t => {
+            const count = items.filter(x => x.topic === t).length;
+            return <button key={t} className={topic === t ? "selected" : ""} onClick={() => setTopic(topic === t ? "ALL" : t)}><span>{String(count).padStart(2, "0")}</span><b>{t}</b><i /></button>;
+          })}
+        </div>
+      </section>
 
-    <section id="rw-field" className="rw-field">
-      <div className="rw-section-head">
-        <div><span>01 / THE FIELD</span><h2>Navigate what&apos;s<br/><em>moving now.</em></h2></div>
-        <p>Not a dashboard. A living map of attention. Select a topic or signal and move deeper into the network.</p>
-      </div>
-      <div className="rw-filters">
-        <div><span>TOPIC</span><button className={topic==="ALL"?"on":""} onClick={()=>setTopic("ALL")}>ALL</button>{topics.slice(0,9).map(t=><button key={t} className={topic===t?"on":""} onClick={()=>setTopic(t)}>{t}</button>)}</div>
-        <div><span>SIGNAL</span><button className={signal==="ALL"?"on":""} onClick={()=>setSignal("ALL")}>ALL</button>{SIGNALS.map(s=><button key={s} className={signal===s?"on":""} onClick={()=>setSignal(s)}>{s}</button>)}</div>
-      </div>
+      <section id="creators" className="rv3-panel-section">
+        <div className="rv3-section-label">03 / CREATOR NETWORK</div>
+        <div className="rv3-section-title"><h2>People are <em>nodes.</em></h2><p>Creators sit inside the same attention network as their content, topics and signals.</p></div>
+      </section>
 
-      <div className="rw-stage">
-        <div className="rw-stage-sky"/>
-        <div className="rw-stage-grid"/>
-        <div className="rw-stage-trails" aria-hidden="true"><i/><i/><i/><i/><i/></div>
-        <div className="rw-stage-title"><span>ATTENTION NETWORK</span><strong>{filtered.length||items.length}</strong><small>VISIBLE NODES</small></div>
-        {filtered.slice(0,18).map((x,i)=><button key={x.id} className={`rw-card c${i%9}`} onClick={()=>setSelected(x)}>
-          <img src={x.thumbnail} alt=""/>
-          <div><small>{x.metadata?.signal||"SIGNAL"} · {x.topic||"WORLD"}</small><strong>{x.title}</strong><span>{x.channel_title} · {compact(x.views)} views</span></div>
-        </button>)}
-        <div className="rw-stage-core"><span>DISCOVERY</span><b>FIELD</b><i/></div>
-      </div>
-    </section>
+      <section id="opportunities" className="rv3-opportunity">
+        <div><span>04 / OPPORTUNITY LAYER</span><h2>From discovery<br />to <em>distribution.</em></h2></div>
+        <div className="rv3-opportunity-card"><i /><b>CONTENT PROMOTION</b><p>Paste a piece of content and RALLIVIO can place it into the discovery workflow for analysis, signal tracking and future distribution products.</p><button onClick={() => setPromote(true)}>START WITH A LINK ↗</button></div>
+      </section>
 
-    <section className="rw-worlds">
-      <div className="rw-section-head compact"><div><span>02 / WORLDS</span><h2>Enter a <em>topic.</em></h2></div><p>Each topic becomes a world with its own creators, velocity and emerging signals.</p></div>
-      <div className="rw-topic-grid">{topics.map((t,i)=>{
-        const count=items.filter(x=>x.topic===t).length;
-        return <button key={t} onClick={()=>{setTopic(t);document.getElementById("rw-field")?.scrollIntoView({behavior:"smooth"})}} className="rw-topic">
-          <span>0{i+1}</span><strong>{t}</strong><small>{count||0} visible signals</small><i/>
-        </button>
-      })}</div>
-    </section>
+      <footer className="rv3-footer"><strong>RALL<span>IVIO</span></strong><small>THE OPERATING SYSTEM FOR GLOBAL ATTENTION</small></footer>
 
-    <section className="rw-creators">
-      <div className="rw-section-head compact"><div><span>03 / CREATOR NETWORK</span><h2>People behind<br/><em>the movement.</em></h2></div><p>Creators are nodes in the same intelligence field — not isolated profile pages.</p></div>
-      <div className="rw-creator-map">
-        <div className="rw-creator-core">CREATOR<br/><b>NETWORK</b></div>
-        {creators.map((x,i)=><button key={x.channel_title} className={`rw-creator cr${i}`} onClick={()=>setSelected(x)}>
-          <img src={x.thumbnail} alt=""/><strong>{x.channel_title}</strong><small>{x.topic||"Creator"} · {compact(x.metadata?.subscriber_count||0)} audience</small>
-        </button>)}
-      </div>
-    </section>
+      {selected && <div className="rv3-modal" onClick={() => setSelected(null)}>
+        <div className="rv3-modal-card" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => setSelected(null)}>×</button>
+          <img src={selected.thumbnail} alt="" />
+          <div><span>{selected.metadata?.signal || "SIGNAL"} · {selected.topic || "WORLD"} · {selected.region || "GLOBAL"}</span><h3>{selected.title}</h3><p>{selected.channel_title}</p><small>{compact(selected.views)} views · momentum {selected.metadata?.momentum_score ?? "—"}</small><a href={selected.url} target="_blank" rel="noreferrer">OPEN SOURCE ↗</a></div>
+        </div>
+      </div>}
 
-    <section className="rw-opps">
-      <div><span>04 / OPPORTUNITIES</span><h2>Where attention<br/><em>becomes opportunity.</em></h2></div>
-      <div className="rw-opps-card"><i/><strong>OPPORTUNITY LAYER</strong><p>Brands, creators and signals will connect here as the RALLIVIO network expands.</p><button onClick={()=>setActiveRoom("OPPORTUNITIES")}>OPEN OPPORTUNITIES ↗</button></div>
-    </section>
-
-    <footer className="rw-footer"><strong>RALL<span>IVIO</span></strong><span>DISCOVER PEOPLE. POWER WHAT&apos;S NEXT.</span><small>GLOBAL DISCOVERY INTELLIGENCE</small></footer>
-
-    {selected&&<div className="rw-modal" onClick={()=>setSelected(null)}>
-      <div className="rw-modal-card" onClick={e=>e.stopPropagation()}>
-        <button className="rw-close" onClick={()=>setSelected(null)}>×</button>
-        <img src={selected.thumbnail} alt=""/>
-        <div><span>{selected.metadata?.signal||"SIGNAL"} · {selected.topic||"WORLD"} · {selected.region||"GLOBAL"}</span><h3>{selected.title}</h3><p>{selected.channel_title}</p><small>{compact(selected.views)} views · momentum {selected.metadata?.momentum_score??"—"}</small><a href={selected.url} target="_blank" rel="noreferrer">OPEN SOURCE ↗</a></div>
-      </div>
-    </div>}
-  </main>
+      {promote && <div className="rv3-modal" onClick={() => setPromote(false)}>
+        <div className="rv3-promote" onClick={(e) => e.stopPropagation()}>
+          <button className="rv3-x" onClick={() => setPromote(false)}>×</button>
+          <span>RALLIVIO / PROMOTE</span><h3>Put content into the attention field.</h3><p>Paste a public content URL to begin the discovery workflow.</p>
+          <input autoFocus placeholder="https://youtube.com/...  /  instagram.com/..." />
+          <button className="rv3-primary">ANALYZE CONTENT ↗</button>
+        </div>
+      </div>}
+    </main>
+  );
 }
