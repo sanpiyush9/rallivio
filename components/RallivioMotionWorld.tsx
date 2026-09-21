@@ -3,6 +3,7 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Html, Line, OrbitControls } from "@react-three/drei";
 import Link from "next/link";
+import RallivioField from "./RallivioField";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
@@ -189,12 +190,8 @@ export default function RallivioMotionWorld() {
     <main className="rmw">
       <div className="rmw-backdrop" style={{ transform: `translate3d(${mouse.x * -10}px,${mouse.y * -7}px,0)` }} />
       <div className="rmw-grid" />
-      <div className="rmw-canvas" style={{ transform: `translate3d(${mouse.x * 7}px,${mouse.y * 5}px,0) scale(1.03)` }}>
-        <Canvas camera={{ position: [0, 0, 12], fov: 52 }} dpr={[1, 1.5]} gl={{ antialias: true, alpha: true }}>
-          <Atmosphere scene={scene} />
-          <Field items={heroItems} active={selected} onSelect={setSelected} scene={scene} />
-          <OrbitControls enablePan={false} enableZoom={false} enableRotate={false} />
-        </Canvas>
+      <div className="rmw-canvas rmw-living-field" aria-label="Rallivio living signal field">
+        <RallivioField />
       </div>
 
       <header className="rmw-header">
