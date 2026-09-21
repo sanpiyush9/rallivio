@@ -164,6 +164,7 @@ export default function LivingDiscover() {
   const [signalCounts, setSignalCounts] = useState<Record<string, number>>({});
   const [activeSignal, setActiveSignal] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState("15m");
+  const [showTimeframeHelp, setShowTimeframeHelp] = useState(false);
   const [poolCount, setPoolCount] = useState(0);
   const [trackedCreators, setTrackedCreators] = useState(0);
   const [risingCreatorCount, setRisingCreatorCount] = useState(0);
@@ -674,7 +675,7 @@ export default function LivingDiscover() {
           </svg>
           <i/><i/><i/><i/><i/><i/>
         </div>
-        <div><b>Global Activity</b><small>Verified source coverage · {globalRegions.length ? globalRegions.join(", ") : "—"}<br/>{!apiUsageLatestAt ? "No source observations yet." : `${fmt(poolCount)} videos · ${fmt(trackedCreators)} tracked creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
+        <div><b>Global Activity ({timeframes.find(t => t.id === timeframe)?.label})</b><small>Verified source coverage · {globalRegions.length ? globalRegions.join(", ") : "—"}<br/>{!apiUsageLatestAt ? "No source observations yet." : `${fmt(poolCount)} videos · ${fmt(trackedCreators)} tracked creators`}{lastUpdatedAt ? ` · ${age(new Date(lastUpdatedAt).toISOString())}` : ""}</small></div>
       </div>
     </section>
 
@@ -704,11 +705,24 @@ export default function LivingDiscover() {
     </section>}
 
     <section className="timeframeBar" aria-label="Signal timeframe">
-      <div className="timeframeLabel"><small>TIME FRAME</small><span>Signals are ranked inside the selected observation window.</span></div>
+      <div className="timeframeLabel">
+        <small>TIME FRAME</small>
+        <span>How far back RALLIVIO looks when detecting and ranking signals.</span>
+      </div>
       <div className="timeframeOptions">
         {timeframes.map(t => <button key={t.id} type="button" className={timeframe === t.id ? "active" : ""} onClick={() => { setTimeframe(t.id); setActiveSignal(null); setSelectedPulse(null); setPulseOffset(0); }}><i/> {t.label}</button>)}
+        <button type="button" className="timeframeHelp" onClick={() => setShowTimeframeHelp(v => !v)} aria-expanded={showTimeframeHelp}>ⓘ What is this?</button>
       </div>
-      <div className="timeframeMeta"><span><i/> WORLDWIDE</span><small>Database-side window · no million-row client load</small></div>
+      <div className="timeframeMeta"><span><i/> WORLDWIDE</span><small>Dashboard + signals use this same window</small></div>
+      {showTimeframeHelp && <div className="timeframeHelpPanel">
+        <strong>What does the time frame mean?</strong>
+        <span><b>15 Min</b> = signals detected from the last 15 minutes — fastest-moving content.</span>
+        <span><b>1 Hour</b> = last 1 hour — short-term momentum and emerging trends.</span>
+        <span><b>1 Day</b> = last 24 hours — daily trends and growing topics.</span>
+        <span><b>1 Week</b> = last 7 days — weekly growth and consistent performers.</span>
+        <span><b>1 Month</b> = last 30 days — longer-term trends and sustained creator activity.</span>
+        <em>When you switch time frame, the dashboard numbers, signal counts and video feed all recalculate for that window.</em>
+      </div>}
     </section>
 
     <section className="pulseSection">
@@ -1243,6 +1257,7 @@ footer{margin-top:8px!important}
 @media(max-width:1180px){.topbar{grid-template-columns:190px minmax(0,1fr) 280px max-content!important;column-gap:14px!important}.topbar nav{gap:16px!important}.topbar .search{width:280px!important;min-width:280px!important;max-width:280px!important}.topActions{gap:8px!important}.themeButton{min-width:40px!important;width:40px!important;padding:0!important;justify-content:center!important}.themeButtonLabel,.themeButtonDot{display:none!important}}
 @media(max-width:950px){.topbar{display:flex!important;flex-wrap:wrap!important;height:auto!important;min-height:72px!important;padding:10px 16px!important}.topbar nav{order:3!important;width:100%!important;overflow:auto!important}.topbar .search{order:2!important;flex:1 1 220px!important;width:auto!important;min-width:180px!important;max-width:none!important}.topActions{order:4!important;margin-left:auto!important}.brand{flex:0 0 auto!important}}
 
+.timeframeHelp{border-color:rgba(95,214,255,.18)!important;color:#8fa8c5!important;background:rgba(74,141,210,.06)!important}.timeframeHelpPanel{grid-column:1 / -1;display:grid;gap:7px;padding:12px 14px;border:1px solid rgba(67,205,255,.2);border-radius:12px;background:linear-gradient(135deg,rgba(10,30,54,.95),rgba(13,18,39,.98));box-shadow:0 16px 35px rgba(0,0,0,.25)}.timeframeHelpPanel strong{font-size:10px;color:#e8f8ff;letter-spacing:.3px}.timeframeHelpPanel span{font-size:8px;color:#8fa8c5;line-height:1.45}.timeframeHelpPanel span b{color:#62dcff}.timeframeHelpPanel em{font-size:8px;color:#6fe0ae;font-style:normal;margin-top:2px}.timeframeWorld{font-size:8px}.timeframeMeta small{white-space:nowrap}@media(max-width:950px){.timeframeHelpPanel{grid-column:1}.timeframeMeta small{white-space:normal}}
 .timeframeBar{position:relative;z-index:3;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;margin:0 5vw;padding:14px 18px;border:1px solid rgba(86,125,215,.28);border-top:0;background:linear-gradient(90deg,rgba(8,16,36,.96),rgba(8,12,28,.98));box-shadow:0 14px 40px rgba(0,0,0,.18)}
 .timeframeLabel small{display:block;font-size:8px;letter-spacing:2px;font-weight:900;color:#8d94b2}.timeframeLabel span{display:block;margin-top:4px;font-size:8px;color:#69718f}.timeframeOptions{display:flex;align-items:center;gap:8px;min-width:0}.timeframeOptions button{display:flex;align-items:center;gap:7px;border:1px solid rgba(117,139,255,.22);background:rgba(255,255,255,.035);color:#aeb4cd;border-radius:999px;padding:9px 16px;font-size:9px;font-weight:850;cursor:pointer;white-space:nowrap;transition:.18s}.timeframeOptions button i{width:6px;height:6px;border-radius:50%;background:#5c6685}.timeframeOptions button:hover{border-color:#5edcff66;color:#eaf5ff;transform:translateY(-1px)}.timeframeOptions button.active{border-color:#36cfff;background:linear-gradient(135deg,rgba(48,211,255,.22),rgba(126,77,255,.18));color:#fff;box-shadow:0 0 24px rgba(43,197,255,.14),inset 0 0 18px rgba(77,130,255,.08)}.timeframeOptions button.active i{background:#5ee8ff;box-shadow:0 0 10px #5ee8ff}.timeframeMeta{text-align:right}.timeframeMeta span{display:block;color:#6fe0ae;font-size:8px;font-weight:850;letter-spacing:.7px}.timeframeMeta span i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#67e5ad;box-shadow:0 0 9px #67e5ad;margin-right:5px}.timeframeMeta small{display:block;margin-top:4px;color:#666d88;font-size:7px}.timeframeShowing{font-size:8px;color:#7f88a6;font-weight:800;white-space:nowrap}@media(max-width:950px){.timeframeBar{grid-template-columns:1fr;gap:10px;margin:0 16px}.timeframeOptions{overflow:auto;padding-bottom:2px}.timeframeMeta{text-align:left}.timeframeShowing{display:none}}
 /* Full-surface theme treatment */
