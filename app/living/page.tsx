@@ -1247,4 +1247,61 @@ footer{margin-top:8px!important}
 @media(prefers-reduced-motion:reduce){.globeStage3d{display:none!important}.globeFallback3d{display:block!important}}
 .pulseCard{transform-style:preserve-3d;perspective:1000px}
 .pulseCard:hover{transform:perspective(1000px) rotateX(var(--tilt-y,0deg)) rotateY(var(--tilt-x,0deg)) translateZ(12px) translateY(-4px)}
+
+/* RALLIVIO TRUE 3D WEB EXPERIENCE — the page itself participates in depth */
+.rv{perspective:1800px;perspective-origin:50% 42%;transform-style:preserve-3d;overflow-x:clip}
+.rv>.hero,.rv>.pulseStrip,.rv>.pulseSection{position:relative;transform-style:preserve-3d;backface-visibility:hidden}
+@supports (animation-timeline:scroll()){
+  .rv>.hero{animation:rallivioHero3d linear both;animation-timeline:scroll(root block);animation-range:0% 24%}
+  .rv>.pulseStrip{animation:rallivioStrip3d linear both;animation-timeline:scroll(root block);animation-range:8% 42%}
+  .rv>.pulseSection{animation:rallivioSection3d linear both;animation-timeline:scroll(root block);animation-range:18% 100%}
+  @keyframes rallivioHero3d{
+    0%{transform:translate3d(0,0,0) rotateX(0deg) rotateY(0deg) scale(1)}
+    55%{transform:translate3d(0,0,-45px) rotateX(1.8deg) rotateY(-.8deg) scale(.985)}
+    100%{transform:translate3d(0,0,-110px) rotateX(3deg) rotateY(1deg) scale(.96)}
+  }
+  @keyframes rallivioStrip3d{
+    0%{transform:translate3d(0,100px,-160px) rotateX(-10deg) scale(.93);opacity:.25}
+    45%{transform:translate3d(0,0,0) rotateX(0) scale(1);opacity:1}
+    100%{transform:translate3d(0,-35px,-80px) rotateX(3deg) scale(.98);opacity:1}
+  }
+  @keyframes rallivioSection3d{
+    0%{transform:translate3d(0,120px,-260px) rotateX(-14deg) scale(.9);opacity:.15}
+    45%{transform:translate3d(0,0,0) rotateX(0) scale(1);opacity:1}
+    100%{transform:translate3d(0,-20px,-35px) rotateX(1.5deg) scale(.995);opacity:1}
+  }
+}
+.pulseSection,.pulseStrip,.pulseCards,.pulseCard,.radarPanel,.topicsPanel,.spotlightPanel{transform-style:preserve-3d}
+.pulseCard,.radarPanel,.topicsPanel,.spotlightPanel{
+  transform-origin:50% 100%;
+  transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s ease;
+  box-shadow:0 24px 70px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.06);
+}
+@media (hover:hover) and (pointer:fine){
+  .pulseCard:hover,.radarPanel:hover,.topicsPanel:hover,.spotlightPanel:hover{
+    transform:translate3d(0,-7px,28px) rotateX(2deg) rotateY(-1deg);
+    box-shadow:0 38px 90px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.09);
+  }
+}
+.heroCopy,.ecosystem,.pulseStripLabel,.pulseMetric,.pulseWorld{transform-style:preserve-3d}
+.platform{transform-style:preserve-3d;transition:transform .35s ease,filter .35s ease}
+.platform:hover,.platform.selected{transform:translate(-50%,-50%) translateZ(42px) scale(1.06)!important;filter:drop-shadow(0 0 18px rgba(80,220,255,.55))}
+.platformMark{transform:translateZ(22px);box-shadow:0 10px 30px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.12)}
+.core{transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.core:hover,.core:focus-visible{transform:translateZ(70px) scale(1.025)!important}
+.heroSearch,.categoryRail,.liveStrip,.pulseSectionHead,.pulseTabs,.pulseViewport{transform:translateZ(24px);transform-style:preserve-3d}
+.pulseMetric{transition:transform .4s ease}
+.pulseMetric:hover{transform:translateZ(34px)}
+/* Scroll-driven camera feel: the fixed WebGL spine remains behind every depth layer. */
+.globeStage3d{will-change:transform,opacity;transform:translateZ(-300px) scale(1.04);transform-style:preserve-3d}
+@media(max-width:767px){
+  .rv{perspective:900px}
+  .rv>.hero,.rv>.pulseStrip,.rv>.pulseSection{transform:none!important;animation:none!important}
+  .pulseCard,.radarPanel,.topicsPanel,.spotlightPanel{transform:none!important}
+  .globeStage3d{opacity:.48!important;transform:translateZ(-120px) scale(1.02)}
+}
+@media(prefers-reduced-motion:reduce){
+  .rv,.rv>.hero,.rv>.pulseStrip,.rv>.pulseSection{perspective:none!important;animation:none!important;transform:none!important}
+  .pulseCard,.radarPanel,.topicsPanel,.spotlightPanel,.platform,.core{transition:none!important;transform:none!important}
+}
 `;
