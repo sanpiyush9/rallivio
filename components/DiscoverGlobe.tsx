@@ -6,9 +6,11 @@
 import { useEffect, useRef } from "react";
 
 // High-resolution photographic Earth textures from the official Three.js examples.
-const EARTH_ALBEDO = "https://threejs.org/examples/textures/planets/earth_day_4096.jpg";
+const EARTH_ALBEDO = "https://threejs.org/examples/textures/planets/earth_atmos_4096.jpg";
+const EARTH_NORMAL = "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg";
+const EARTH_SPECULAR = "https://threejs.org/examples/textures/planets/earth_specular_2048.jpg";
 const EARTH_NIGHT = "https://threejs.org/examples/textures/planets/earth_lights_2048.png";
-const EARTH_CLOUDS = "https://threejs.org/examples/textures/planets/earth_clouds_1024.png";
+const EARTH_CLOUDS = "https://threejs.org/examples/textures/planets/earth_clouds_2048.png";
 
 export default function DiscoverGlobe() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,7 @@ export default function DiscoverGlobe() {
 
         // Load the photographic daytime Earth first so the real globe appears immediately.
         // Night lights and clouds enhance it progressively without blocking first paint.
-        const albedo = await loader.loadAsync(EARTH_ALBEDO);
+        const [albedo, normal, specular] = await Promise.all([loader.loadAsync(EARTH_ALBEDO), loader.loadAsync(EARTH_NORMAL), loader.loadAsync(EARTH_SPECULAR)]);
         if (disposed) {
           geometry.dispose();
           albedo.dispose();
@@ -77,6 +79,8 @@ export default function DiscoverGlobe() {
 
         albedo.colorSpace = THREE.SRGBColorSpace;
         albedo.anisotropy = 2;
+        normal.anisotropy = 2;
+        specular.anisotropy = 2;
 
         const night = new THREE.DataTexture(
           new Uint8Array([0, 0, 0, 255]),
@@ -89,10 +93,13 @@ export default function DiscoverGlobe() {
 
         // Use the photographic daytime Earth directly. This avoids shader shadowing
         // that was making the real map appear like a mostly-night globe.
-        const earthMaterial = new THREE.MeshBasicMaterial({
+        const earthMaterial = new THREE.MeshPhongMaterial({
           map: albedo,
-          color: new THREE.Color(0xffffff),
-          toneMapped: false,
+          normalMap: normal,
+          normalScale: new THREE.Vector2(0.55, -0.55),
+          specularMap: specular,
+          specular: new THREE.Color(0x8fd8ff),
+          shininess: 18,
         });
 
         const earth = new THREE.Mesh(geometry, earthMaterial);
@@ -166,16 +173,23 @@ export default function DiscoverGlobe() {
           if (disposed) { texture.dispose(); return; }
           texture.colorSpace = THREE.SRGBColorSpace;
           texture.anisotropy = 2;
-          // Night lights are intentionally not composited into the daytime Earth.
-          texture.dispose();
+          const nightMaterial = new THREE.ShaderMaterial({
+            uniforms: { map: { value: texture }, sunDirection: { value: keyLight.position.clone().normalize() } },
+            vertexShader: `varying vec2 vUv; varying vec3 vNormalWorld; void main(){vUv=uv;vNormalWorld=normalize(mat3(modelMatrix)*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+            fragmentShader: `uniform sampler2D map; uniform vec3 sunDirection; varying vec2 vUv; varying vec3 vNormalWorld; void main(){float daylight=dot(normalize(vNormalWorld),normalize(sunDirection));float nightMask=1.0-smoothstep(-0.10,0.18,daylight);vec3 lights=texture2D(map,vUv).rgb;gl_FragColor=vec4(lights*nightMask*1.25,nightMask*.9);}`,
+            transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+          });
+          const nightMesh = new THREE.Mesh(geometry.clone(), nightMaterial);
+          nightMesh.scale.setScalar(1.0015);
+          group.add(nightMesh);
         });
 
         loader.load(EARTH_CLOUDS, addClouds);
 
-        const keyLight = new THREE.DirectionalLight(0xffffff, 3.8);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
         keyLight.position.set(-4.2, 3.2, 4.6);
         scene.add(keyLight);
-        scene.add(new THREE.AmbientLight(0x3977aa, 0.48));
+        scene.add(new THREE.AmbientLight(0x17283d, 0.16));
 
         // Thin cyan orbital rings naturally occlude behind/in front of the Earth.
         // Sparse starfield surrounding the globe.
@@ -218,9 +232,7 @@ export default function DiscoverGlobe() {
           if (!lastFrame) lastFrame = now;
           if (now - lastFrame >= 33.33) {
             const delta = Math.min((now - lastFrame) / 1000, 0.1);
-            group.rotation.y += (Math.PI * 2 / 60) * delta;
-            const cloud = group.children.find((child) => child.userData.isCloudLayer) as import("three").Mesh | undefined;
-            if (cloud) cloud.rotation.y += (Math.PI * 2 / 48) * delta;
+            void delta; // Step 1 is intentionally static; rotation starts only after visual approval.
             renderer.render(scene, camera);
             if (renderer.info.render.frame <= 3 || renderer.info.render.frame % 60 === 0) console.log("[globe] frame", renderer.info.render.frame);
             lastFrame = now;
