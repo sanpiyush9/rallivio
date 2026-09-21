@@ -27,3 +27,42 @@ $$;
 
 revoke execute on function public.get_discovery_timeframe_signal_counts(timestamptz) from public, anon, authenticated;
 grant execute on function public.get_discovery_timeframe_signal_counts(timestamptz) to service_role;
+
+
+create or replace function public.get_discovery_timeframe_metrics(p_since timestamptz)
+returns jsonb
+language sql
+security definer
+set search_path = public
+as $$
+  with observed as (
+    select distinct on (ds.video_id)
+      ds.video_id,
+      ds.channel_id,
+      ds.signal_type,
+      ds.observed_at,
+      yp.topic
+    from public.discovery_signals ds
+    left join public.youtube_discovery_pool yp on yp.id = ds.video_id
+    where ds.observed_at >= p_since
+    order by ds.video_id, ds.observed_at desc
+  ),
+  metrics as (
+    select
+      count(*)::bigint as verified_signals,
+      count(distinct channel_id)::bigint as tracked_creators,
+      count(distinct case when signal_type in ('Now Moving','Breaking Out','On the Rise') then channel_id end)::bigint as rising_creators,
+      count(distinct nullif(topic,''))::bigint as active_topics
+    from observed
+  )
+  select jsonb_build_object(
+    'verifiedSignals', verified_signals,
+    'trackedCreators', tracked_creators,
+    'risingCreators', rising_creators,
+    'activeTopics', active_topics
+  )
+  from metrics;
+$$;
+
+revoke execute on function public.get_discovery_timeframe_metrics(timestamptz) from public, anon, authenticated;
+grant execute on function public.get_discovery_timeframe_metrics(timestamptz) to service_role;
