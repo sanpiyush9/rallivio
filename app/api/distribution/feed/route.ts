@@ -31,61 +31,93 @@ export async function GET(request: Request) {
     const topic = url.searchParams.get("topic") || "";
     const region = url.searchParams.get("region") || "";
     const sourceHost = hostFrom(request);
+    const now = new Date().toISOString();
 
     const rate = await sb("rpc/consume_embed_request", {
       method: "POST",
       body: JSON.stringify({ p_source_host: sourceHost })
     });
-    if (!rate.ok) return NextResponse.json({ ok:false, items:[], state:"RATE_LIMITED" }, { status:429 });
-
-    const filters = [
-      "select=id,title,channel_title,channel_id,thumbnail,url,topic,region,source,tier,relevance_score,last_movement_at,updated_at,views",
-      "embeddable=eq.true",
-      "expires_at=is.null",
-      "order=relevance_score.desc,last_movement_at.desc,updated_at.desc"
-    ];
-    if (topic) filters.push(`topic=eq.${encodeURIComponent(topic)}`);
-    if (region) filters.push(`region=eq.${encodeURIComponent(region)}`);
-
-    // Rotate through the complete RALLIVIO discovery pool so repeated publisher
-    // requests do not keep showing the same first page.
-    const slot = Math.floor(Date.now() / 300000);
-    const offset = (slot * limit) % 1000000;
-    filters.push(`offset=${offset}`, `limit=${limit}`);
-
-    const response = await sb(`youtube_discovery_pool?${filters.join("&")}`, {
-      headers: { Prefer: "count=exact" }
-    });
-    if (!response.ok) {
-      console.error("distribution feed query failed", response.status, await response.text());
-      return NextResponse.json({ ok:true, items:[], total:0, state:"EMPTY" }, { headers: { "Access-Control-Allow-Origin":"*" } });
+    if (!rate.ok) {
+      return NextResponse.json({ ok:false, items:[], state:"RATE_LIMITED" }, { status:429 });
     }
 
-    const rows = await response.json() as Array<Record<string, unknown>>;
-    const range = response.headers.get("content-range") || "";
-    const total = Number((range.split("/")[1] || "0")) || 0;
+    // CRITICAL: the external distribution network is campaign-only.
+    // RALLIVIO's discovery pool is never used as an automatic distribution source.
+    const campaignQuery = [
+      "select=id,source_url,source_host,content_type,title,status,distribution_mode,trial_ends_at,created_at,youtube_video_id,youtube_channel_id",
+      "status=eq.active",
+      "distribution_mode=eq.rallivio_owned",
+      `trial_ends_at=gt.${encodeURIComponent(now)}`,
+      "order=created_at.desc",
+      `limit=${Math.max(limit, 20)}`
+    ];
 
-    const items = rows.map(row => ({
-      id: row.id,
-      title: row.title || "RALLIVIO discovery",
-      channel: row.channel_title || "Unknown creator",
-      channelId: row.channel_id || null,
-      thumbnail: row.thumbnail || "",
-      url: `/r/${encodeURIComponent(String(row.id))}?src=${encodeURIComponent(sourceHost)}`,
-      topic: row.topic || "All",
-      region: row.region || "WORLDWIDE",
-      source: row.source || "youtube",
-      tier: row.tier || null,
-      relevance: Number(row.relevance_score || 0),
-      views: Number(row.views || 0),
-      lastMovementAt: row.last_movement_at || null
-    }));
+    const campaignResponse = await sb(`promotion_campaigns?${campaignQuery.join("&")}`);
+    if (!campaignResponse.ok) {
+      console.error("promotion distribution query failed", campaignResponse.status, await campaignResponse.text());
+      return NextResponse.json({ ok:true, items:[], total:0, state:"EMPTY" }, {
+        headers: { "Access-Control-Allow-Origin":"*" }
+      });
+    }
+
+    const campaigns = await campaignResponse.json() as Array<Record<string, unknown>>;
+    const youtubeIds = campaigns
+      .map(c => typeof c.youtube_video_id === "string" ? c.youtube_video_id : "")
+      .filter(Boolean);
+
+    let poolRows: Array<Record<string, unknown>> = [];
+    if (youtubeIds.length) {
+      const uniqueIds = [...new Set(youtubeIds)].slice(0, 50);
+      const poolPath = [
+        "youtube_discovery_pool",
+        `select=id,title,channel_title,channel_id,thumbnail,topic,region,tier,relevance_score,views,last_movement_at`,
+        `id=in.(${uniqueIds.map(encodeURIComponent).join(",")})`
+      ];
+      if (topic) poolPath.push(`topic=eq.${encodeURIComponent(topic)}`);
+      if (region) poolPath.push(`region=eq.${encodeURIComponent(region)}`);
+      const poolResponse = await sb(poolPath.join("?"));
+      if (poolResponse.ok) poolRows = await poolResponse.json();
+    }
+
+    const poolById = new Map(poolRows.map(row => [String(row.id), row]));
+    const eligible = campaigns.filter(c => {
+      if (!topic && !region) return true;
+      if (!c.youtube_video_id) return false;
+      const row = poolById.get(String(c.youtube_video_id));
+      if (!row) return false;
+      return (!topic || String(row.topic || "") === topic) &&
+             (!region || String(row.region || "") === region);
+    });
+
+    const items = eligible.slice(0, limit).map(campaign => {
+      const videoId = typeof campaign.youtube_video_id === "string" ? campaign.youtube_video_id : "";
+      const row = videoId ? poolById.get(videoId) : undefined;
+      return {
+        id: String(campaign.id),
+        campaignId: String(campaign.id),
+        title: String(campaign.title || row?.title || "RALLIVIO promoted content"),
+        channel: String(row?.channel_title || campaign.source_host || "Promoted source"),
+        channelId: row?.channel_id || campaign.youtube_channel_id || null,
+        thumbnail: String(row?.thumbnail || ""),
+        contentType: String(campaign.content_type || "link"),
+        sourceUrl: String(campaign.source_url),
+        url: `/go/${encodeURIComponent(String(campaign.id))}?src=${encodeURIComponent(sourceHost)}`,
+        topic: String(row?.topic || "Promoted"),
+        region: String(row?.region || "GLOBAL"),
+        source: videoId ? "youtube" : "campaign",
+        tier: String(row?.tier || "PROMOTED"),
+        relevance: Number(row?.relevance_score || 0),
+        views: Number(row?.views || 0),
+        lastMovementAt: row?.last_movement_at || null
+      };
+    });
 
     return NextResponse.json({
       ok:true,
-      mode:"all_discovered_content",
-      total,
-      rotated:true,
+      mode:"promoted_campaigns_only",
+      total: campaigns.length,
+      eligible: eligible.length,
+      discovery_pool_included: false,
       refreshSeconds:300,
       items
     }, {
@@ -95,7 +127,7 @@ export async function GET(request: Request) {
       }
     });
   } catch (error) {
-    console.error("distribution feed failed", error);
+    console.error("promotion distribution feed failed", error);
     return NextResponse.json({ ok:true, items:[], total:0, state:"EMPTY" }, {
       headers: { "Access-Control-Allow-Origin":"*" }
     });
