@@ -21,7 +21,6 @@ function boot(){
      }),keepalive:true}).catch(function(){});
    })}catch(_){}
  }
- var oldLoad=load;
  load=function(){var q=new URLSearchParams();if(topic)q.set("topic",topic);if(region)q.set("region",region);q.set("limit",String(limit));
    fetch(b+"/api/distribution/feed?"+q,{mode:"cors",credentials:"omit",cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){
      var items=d.items||[]; impression(items);
