@@ -259,13 +259,11 @@ export default function LivingDiscover() {
     await loadDiscovery(activeSignal, filter === "Trending" ? null : filter, nextCursor, true);
   };
 
+  // Initial hydration + one guarded source refresh. Keep this independent
+  // from the selected signal so a late refresh can never overwrite a user's
+  // signal selection with the unfiltered Trending pool.
   useEffect(() => {
     let cancelled = false;
-
-    // Render the persisted, verified feed first. A separate open-refresh request
-    // then asks the server for one small real YouTube observation batch. The
-    // server gate allows this globally only once per five minutes, so multiple
-    // visitors cannot multiply YouTube quota usage.
     void loadDiscovery(null);
 
     void fetch("/api/discovery/open-refresh", {
@@ -279,20 +277,27 @@ export default function LivingDiscover() {
       })
       .then((result) => {
         if (!cancelled && result?.ok && result.state === "REFRESHED") {
-          return loadDiscovery(activeSignal, filter === "Trending" ? null : filter);
+          return loadDiscovery(null, null);
         }
         return null;
       })
       .catch(() => undefined);
 
-    const id = window.setInterval(() => {
-      void loadDiscovery(activeSignal, filter);
-    }, 60000);
+    return () => { cancelled = true; };
+  }, []);
 
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
+  // Signal/topic changes replace the feed with the requested slice only.
+  useEffect(() => {
+    if (activeSignal === null && filter === "Trending") return;
+    void loadDiscovery(activeSignal, filter === "Trending" ? null : filter);
+  }, [activeSignal, filter]);
+
+  // Refresh the currently selected slice without resetting its filter.
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      void loadDiscovery(activeSignal, filter === "Trending" ? null : filter);
+    }, 60000);
+    return () => window.clearInterval(id);
   }, [activeSignal, filter]);
 
   useEffect(() => { if (!notice) return; const id = window.setTimeout(() => setNotice(""), 4200); return () => window.clearTimeout(id); }, [notice]);
