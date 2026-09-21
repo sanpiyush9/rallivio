@@ -50,20 +50,34 @@ export default function RallivioWorld(){
     let live=true;
     const load=async()=>{
       try{
-        const r=await fetch("/api/discovery?limit=100",{cache:"no-store"});
-        const b=await r.json();
-        if(!live || !b?.ok) return;
-        setItems(Array.isArray(b.items)?b.items:[]);
+        const endpoint=new URL("/api/discovery?limit=60",window.location.origin).toString();
+        const r=await fetch(endpoint,{cache:"no-store",headers:{accept:"application/json"}});
+        const text=await r.text();
+        let b: any;
+        try{ b=JSON.parse(text); }catch(parseError){
+          console.error("RALLIVIO discovery: invalid JSON",{status:r.status,contentType:r.headers.get("content-type"),text:text.slice(0,500),parseError});
+          return;
+        }
+        console.log("RALLIVIO discovery RAW",Object.keys(b),b.poolCount,b.items?.length);
+        if(!live) return;
+        if(!r.ok || b?.ok!==true){
+          console.error("RALLIVIO discovery: API rejected",{status:r.status,payload:b});
+          return;
+        }
+        const nextItems=Array.isArray(b.items)?b.items:[];
+        setItems(nextItems);
         setStats({
-          pool:Number(b.poolCount||0),
-          signals:Number(b.verifiedSignalCount||0),
-          creators:Number(b.trackedCreators||0),
-          topics:Number(b.activeTopics||0)
+          pool:Number(b.poolCount ?? 0),
+          signals:Number(b.verifiedSignalCount ?? 0),
+          creators:Number(b.trackedCreators ?? 0),
+          topics:Number(b.activeTopics ?? 0)
         });
-      }catch{}
+      }catch(error){
+        console.error("RALLIVIO discovery: fetch failed",error);
+      }
     };
-    load();
-    const id=setInterval(load,60000);
+    void load();
+    const id=setInterval(()=>void load(),60000);
     return()=>{live=false;clearInterval(id)};
   },[]);
 
