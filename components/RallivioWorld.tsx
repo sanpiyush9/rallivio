@@ -53,18 +53,19 @@ export default function RallivioWorld(){
         const endpoint=new URL("/api/discovery?limit=60",window.location.origin).toString();
         const r=await fetch(endpoint,{cache:"no-store",headers:{accept:"application/json"}});
         const text=await r.text();
-        let b: any;
+        let b: Record<string, unknown>;
         try{ b=JSON.parse(text); }catch(parseError){
           console.error("RALLIVIO discovery: invalid JSON",{status:r.status,contentType:r.headers.get("content-type"),text:text.slice(0,500),parseError});
           return;
         }
-        console.log("RALLIVIO discovery RAW",Object.keys(b),b.poolCount,b.items?.length);
+        const rawItems = Array.isArray(b.items) ? b.items : [];
+        console.log("RALLIVIO discovery RAW",Object.keys(b),b.poolCount,rawItems.length);
         if(!live) return;
         if(!r.ok || b?.ok!==true){
           console.error("RALLIVIO discovery: API rejected",{status:r.status,payload:b});
           return;
         }
-        const nextItems=Array.isArray(b.items)?b.items:[];
+        const nextItems=rawItems as Item[];
         setItems(nextItems);
         setStats({
           pool:Number(b.poolCount ?? 0),
