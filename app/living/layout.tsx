@@ -67,7 +67,6 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
         .rv .platformMark.spotify{--brand-fill:#1DB954;--brand-logo:#000;--brand-glow:#1DB95466}
         .rv .platformMark.twitch{--brand-fill:#9146FF;--brand-logo:#fff;--brand-glow:#9146FF66}
 
-        /* The existing inline marks contain their own background silhouettes. Make those silhouettes transparent so the new circular badge is the only fill. */
         .rv .platformMark.youtube svg rect,
         .rv .platformMark.linkedin svg rect,
         .rv .platformMark.twitch svg path:first-child,
@@ -91,6 +90,17 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
         .rv .platformMark.spotify svg path{stroke:var(--brand-logo)!important}
         .rv .platformMark.reddit svg path{stroke:var(--brand-logo)!important}
         .rv .platformMark.discord svg circle{fill:#0b0d20!important}
+
+        /* Campaign Spotlight: never leave a single campaign stranded at the far left. */
+        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseViewport{overflow:hidden!important}
+        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseCards{justify-content:center!important;align-items:stretch!important}
+        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseCard{flex:0 1 520px!important;width:min(520px,100%)!important}
+        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseThumb{height:170px!important}
+        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseCards:empty{display:none!important}
+
+        /* Timeframe is a rolling observation window, never a cumulative lifetime total. */
+        .rv .timeframeLabel span{max-width:390px!important}
+        .rv .timeframeMeta small::after{content:" · rolling window";color:#4f9fca!important}
       `}</style>
       {children}
     </>
