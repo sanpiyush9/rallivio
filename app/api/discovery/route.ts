@@ -34,6 +34,21 @@ function parseTimeframe(request: Request) {
 }
 function labels(value: unknown): string[] { return Array.isArray(value) ? value.filter((x): x is string => typeof x === "string") : []; }
 function num(value: unknown, fallback = 0) { const n = Number(value); return Number.isFinite(n) ? n : fallback; }
+function sourceFamily(metadata: Record<string, unknown> | null | undefined) {
+  const raw = metadata?.source_family ?? metadata?.sourceFamily;
+  if (typeof raw === "string" && raw.trim()) return raw.trim();
+  return "YouTube";
+}
+function sourceType(format: string | null | undefined, metadata: Record<string, unknown> | null | undefined) {
+  const raw = metadata?.source_type ?? metadata?.sourceType;
+  if (typeof raw === "string" && raw.trim()) return raw.trim();
+  const f = String(format ?? "video").toLowerCase();
+  if (f.includes("article") || f.includes("news") || f.includes("blog")) return "article";
+  if (f.includes("post") || f.includes("tweet") || f.includes("social")) return "post";
+  if (f.includes("reel") || f.includes("short")) return "short-video";
+  if (f.includes("live")) return "live";
+  return "video";
+}
 
 async function getPromotedItems() {
   const now = new Date().toISOString();
@@ -46,7 +61,7 @@ async function getPromotedItems() {
   if (!poolResponse.ok) return [];
   const pool = await poolResponse.json() as PoolRow[];
   const byId = new Map(pool.map(x => [x.id, x]));
-  return campaigns.map(c => { const item = byId.get(c.youtube_video_id); if (!item) return null; return { ...item, metadata: { ...(item.metadata ?? {}), promoted: true, promotion_campaign_id: c.id, promotion_label: "RALLIVIO Campaign", promotion_title: c.title || item.title, source_family: "YouTube" } }; }).filter(Boolean);
+  return campaigns.map(c => { const item = byId.get(c.youtube_video_id); if (!item) return null; return { ...item, metadata: { ...(item.metadata ?? {}), promoted: true, promotion_campaign_id: c.id, promotion_label: "RALLIVIO Campaign", promotion_title: c.title || item.title, source_family: sourceFamily(item.metadata), source_type: sourceType(item.format, item.metadata) } }; }).filter(Boolean);
 }
 
 export async function GET(request: Request) {
@@ -56,6 +71,7 @@ export async function GET(request: Request) {
     const limit = parseLimit(request); const cursor = parseCursor(request); const timeframe = parseTimeframe(request);
     const signal = url.searchParams.get("signal")?.trim().slice(0, 40) || null;
     const topic = url.searchParams.get("topic")?.trim().slice(0, 80) || null;
+    const source = url.searchParams.get("source")?.trim().slice(0, 40) || null;
 
     const feedResponse = await supabase("rpc/get_discovery_timeframe_feed", { method: "POST", body: JSON.stringify({ p_since: timeframe.since, p_limit: Math.min(1000, Math.max(100, limit * 8)), p_offset: cursor, p_signal: signal, p_topic: topic && topic !== "Trending" ? topic : null }) });
     if (!feedResponse.ok) return NextResponse.json({ ok: false, state: "DATA_UNAVAILABLE" }, { status: 503 });
@@ -86,10 +102,13 @@ export async function GET(request: Request) {
     const byId = new Map(poolRows.map(x => [x.id, x]));
     const items = feedRows.map(row => {
       const pool = byId.get(row.video_id); if (!pool) return null;
+      const family = sourceFamily(pool.metadata);
+      const type = sourceType(row.format ?? pool.format, pool.metadata);
+      if (source && family.toLowerCase() !== source.toLowerCase()) return null;
       const evidence = row.evidence ?? {};
-      const metadata = { ...(pool.metadata ?? {}), signal: row.signal_type, signals: labels(row.signal_labels), momentum_score: row.momentum_score, signal_evidence: evidence, source_family: "YouTube" };
+      const metadata = { ...(pool.metadata ?? {}), signal: row.signal_type, signals: labels(row.signal_labels), momentum_score: row.momentum_score, signal_evidence: evidence, source_family: family, source_type: type };
       const views = num(pool.views); const likes = num(pool.likes); const comments = num(pool.comments);
-      return { id: pool.id, title: pool.title, channel_title: pool.channel_title, published_at: pool.published_at, observed_at: row.observed_at, thumbnail: pool.thumbnail, description: pool.description ?? "", views, likes, comments, engagement: views > 0 ? ((likes + comments) / views) * 100 : 0, velocity: num(evidence.velocity), live: pool.live_broadcast_content === "live", url: pool.url, embeddable: Boolean(pool.embeddable), topic: pool.topic, region: row.region ?? pool.region, metadata, stats_refreshed_at: pool.stats_refreshed_at ?? undefined };
+      return { id: pool.id, title: pool.title, channel_title: pool.channel_title, published_at: pool.published_at, observed_at: row.observed_at, thumbnail: pool.thumbnail, description: pool.description ?? "", views, likes, comments, engagement: views > 0 ? ((likes + comments) / views) * 100 : 0, velocity: num(evidence.velocity), live: pool.live_broadcast_content === "live", url: pool.url, embeddable: Boolean(pool.embeddable), topic: pool.topic, format: row.format ?? pool.format, region: row.region ?? pool.region, source_family: family, source_type: type, metadata, stats_refreshed_at: pool.stats_refreshed_at ?? undefined };
     }).filter(Boolean);
 
     const usageResponse = await supabase("api_usage?select=created_at,endpoint&order=created_at.desc&limit=1");
@@ -101,6 +120,7 @@ export async function GET(request: Request) {
     for (const name of topicNames) { const rows = momentumRows.filter(r => r.topic === name).sort((a, b) => Date.parse(a.window_start) - Date.parse(b.window_start)).slice(-12); const counts = rows.map(r => num(r.video_count)); topicMomentumWindows[name] = rows.map(r => num(r.momentum)); topicTrendMeta[name] = { firstWindow: rows[0]?.window_start ?? null, latestWindow: rows.at(-1)?.window_start ?? null, windows: rows.length, firstVideos: counts[0] ?? 0, latestVideos: counts.at(-1) ?? 0, minVideos: counts.length ? Math.min(...counts) : 0, maxVideos: counts.length ? Math.max(...counts) : 0 }; }
     const requestedSize = Math.min(1000, Math.max(100, limit * 8));
     const nextCursor = feedRows.length >= requestedSize ? cursor + feedRows.length : null;
-    return NextResponse.json({ ok: true, source: "RALLIVIO_DISCOVERY_OBSERVATIONS", timeframe: timeframe.id, refreshedAt: overview.refreshedAt ?? feedRows[0]?.observed_at ?? null, apiUsageLatestAt: usageRows[0]?.created_at ?? null, apiUsageLatestEndpoint: usageRows[0]?.endpoint ?? null, poolCount: num(metrics.activeVideos), verifiedSignalCount: num(metrics.verifiedSignals), trackedCreators: num(metrics.trackedCreators), risingCreators: num(metrics.risingCreators), activeTopics: num(metrics.activeTopics), regions: Array.isArray(overview.regions) ? overview.regions : [], signalCounts, topicCounts: overview.topicCounts ?? {}, coverage: { requestedHours, observedHours: Number(coverageHours.toFixed(2)), start: coverageStart, end: coverageEnd, complete: coverageHours >= requestedHours * 0.98 }, sourceFamilies: ["YouTube"], promotedItems, items, nextCursor }, { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" } });
+    const sourceFamilies = Array.from(new Set((items as Array<{ source_family?: string }>).map(x => x.source_family).filter(Boolean) as string[]));
+    return NextResponse.json({ ok: true, source: "RALLIVIO_DISCOVERY_OBSERVATIONS", timeframe: timeframe.id, refreshedAt: overview.refreshedAt ?? feedRows[0]?.observed_at ?? null, apiUsageLatestAt: usageRows[0]?.created_at ?? null, apiUsageLatestEndpoint: usageRows[0]?.endpoint ?? null, poolCount: num(metrics.activeVideos), verifiedSignalCount: num(metrics.verifiedSignals), trackedCreators: num(metrics.trackedCreators), risingCreators: num(metrics.risingCreators), activeTopics: num(metrics.activeTopics), regions: Array.isArray(overview.regions) ? overview.regions : [], signalCounts, topicCounts: overview.topicCounts ?? {}, coverage: { requestedHours, observedHours: Number(coverageHours.toFixed(2)), start: coverageStart, end: coverageEnd, complete: coverageHours >= requestedHours * 0.98 }, sourceFamilies: sourceFamilies.length ? sourceFamilies : ["YouTube"], promotedItems, items, nextCursor, sourceFilter: source ?? null }, { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60" } });
   } catch (error) { return NextResponse.json({ ok: false, state: "DATA_UNAVAILABLE", message: error instanceof Error ? error.message : "Unknown error" }, { status: 503 }); }
 }
