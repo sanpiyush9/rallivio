@@ -3,6 +3,13 @@ import type {
   DiscoverySourceItem,
 } from "./source-adapters";
 
+export type SensorCollectionError = {
+  source: string;
+  error: string;
+};
+
+export type SensorCollectionResult = DiscoverySourceItem | SensorCollectionError;
+
 const now = () => new Date().toISOString();
 const limitOf = (value: number | undefined, fallback = 20) =>
   Math.min(Math.max(value ?? fallback, 1), 50);
@@ -135,18 +142,25 @@ export const hackerNewsAdapter: DiscoverySourceAdapter = {
 
 export const openWebAdapters = [wikipediaAdapter, hackerNewsAdapter] as const;
 
-export async function collectOpenWebSignals(limit = 20) {
+export async function collectOpenWebSignals(limit = 20): Promise<SensorCollectionResult[]> {
   const results = await Promise.allSettled(
     openWebAdapters.map((adapter) => adapter.discover({ limit })),
   );
-  return results.flatMap((result, index) =>
-    result.status === "fulfilled"
-      ? result.value
-      : [
-          {
-            source: openWebAdapters[index].id,
-            error: result.reason instanceof Error ? result.reason.message : String(result.reason),
-          },
-        ],
-  );
+
+  const collected: SensorCollectionResult[] = [];
+
+  results.forEach((result, index) => {
+    if (result.status === "fulfilled") {
+      collected.push(...result.value);
+      return;
+    }
+
+    const reason = result.reason;
+    collected.push({
+      source: openWebAdapters[index].id,
+      error: reason instanceof Error ? reason.message : String(reason),
+    });
+  });
+
+  return collected;
 }
