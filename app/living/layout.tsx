@@ -91,12 +91,14 @@ export default function LivingLayout({ children }: { children: ReactNode }) {
         .rv .platformMark.reddit svg path{stroke:var(--brand-logo)!important}
         .rv .platformMark.discord svg circle{fill:#0b0d20!important}
 
-        /* Campaign Spotlight: never leave a single campaign stranded at the far left. */
-        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseViewport{overflow:hidden!important}
-        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseCards{justify-content:center!important;align-items:stretch!important}
-        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseCard{flex:0 1 520px!important;width:min(520px,100%)!important}
+        /* Campaign Spotlight: isolate the single-campaign layout from the signal carousel. */
+        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseViewport{overflow:hidden!important;display:flex!important;align-items:stretch!important;justify-content:center!important;min-width:0!important;padding:10px 0 18px!important}
+        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseCards{display:flex!important;justify-content:center!important;align-items:stretch!important;gap:14px!important;width:100%!important;min-width:0!important;margin:0!important;overflow:visible!important;flex-wrap:nowrap!important}
+        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseCard{flex:0 1 520px!important;width:min(520px,100%)!important;max-width:520px!important;min-width:0!important;transform:none!important}
         .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseThumb{height:170px!important}
         .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseCards:empty{display:none!important}
+        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseCarousel{display:block!important;margin-top:10px!important}
+        .rv .pulseSection:not(:has(.viewSignalsButton)) .pulseCarousel>.pulseViewport{width:100%!important}
 
         /* Timeframe is a rolling observation window, never a cumulative lifetime total. */
         .rv .timeframeLabel span{max-width:390px!important}
