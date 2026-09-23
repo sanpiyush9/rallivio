@@ -26,17 +26,22 @@ const entityKeysFromTitle = (title: string) =>
     ),
   );
 
+const wikipediaDateCandidates = () => {
+  const dates: string[] = [];
+  for (const daysAgo of [1, 2, 3]) {
+    const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+    dates.push(
+      `${date.getUTCFullYear()}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/${String(date.getUTCDate()).padStart(2, "0")}`,
+    );
+  }
+  return dates;
+};
+
 export const wikipediaAdapter: DiscoverySourceAdapter = {
   id: "wikipedia",
   kind: "search",
   async discover({ limit }) {
-    const response = await fetch(
-      "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/" +
-        "latest.json",
-      { next: { revalidate: 900 } },
-    );
-    if (!response.ok) throw new Error(`Wikipedia HTTP ${response.status}`);
-    const payload = (await response.json()) as {
+    let payload: {
       items?: Array<{
         articles?: Array<{
           article?: string;
@@ -44,7 +49,28 @@ export const wikipediaAdapter: DiscoverySourceAdapter = {
           rank?: number;
         }>;
       }>;
-    };
+    } | null = null;
+    let lastStatus = 0;
+
+    for (const datePath of wikipediaDateCandidates()) {
+      const response = await fetch(
+        `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/${datePath}`,
+        {
+          headers: {
+            Accept: "application/json",
+            "User-Agent": "RALLIVIO/1.0 (public discovery signal collector)",
+          },
+          next: { revalidate: 900 },
+        },
+      );
+      lastStatus = response.status;
+      if (!response.ok) continue;
+      payload = (await response.json()) as typeof payload;
+      if (payload?.items?.length) break;
+    }
+
+    if (!payload) throw new Error(`Wikipedia HTTP ${lastStatus}`);
+
     const articles = payload.items?.[0]?.articles ?? [];
     const observedAt = now();
     return articles
