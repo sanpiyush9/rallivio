@@ -10,6 +10,7 @@ export default defineConfig([
   {
     rules: {
       "react/no-unescaped-entities": "off",
+      "react/jsx-no-comment-textnodes": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": "warn",
     },
