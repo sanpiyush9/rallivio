@@ -10,6 +10,16 @@ export type SensorCollectionError = {
 
 export type SensorCollectionResult = DiscoverySourceItem | SensorCollectionError;
 
+type WikipediaArticle = {
+  article?: string;
+  views?: number;
+  rank?: number;
+};
+
+type WikipediaResponse = {
+  items?: Array<{ articles?: WikipediaArticle[] }>;
+};
+
 const now = () => new Date().toISOString();
 const limitOf = (value: number | undefined, fallback = 20) =>
   Math.min(Math.max(value ?? fallback, 1), 50);
@@ -37,41 +47,32 @@ const wikipediaDateCandidates = () => {
   return dates;
 };
 
+async function fetchWikipediaArticles(): Promise<WikipediaArticle[]> {
+  let lastStatus = 0;
+  for (const datePath of wikipediaDateCandidates()) {
+    const response = await fetch(
+      `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/${datePath}`,
+      {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "RALLIVIO/1.0 (public discovery signal collector)",
+        },
+        next: { revalidate: 900 },
+      },
+    );
+    lastStatus = response.status;
+    if (!response.ok) continue;
+    const payload = (await response.json()) as WikipediaResponse;
+    return payload.items?.[0]?.articles ?? [];
+  }
+  throw new Error(`Wikipedia HTTP ${lastStatus}`);
+}
+
 export const wikipediaAdapter: DiscoverySourceAdapter = {
   id: "wikipedia",
   kind: "search",
   async discover({ limit }) {
-    let payload: {
-      items?: Array<{
-        articles?: Array<{
-          article?: string;
-          views?: number;
-          rank?: number;
-        }>;
-      }>;
-    } | null = null;
-    let lastStatus = 0;
-
-    for (const datePath of wikipediaDateCandidates()) {
-      const response = await fetch(
-        `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/${datePath}`,
-        {
-          headers: {
-            Accept: "application/json",
-            "User-Agent": "RALLIVIO/1.0 (public discovery signal collector)",
-          },
-          next: { revalidate: 900 },
-        },
-      );
-      lastStatus = response.status;
-      if (!response.ok) continue;
-      payload = (await response.json()) as typeof payload;
-      if (payload?.items?.length) break;
-    }
-
-    if (!payload) throw new Error(`Wikipedia HTTP ${lastStatus}`);
-
-    const articles = payload.items?.[0]?.articles ?? [];
+    const articles = await fetchWikipediaArticles();
     const observedAt = now();
     return articles
       .filter((item) => item.article && item.article !== "Main_Page")
