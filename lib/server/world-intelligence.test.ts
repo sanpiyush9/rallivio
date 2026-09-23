@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { accelerationFromSeries, groupTrendObservations, scoreTrend } from "./world-intelligence";
 
 describe("world intelligence", () => {
