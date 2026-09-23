@@ -89,7 +89,7 @@ export async function GET(request: Request) {
       const evidence = row.evidence ?? {};
       const metadata = { ...(pool.metadata ?? {}), signal: row.signal_type, signals: labels(row.signal_labels), momentum_score: row.momentum_score, signal_evidence: evidence, source_family: "YouTube" };
       const views = num(pool.views); const likes = num(pool.likes); const comments = num(pool.comments);
-      return { id: pool.id, title: pool.title, channel_title: pool.channel_title, published_at: pool.published_at, thumbnail: pool.thumbnail, description: pool.description ?? "", views, likes, comments, engagement: views > 0 ? ((likes + comments) / views) * 100 : 0, velocity: num(evidence.velocity), live: pool.live_broadcast_content === "live", url: pool.url, embeddable: Boolean(pool.embeddable), topic: pool.topic, region: row.region ?? pool.region, metadata, stats_refreshed_at: pool.stats_refreshed_at ?? undefined };
+      return { id: pool.id, title: pool.title, channel_title: pool.channel_title, published_at: pool.published_at, observed_at: row.observed_at, thumbnail: pool.thumbnail, description: pool.description ?? "", views, likes, comments, engagement: views > 0 ? ((likes + comments) / views) * 100 : 0, velocity: num(evidence.velocity), live: pool.live_broadcast_content === "live", url: pool.url, embeddable: Boolean(pool.embeddable), topic: pool.topic, region: row.region ?? pool.region, metadata, stats_refreshed_at: pool.stats_refreshed_at ?? undefined };
     }).filter(Boolean);
 
     const usageResponse = await supabase("api_usage?select=created_at,endpoint&order=created_at.desc&limit=1");
