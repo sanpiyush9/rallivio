@@ -41,9 +41,7 @@ export function accelerationFromSeries(values: number[]) {
 }
 
 export function scoreTrend(observations: TrendObservation[]): TrendScore {
-  if (!observations.length) {
-    return { score: 0, state: "emerging", evidence: { sourceCount: 0, regionCount: 0, observationCount: 0, velocity: 0, acceleration: 0, persistence: 0, novelty: 0 } };
-  }
+  if (!observations.length) return { score: 0, state: "emerging", evidence: { sourceCount: 0, regionCount: 0, observationCount: 0, velocity: 0, acceleration: 0, persistence: 0, novelty: 0 } };
   const ordered = [...observations].sort((a, b) => Date.parse(a.observedAt) - Date.parse(b.observedAt));
   const values = ordered.map((observation) => Math.max(observation.value, 0));
   const latest = values.at(-1) ?? 0;
@@ -94,6 +92,7 @@ const keyFor = (item: DiscoverySourceItem) => { const keys = item.entityKeys?.fi
 const num = (value: unknown) => { const n = Number(value); return Number.isFinite(n) ? n : 0; };
 const attention = (item: DiscoverySourceItem) => { const m = item.metrics; const raw = Object.values(m.raw ?? {}).map(num).filter((x) => x > 0); const base = Math.max(num(m.views), num(m.likes) * 40, num(m.comments) * 80, num(m.shares) * 100, num(m.reactions) * 60, ...raw, 1); return Math.min(1, Math.log10(base + 1) / 8); };
 const freshness = (item: DiscoverySourceItem) => Math.max(0, Math.min(1, 1 - Math.max(0, (Date.now() - Date.parse(item.observedAt)) / 36e5) / 168));
+const stableId = (value: string) => { let hash = 2166136261; for (let i = 0; i < value.length; i += 1) hash = Math.imul(hash ^ value.charCodeAt(i), 16777619); return `world-${(hash >>> 0).toString(36)}`; };
 
 function eventScore(items: DiscoverySourceItem[]) {
   const attentionScore = items.reduce((sum, item) => sum + attention(item), 0) / Math.max(items.length, 1);
@@ -121,17 +120,11 @@ function whyFor(items: DiscoverySourceItem[], sourceCount: number) {
   return reasons.slice(0, 4);
 }
 
-export function toDiscoveryItem(item: DiscoverySourceItem): DiscoverySourceItem {
-  return { ...item, entityKeys: item.entityKeys?.length ? item.entityKeys : tokens(item.title) };
-}
+export function toDiscoveryItem(item: DiscoverySourceItem): DiscoverySourceItem { return { ...item, entityKeys: item.entityKeys?.length ? item.entityKeys : tokens(item.title) }; }
 
 export function buildWorldEvents(input: DiscoverySourceItem[], limit = 12): WorldEvent[] {
   const groups = new Map<string, DiscoverySourceItem[]>();
-  for (const raw of input) {
-    const item = toDiscoveryItem(raw);
-    const key = keyFor(item);
-    groups.set(key, [...(groups.get(key) ?? []), item]);
-  }
+  for (const raw of input) { const item = toDiscoveryItem(raw); const key = keyFor(item); groups.set(key, [...(groups.get(key) ?? []), item]); }
   return [...groups.entries()].map(([key, rawItems]) => {
     const items = rawItems.sort((a, b) => Date.parse(b.observedAt) - Date.parse(a.observedAt));
     const sources = [...new Set(items.map((x) => x.source))];
@@ -145,6 +138,6 @@ export function buildWorldEvents(input: DiscoverySourceItem[], limit = 12): Worl
     const a = items.reduce((s, x) => s + attention(x), 0) / items.length;
     const f = items.reduce((s, x) => s + freshness(x), 0) / items.length;
     const c = Math.min(1, sourceCount / 4);
-    return { id: `world-${Buffer.from(key).toString("base64url").slice(0, 24)}`, title: items[0]?.title ?? "Emerging world event", topic, region, stage: stage(score, sourceCount), score, signalCount: items.length, sourceCount, sources, formats, latestObservedAt: latest, firstObservedAt: first, why: whyFor(items, sourceCount), dna: { attention: Math.round(a * 100), freshness: Math.round(f * 100), crossSource: Math.round(c * 100), momentum: Math.round(score) }, items: items.slice(0, 8) } satisfies WorldEvent;
+    return { id: stableId(key), title: items[0]?.title ?? "Emerging world event", topic, region, stage: stage(score, sourceCount), score, signalCount: items.length, sourceCount, sources, formats, latestObservedAt: latest, firstObservedAt: first, why: whyFor(items, sourceCount), dna: { attention: Math.round(a * 100), freshness: Math.round(f * 100), crossSource: Math.round(c * 100), momentum: Math.round(score) }, items: items.slice(0, 8) } satisfies WorldEvent;
   }).sort((a, b) => b.score - a.score || Date.parse(b.latestObservedAt) - Date.parse(a.latestObservedAt)).slice(0, limit);
 }
