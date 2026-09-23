@@ -10,6 +10,8 @@ export default defineConfig([
   {
     rules: {
       "react/no-unescaped-entities": "off",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "warn",
     },
   },
   globalIgnores([".next/**", "node_modules/**", "out/**", "build/**", "next-env.d.ts"]),
