@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { collectOpenWebSignals } from "@/lib/server/world-sensors";
+import { collectOpenWebSignals, type SensorCollectionResult } from "@/lib/server/world-sensors";
+import type { DiscoverySourceItem } from "@/lib/server/source-adapters";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -10,8 +11,8 @@ export async function GET(request: Request) {
   const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.floor(rawLimit), 1), 25) : 10;
 
   try {
-    const signals = await collectOpenWebSignals(limit);
-    const valid = signals.filter((item): item is Exclude<typeof item, { error: string }> => !("error" in item));
+    const signals: SensorCollectionResult[] = await collectOpenWebSignals(limit);
+    const valid = signals.filter((item): item is DiscoverySourceItem => !("error" in item));
     const errors = signals.filter((item): item is { source: string; error: string } => "error" in item);
 
     return NextResponse.json({
@@ -28,10 +29,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     return NextResponse.json(
-      {
-        ok: false,
-        error: error instanceof Error ? error.message : "Sensor collection failed",
-      },
+      { ok: false, error: error instanceof Error ? error.message : "Sensor collection failed" },
       { status: 502 },
     );
   }
